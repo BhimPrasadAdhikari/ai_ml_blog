@@ -26,8 +26,14 @@ SECRET_KEY = 'django-insecure-t)avcojafx)(c!)@p%u^jvhbg_&%-e&2od826#%-fwcys0-vev
 DEBUG = True
 STATIC_URL ='/static/'
 STATIC_ROOT = BASE_DIR/'static'
+MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_URL = '/media/'
+
 
 ALLOWED_HOSTS = ['*']
+
+
+
 
 
 
@@ -41,8 +47,16 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'blog'
+    'blog',
+    'storages'
 ]
+
+GS_BUCKET_NAME = 'ai-blog-pictures'
+GS_PROJECT_ID = 'ancient-tractor-455208-t5'
+DEFAULT_FILE_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
+MEDIA_URL = f'https://storage.googleapis.com/{GS_BUCKET_NAME}/'
+# GS_AUTO_CREATE_BUCKET_NAME = True
+GS_DEFAULT_ACL = 'publicRead'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
