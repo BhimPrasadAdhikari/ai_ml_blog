@@ -2,3 +2,8 @@ Django==5.0.*
 Pillow
 django-storages[google]
 google-cloud-storage
+django-allauth[phone]
+django-phonenumber-field[phonenumbers]
+PyJWT
+python-dotenv
+cryptography
