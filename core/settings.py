@@ -38,7 +38,6 @@ MEDIA_URL = '/media/'
 ALLOWED_HOSTS = ['*']
 
 
-AUTH_USER_MODEL = 'blog.CustomUser'
 
 
 
@@ -63,6 +62,7 @@ INSTALLED_APPS = [
     'phonenumber_field',
 ]
 
+AUTH_USER_MODEL = 'blog.CustomUser'
 
 GS_BUCKET_NAME = 'ai-blog-pictures'
 GS_PROJECT_ID = 'ancient-tractor-455208-t5'
@@ -84,7 +84,7 @@ ACCOUNT_FORMS = {
 }
 
 LOGIN_REDIRECT_URL = '/'
-ACCOUNT_AUTHENTICATION_METHOD = 'username_email'
+# ACCOUNT_AUTHENTICATION_METHOD = 'username_email'
 ACCOUNT_LOGIN_BY_CODE_ENABLED = True
 ACCOUNT_EMAIL_VERIFICATION = "mandatory"
 ACCOUNT_EMAIL_VERIFICATION_BY_CODE_ENABLED = True

@@ -1,30 +1,14 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.contrib.auth import get_user_model
+from django.utils.text import slugify
 from django.contrib.auth.base_user import BaseUserManager
 from django.core.validators import RegexValidator
 from phonenumber_field.modelfields import PhoneNumberField
+from django.urls import reverse
 
-from django.db.models import CharField, ImageField, DateTimeField,BooleanField, TextField, EmailField
+from django.db.models import CharField, ImageField, DateTimeField,BooleanField, TextField, EmailField,ForeignKey, ManyToManyField
 
-class BlogPost(models.Model):
-    """
-    Model to store blog posts for the AI/ML blog.
-    """
-    title = CharField(max_length=50)
-    slug = CharField(max_length=255, unique=True, blank=True)
-    content = TextField()
-    image = ImageField(upload_to='blog_images/')
-    created_at = DateTimeField(auto_now_add=True)
-    updated_at = DateTimeField(auto_now=True)
-    is_published = BooleanField(default=False)
-    
-    def __str__(self):
-        return self.title
-    
-    class meta: 
-        verbose_name = "Blog Post"
-        verbose_name_plural = "Blog Posts"
-        ordering = ['-created_at']
 
 
 class CustomUserManager(BaseUserManager):
@@ -57,10 +41,70 @@ class CustomUser(AbstractUser):
     def __str__(self):
         return self.email
 
+class Category(models.Model):
+    name = CharField(max_length=100, unique=True)
+    slug = models.SlugField(unique=True, blank=True)
+    
+    class meta:
+        verbose_name_plural = 'Categories'
+        
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
+    def __str__(self):
+        return self.name
+    def get_absolute_url(self):
+        return reverse('category_detail', kwargs={'slug': self.slug})
+    
+class Post(models.Model):
+    """
+    Model to store blog posts for the AI/ML blog.
+    """
+    STATUS_CHOICE = (
+        ('draft', 'Draft'),
+        ('published', 'Published')
+    )
+    title = CharField(max_length=200)
+    slug = CharField(max_length=255, unique=True, blank=True)
+    summary = TextField(max_length=500, help_text="A short summary of the post")
+    content = TextField()
+    image = ImageField(upload_to='blog_images/', blank=True, null=True)
+    author = ForeignKey(get_user_model(),
+                        on_delete=models.CASCADE,
+                        related_name='posts')
+    categories = ManyToManyField(Category, 
+                                 related_name='posts',
+                                 blank=True)
+    tags = CharField(max_length=250, 
+                     blank=True, 
+                     help_text="comma-separated tags")
+    status = CharField(max_length=10, 
+                       choices=STATUS_CHOICE,
+                       default='draft')
+    created_at = DateTimeField(auto_now_add=True)
+    updated_at = DateTimeField(auto_now=True)
+    published_at = DateTimeField(blank=True, null=True)
     
     
+    
+    def get_absolute_url(self):
+        return reverse("post_detail", kwargs={"slug": self.slug})
+    
+    
+    def __str__(self):
+        return self.title
+    
+    class meta: 
+        verbose_name = "Blog Post"
+        verbose_name_plural = "Blog Posts"
+        ordering = ['-published_at','-created_at']
         
-        
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.title)
+        super().save(*args, **kwargs)
+    
         
     
         
