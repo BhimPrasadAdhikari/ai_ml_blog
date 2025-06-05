@@ -69,7 +69,7 @@ class Post(models.Model):
     slug = CharField(max_length=255, unique=True, blank=True)
     summary = TextField(max_length=500, help_text="A short summary of the post")
     content = TextField()
-    image = ImageField(upload_to='blog_images/', blank=True, null=True)
+    image = ImageField(upload_to='', blank=True, null=True)
     author = ForeignKey(get_user_model(),
                         on_delete=models.CASCADE,
                         related_name='posts')
