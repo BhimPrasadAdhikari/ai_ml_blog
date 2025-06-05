@@ -1,16 +1,355 @@
-{% block content %}
-<article>
-    <h1>{{ post.title }}</h1>
-    <p>By {{ post.author }} on {{ post.created_at }}</p>
-    <div>{{ post.content|linebreaks }}</div>
+{% extends 'blog/base.html' %}
+
+{% block title %}{{ post.title }} - AI/ML Blog{% endblock %}
+
+
+{% block extra_css %}
+<style>
+    .post-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 3rem 0;
+        margin-bottom: 2rem;
+        border-radius: 10px;
+    }
+
+    .post-title {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin-bottom: 1rem;
+        line-height: 1.2;
+    }
+
+    .post-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 2rem;
+        align-items: center;
+        font-size: 1rem;
+        opacity: 0.9;
+        margin-bottom: 1rem;
+    }
+
+    .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .post-summary {
+        font-size: 1.1rem;
+        opacity: 0.95;
+        line-height: 1.6;
+    }
+
+    .post-content-wrapper {
+        display: grid;
+        grid-template-columns: 1fr 300px;
+        gap: 3rem;
+        align-items: start;
+    }
+
+    .post-main {
+        background: white;
+        padding: 2rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        border: 1px solid #e9ecef;
+    }
+
+    .post-image {
+        width: 100%;
+        max-height: 400px;
+        object-fit: cover;
+        border-radius: 8px;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    .post-content {
+        font-size: 1.1rem;
+        line-height: 1.8;
+        color: #2c3e50;
+    }
+
+    .post-content h1,
+    .post-content h2,
+    .post-content h3,
+    .post-content h4,
+    .post-content h5,
+    .post-content h6 {
+        margin: 2rem 0 1rem 0;
+        color: #2c3e50;
+    }
+
+    .post-content p {
+        margin-bottom: 1.5rem;
+    }
+
+    .post-content ul,
+    .post-content ol {
+        margin-bottom: 1.5rem;
+        padding-left: 2rem;
+    }
+
+    .post-content blockquote {
+        border-left: 4px solid #667eea;
+        padding-left: 1.5rem;
+        margin: 2rem 0;
+        font-style: italic;
+        color: #6c757d;
+        background: #f8f9fa;
+        padding: 1rem 1.5rem;
+        border-radius: 0 8px 8px 0;
+    }
+
+    .post-content code {
+        background: #f8f9fa;
+        padding: 0.2rem 0.4rem;
+        border-radius: 4px;
+        font-family: 'Courier New', monospace;
+        font-size: 0.9rem;
+    }
+
+    .post-content pre {
+        background: #2c3e50;
+        color: white;
+        padding: 1.5rem;
+        border-radius: 8px;
+        overflow-x: auto;
+        margin: 1.5rem 0;
+    }
+
+    .post-content pre code {
+        background: none;
+        padding: 0;
+        color: inherit;
+    }
+
+    .sidebar {
+        position: sticky;
+        top: 2rem;
+    }
+
+    .sidebar-section {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        border: 1px solid #e9ecef;
+        margin-bottom: 2rem;
+    }
+
+    .sidebar-title {
+        font-size: 1.2rem;
+        font-weight: bold;
+        margin-bottom: 1rem;
+        color: #2c3e50;
+        border-bottom: 2px solid #667eea;
+        padding-bottom: 0.5rem;
+    }
+
+    .categories-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .category-link {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        padding: 0.6rem 1rem;
+        border-radius: 25px;
+        text-decoration: none;
+        text-align: center;
+        font-weight: 500;
+        transition: opacity 0.3s ease;
+    }
+
+    .category-link:hover {
+        opacity: 0.8;
+    }
+
+    .tags-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .tag-item {
+        background: #f8f9fa;
+        color: #495057;
+        padding: 0.4rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        border: 1px solid #dee2e6;
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 500;
+        margin-bottom: 2rem;
+        transition: color 0.3s ease;
+    }
+
+    .back-link:hover {
+        color: #764ba2;
+    }
+
+    .author-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1.5rem;
+        background: #f8f9fa;
+        border-radius: 12px;
+        margin-top: 2rem;
+        border-left: 4px solid #667eea;
+    }
+
+    .author-avatar {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.5rem;
+        font-weight: bold;
+    }
+
+    .author-details h4 {
+        margin: 0 0 0.5rem 0;
+        color: #2c3e50;
+    }
+
+    .author-details p {
+        margin: 0;
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+
+    @media (max-width: 1024px) {
+        .post-content-wrapper {
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+
+        .sidebar {
+            position: static;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .post-title {
+            font-size: 2rem;
+        }
+
+        .post-meta {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+
+        .post-main {
+            padding: 1.5rem;
+        }
+    }
     
-    {% if post.image%}
-    <img src="{{ post.image.url }}" alt="{{ post.title }}" />
+</style>
+{% endblock %}
 
+{% block content %}
+<a href="{% url 'post_list' %}" class="back-link">
+    ← Back to All Posts
+</a>
+
+<div class="post-header">
+    <h1 class="post-title">{{ post.title }}</h1>
+    
+    <div class="post-meta">
+        <span class="meta-item">
+            👤 <strong>{{ post.author.username }}</strong>
+        </span>
+        <span class="meta-item">
+            📅 {{ post.created_at|date:"F d, Y" }}
+        </span>
+        {% if post.updated_at != post.created_at %}
+        <span class="meta-item">
+            ✏️ Updated {{ post.updated_at|date:"F d, Y" }}
+        </span>
+        {% endif %}
+    </div>
+    
+    {% if post.summary %}
+    <p class="post-summary">{{ post.summary }}</p>
     {% endif %}
+</div>
+
+<div class="post-content-wrapper">
+    <div class="post-main">
+        {% if post.image %}
+            <img src="{{ post.image.url }}" alt="{{ post.title }}" class="post-image">
+        {% endif %}
         
-
-</article>
-
-
-{% endblock  %}
+        <div class="post-content">
+            {{ post_content_html }}
+        </div>
+        
+        <div class="author-info">
+            <div class="author-avatar">
+                {{ post.author.username|first|upper }}
+            </div>
+            <div class="author-details">
+                <h4>{{ post.author.get_full_name|default:post.author.username }}</h4>
+                <p>Published on {{ post.created_at|date:"F d, Y" }}</p>
+            </div>
+        </div>
+    </div>
+    
+    {% comment %} <aside class="sidebar">
+        {% if post.categories.all %}
+        <div class="sidebar-section">
+            <h3 class="sidebar-title">Categories</h3>
+            <div class="categories-list">
+                {% for category in post.categories.all %}
+                    <a href="{{ category.get_absolute_url }}" class="category-link">
+                        {{ category.name }}
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if post.tags %}
+        <div class="sidebar-section">
+            <h3 class="sidebar-title">Tags</h3>
+            <div class="tags-list">
+                {% for tag in post.tags|split:"," %}
+                    <span class="tag-item">{{ tag|trim }}</span>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %} {% endcomment %}
+        
+        <div class="sidebar-section">
+            <h3 class="sidebar-title">Post Info</h3>
+            <div style="color: #6c757d; line-height: 1.6;">
+                <p><strong>Created:</strong> {{ post.created_at|date:"F d, Y g:i A" }}</p>
+                {% if post.updated_at != post.created_at %}
+                <p><strong>Updated:</strong> {{ post.updated_at|date:"F d, Y g:i A" }}</p>
+                {% endif %}
+                <p><strong>Status:</strong> 
+                    <span style="color: #28a745; font-weight: 500;">{{ post.get_status_display }}</span>
+                </p>
+            </div>
+        </div>
+    </aside>
+</div>
+{% endblock %}

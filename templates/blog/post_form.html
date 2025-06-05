@@ -1,10 +1,25 @@
+{% load static %}
 {% block content %}
 <h1> Create New Post </h1>
 
 <form method="post" enctype="multipart/form-data">
-    {%csrf_token%}
-    {{form.as_p}}
+    {% csrf_token %}
+    {{ form.as_p }}
     <button type="submit">Publish</button>
 </form>
+
+<!-- Include Markdownx static files -->
+{% comment %} <link rel="stylesheet" href="{% static 'markdownx/css/markdownx.css' %}">
+<script src="{% static 'markdownx/js/markdownx.js' %}"></script> {% endcomment %}
+<link rel="stylesheet" href="https://unpkg.com/easymde/dist/easymde.min.css">
+<script src="https://unpkg.com/easymde/dist/easymde.min.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    var textarea = document.querySelector('textarea[name="content"]');
+    if (textarea) {
+        new EasyMDE({ element: textarea });
+    }
+});
+</script>
 
 {% endblock %}

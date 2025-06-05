@@ -1,4 +1,6 @@
 from django.shortcuts import render
+import markdown
+from django.utils.safestring import mark_safe
 from django.views.generic import ListView, DetailView, CreateView
 from django.views import View
 from django.urls import reverse_lazy
@@ -15,6 +17,11 @@ class PostDetailView(DetailView):
     
     def get_queryset(self):
         return Post.objects.filter(status='published')
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        post = context['post']
+        context['post_content_html'] = mark_safe(markdown.markdown(post.content, extensions=['extra','codehilite', 'toc','tables']))
+        return context 
     
 class PostListView(ListView):
     model = Post

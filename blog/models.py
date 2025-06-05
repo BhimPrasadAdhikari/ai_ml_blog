@@ -8,6 +8,7 @@ from phonenumber_field.modelfields import PhoneNumberField
 from django.urls import reverse
 
 from django.db.models import CharField, ImageField, DateTimeField,BooleanField, TextField, EmailField,ForeignKey, ManyToManyField
+from markdownx.models import MarkdownxField
 
 
 
@@ -68,7 +69,7 @@ class Post(models.Model):
     title = CharField(max_length=200)
     slug = CharField(max_length=255, unique=True, blank=True)
     summary = TextField(max_length=500, help_text="A short summary of the post")
-    content = TextField()
+    content = MarkdownxField()
     image = ImageField(upload_to='', blank=True, null=True)
     author = ForeignKey(get_user_model(),
                         on_delete=models.CASCADE,

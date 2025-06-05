@@ -30,7 +30,10 @@ SECRET_KEY = 'django-insecure-t)avcojafx)(c!)@p%u^jvhbg_&%-e&2od826#%-fwcys0-vev
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 STATIC_URL ='/static/'
-STATIC_ROOT = BASE_DIR/'static'
+# STATIC_ROOT = BASE_DIR/'static'
+STATICFILES_DIRS = [
+    BASE_DIR / 'blog' / 'static',
+]
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'blog_images'
 
@@ -60,6 +63,8 @@ INSTALLED_APPS = [
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
     'phonenumber_field',
+    'markdownx',
+
 ]
 
 AUTH_USER_MODEL = 'blog.CustomUser'
