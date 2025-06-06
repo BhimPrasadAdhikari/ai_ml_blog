@@ -1,25 +1,539 @@
+{% extends 'blog/base.html' %}
 {% load static %}
+
+{% block title %}Create New Post - AI/ML Blog{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem 0;
+        text-align: center;
+        margin-bottom: 3rem;
+        border-radius: 10px;
+    }
+
+    .form-title {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-subtitle {
+        font-size: 1.1rem;
+        opacity: 0.9;
+    }
+
+    .form-container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: white;
+        padding: 2.5rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        border: 1px solid #e9ecef;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: #2c3e50;
+        font-size: 1rem;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.8rem 1rem;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        background-color: #fff;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .form-control:invalid {
+        border-color: #dc3545;
+    }
+
+    .form-control:invalid:focus {
+        box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1);
+    }
+
+    textarea.form-control {
+        min-height: 120px;
+        resize: vertical;
+        font-family: inherit;
+    }
+
+    .content-textarea {
+        min-height: 300px;
+    }
+
+    .file-input {
+        position: relative;
+        display: inline-block;
+        width: 100%;
+    }
+
+    .file-input input[type=file] {
+        position: absolute;
+        opacity: 0;
+        width: 100%;
+        height: 100%;
+        cursor: pointer;
+    }
+
+    .file-input-label {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 1rem;
+        border: 2px dashed #dee2e6;
+        border-radius: 8px;
+        background: #f8f9fa;
+        color: #6c757d;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .file-input-label:hover {
+        border-color: #667eea;
+        background: #f0f2ff;
+        color: #667eea;
+    }
+
+    .file-input.has-file .file-input-label {
+        border-color: #28a745;
+        background: #f0fff4;
+        color: #28a745;
+    }
+
+    .help-text {
+        font-size: 0.9rem;
+        color: #6c757d;
+        margin-top: 0.5rem;
+        line-height: 1.4;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: flex-end;
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 1px solid #e9ecef;
+    }
+
+    .btn {
+        padding: 0.8rem 1.5rem;
+        border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 500;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+    }
+
+    .btn-primary:hover {
+        opacity: 0.9;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+
+    .btn-secondary {
+        background: #6c757d;
+        color: white;
+    }
+
+    .btn-secondary:hover {
+        background: #5a6268;
+        transform: translateY(-1px);
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 500;
+        margin-bottom: 2rem;
+        transition: color 0.3s ease;
+    }
+
+    .back-link:hover {
+        color: #764ba2;
+    }
+
+    .error-message {
+        background: #f8d7da;
+        color: #721c24;
+        padding: 0.75rem 1rem;
+        border-radius: 6px;
+        margin-bottom: 1rem;
+        border: 1px solid #f5c6cb;
+    }
+
+    .form-errors {
+        background: #f8d7da;
+        color: #721c24;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 2rem;
+        border: 1px solid #f5c6cb;
+    }
+
+    .form-errors ul {
+        margin: 0;
+        padding-left: 1.5rem;
+    }
+
+    .form-errors li {
+        margin-bottom: 0.5rem;
+    }
+
+    .character-count {
+        text-align: right;
+        font-size: 0.8rem;
+        color: #6c757d;
+        margin-top: 0.25rem;
+    }
+
+    .character-count.warning {
+        color: #fd7e14;
+    }
+
+    .character-count.error {
+        color: #dc3545;
+    }
+
+    @media (max-width: 768px) {
+        .form-container {
+            padding: 1.5rem;
+            margin: 0 1rem;
+        }
+
+        .form-title {
+            font-size: 2rem;
+        }
+
+        .form-actions {
+            flex-direction: column;
+        }
+
+        .btn {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<h1> Create New Post </h1>
+<a href="{% url 'post_list' %}" class="back-link">
+    ← Back to All Posts
+</a>
 
-<form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Publish</button>
-</form>
+<div class="form-header">
+    <h1 class="form-title">Create New Post</h1>
+    <p class="form-subtitle">Share your AI/ML insights with the community</p>
+</div>
 
-<!-- Include Markdownx static files -->
-{% comment %} <link rel="stylesheet" href="{% static 'markdownx/css/markdownx.css' %}">
-<script src="{% static 'markdownx/js/markdownx.js' %}"></script> {% endcomment %}
-<link rel="stylesheet" href="https://unpkg.com/easymde/dist/easymde.min.css">
+<div class="form-container">
+    {% if form.errors %}
+    <div class="form-errors">
+        <h4>Please correct the following errors:</h4>
+        <ul>
+            {% for field, errors in form.errors.items %}
+                {% for error in errors %}
+                    <li>{{ field|title }}: {{ error }}</li>
+                {% endfor %}
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data" id="post-form">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label for="{{ form.title.id_for_label }}" class="form-label">
+                Title *
+            </label>
+            <input type="text" 
+                   name="{{ form.title.name }}" 
+                   id="{{ form.title.id_for_label }}"
+                   class="form-control" 
+                   value="{{ form.title.value|default:'' }}"
+                   required
+                   maxlength="200"
+                   placeholder="Enter an engaging title for your post">
+            <div class="character-count" id="title-count">0/200 characters</div>
+            <div class="help-text">
+                Choose a clear, descriptive title that captures the essence of your post.
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.slug.id_for_label }}" class="form-label">
+                URL Slug
+            </label>
+            <input type="text" 
+                   name="{{ form.slug.name }}" 
+                   id="{{ form.slug.id_for_label }}"
+                   class="form-control" 
+                   value="{{ form.slug.value|default:'' }}"
+                   maxlength="255"
+                   placeholder="url-friendly-version-of-title">
+            <div class="character-count" id="slug-count">0/255 characters</div>
+            <div class="help-text">
+                Leave blank to auto-generate from title. Use lowercase letters, numbers, and hyphens only.
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.image.id_for_label }}" class="form-label">
+                Featured Image
+            </label>
+            <div class="file-input" id="image-input">
+                <input type="file" 
+                       name="{{ form.image.name }}" 
+                       id="{{ form.image.id_for_label }}"
+                       accept="image/*">
+                <label for="{{ form.image.id_for_label }}" class="file-input-label">
+                    <span>📷</span>
+                    <span id="file-label-text">Choose an image or drag and drop</span>
+                </label>
+            </div>
+            <div class="help-text">
+                Upload a compelling image that represents your post content. Recommended size: 1200x630px.
+            </div>
+        </div>
+
+         <div class="form-group">
+            <label for="{{ form.content.id_for_label }}" class="form-label">
+                Content *
+            </label>
+            <textarea name="{{ form.content.name }}" 
+                      id="{{ form.content.id_for_label }}"
+                      class="form-control content-textarea" 
+                      required
+                      placeholder="Write your post content here. You can use basic HTML tags for formatting.">{{ form.content.value|default:'' }}</textarea>
+            <div class="help-text">
+                Write your complete post content. You can use basic formatting like paragraphs, lists, and links.
+            </div>
+        </div> 
+
+        <div class="form-actions">
+            <a href="{% url 'post_list' %}" class="btn btn-secondary">
+                Cancel
+            </a>
+            <button type="submit" class="btn btn-primary">
+                <span>✨</span>
+                Publish Post
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+    // Character counting
+    function updateCharacterCount(input, countElement, maxLength) {
+        const count = input.value.length;
+        countElement.textContent = count + '/' + maxLength + ' characters';
+        
+        if (count > maxLength * 0.9) {
+            countElement.className = 'character-count warning';
+        } else if (count > maxLength) {
+            countElement.className = 'character-count error';
+        } else {
+            countElement.className = 'character-count';
+        }
+    }
+
+    // Title character count
+    const titleInput = document.getElementById('{{ form.title.id_for_label }}');
+    const titleCount = document.getElementById('title-count');
+    if (titleInput && titleCount) {
+        updateCharacterCount(titleInput, titleCount, 200);
+        titleInput.addEventListener('input', function() {
+            updateCharacterCount(this, titleCount, 200);
+        });
+    }
+
+    // Slug character count
+    const slugInput = document.getElementById('{{ form.slug.id_for_label }}');
+    const slugCount = document.getElementById('slug-count');
+    if (slugInput && slugCount) {
+        updateCharacterCount(slugInput, slugCount, 255);
+        slugInput.addEventListener('input', function() {
+            updateCharacterCount(this, slugCount, 255);
+        });
+    }
+
+    // Auto-generate slug from title
+    if (titleInput && slugInput) {
+        titleInput.addEventListener('input', function() {
+            if (!slugInput.value || slugInput.dataset.autoGenerated) {
+                const slug = this.value
+                    .toLowerCase()
+                    .replace(/[^a-z0-9\s-]/g, '')
+                    .replace(/\s+/g, '-')
+                    .replace(/-+/g, '-')
+                    .replace(/^-|-$/g, '');
+                slugInput.value = slug;
+                slugInput.dataset.autoGenerated = 'true';
+                updateCharacterCount(slugInput, slugCount, 255);
+            }
+        });
+
+        slugInput.addEventListener('input', function() {
+            if (this.value) {
+                delete this.dataset.autoGenerated;
+            }
+        });
+    }
+
+    // File input handling
+    const fileInput = document.getElementById('{{ form.image.id_for_label }}');
+    const fileInputContainer = document.getElementById('image-input');
+    const fileLabel = document.getElementById('file-label-text');
+
+    if (fileInput && fileInputContainer && fileLabel) {
+        fileInput.addEventListener('change', function() {
+            if (this.files && this.files.length > 0) {
+                const fileName = this.files[0].name;
+                fileLabel.textContent = fileName;
+                fileInputContainer.classList.add('has-file');
+            } else {
+                fileLabel.textContent = 'Choose an image or drag and drop';
+                fileInputContainer.classList.remove('has-file');
+            }
+        });
+
+        // Drag and drop functionality
+        const fileInputLabel = fileInputContainer.querySelector('.file-input-label');
+        
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            fileInputLabel.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            fileInputLabel.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            fileInputLabel.addEventListener(eventName, unhighlight, false);
+        });
+
+        function highlight(e) {
+            fileInputLabel.style.borderColor = '#667eea';
+            fileInputLabel.style.background = '#f0f2ff';
+        }
+
+        function unhighlight(e) {
+            fileInputLabel.style.borderColor = '#dee2e6';
+            fileInputLabel.style.background = '#f8f9fa';
+        }
+
+        fileInputLabel.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            
+            if (files.length > 0) {
+                fileInput.files = files;
+                const event = new Event('change', { bubbles: true });
+                fileInput.dispatchEvent(event);
+            }
+        }
+    }
+
+    // Form validation
+    const form = document.getElementById('post-form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const title = titleInput.value.trim();
+            const content = document.getElementById('{{ form.content.id_for_label }}').value.trim();
+            
+            if (!title || !content) {
+                e.preventDefault();
+                alert('Please fill in all required fields (Title and Content).');
+                return false;
+            }
+            
+            // Show loading state
+            const submitBtn = form.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span>⏳</span> Publishing...';
+        });
+    }
+</script>
+{% comment %} <script src="{% static 'markdownx/js/markdownx.js' %}"></script>  {% endcomment %}
+{% comment %} <link rel="stylesheet" href="https://unpkg.com/easymde/dist/easymde.min.css">
 <script src="https://unpkg.com/easymde/dist/easymde.min.js"></script>
 <script>
 document.addEventListener("DOMContentLoaded", function() {
     var textarea = document.querySelector('textarea[name="content"]');
     if (textarea) {
-        new EasyMDE({ element: textarea });
+        new EasyMDE({ 
+            element: textarea,
+            spellChecker: false,
+            toolbar: [
+                'bold', 'italic', 'heading', '|',
+                'quote', 'unordered-list', 'ordered-list', '|',
+                'link', 'image', '|',
+                'preview', 'side-by-side', 'fullscreen'
+            ],
+            shortcuts: {
+                toggleBold: "Ctrl-B",
+                toggleItalic: "Ctrl-I",
+                toggleHeadingSmaller: "Ctrl-H",
+                toggleQuote: "Ctrl-Q",
+                toggleUnorderedList: "Ctrl-U",
+                toggleOrderedList: "Ctrl-O",
+                togglePreview: "Ctrl-P"
+            },
+            placeholder: "Write your post content here. You can use basic HTML tags for formatting.",
+            autoDownloadFontAwesome: true,
+            forcesync: true,
+            renderingConfig: {
+                codeSyntaxHighlighting: true,
+                singleLineBreaks: false,
+            },
+
+
+
+        });
     }
 });
-</script>
-
+</script> {% endcomment %}
 {% endblock %}
