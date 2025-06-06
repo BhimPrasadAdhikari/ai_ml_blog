@@ -55,6 +55,7 @@
         font-size: 1rem;
         transition: border-color 0.3s ease, box-shadow 0.3s ease;
         background-color: #fff;
+        box-sizing: border-box;
     }
 
     .form-control:focus {
@@ -156,10 +157,16 @@
         color: white;
     }
 
-    .btn-primary:hover {
+    .btn-primary:hover:not(:disabled) {
         opacity: 0.9;
         transform: translateY(-1px);
         box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+
+    .btn-primary:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
     }
 
     .btn-secondary {
@@ -229,6 +236,19 @@
         color: #dc3545;
     }
 
+    .debug-info {
+        background: #e3f2fd;
+        border: 1px solid #bbdefb;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        font-family: monospace;
+        font-size: 0.85rem;
+        max-height: 200px;
+        overflow-y: auto;
+        display: none; /* Hidden by default, can be shown for debugging */
+    }
+
     @media (max-width: 768px) {
         .form-container {
             padding: 1.5rem;
@@ -275,17 +295,26 @@
     </div>
     {% endif %}
 
+    <!-- Debug container (hidden by default) -->
+    <div id="debug-info" class="debug-info"></div>
+
+    <!-- Client-side error container -->
+    <div id="client-side-errors" class="form-errors" style="display: none;">
+        <h4>Please correct the following errors:</h4>
+        <ul id="error-list"></ul>
+    </div>
+
     <form method="post" enctype="multipart/form-data" id="post-form">
         {% csrf_token %}
-        
+
         <div class="form-group">
-            <label for="{{ form.title.id_for_label }}" class="form-label">
+            <label for="id_title_hardcoded" class="form-label">
                 Title *
             </label>
-            <input type="text" 
-                   name="{{ form.title.name }}" 
-                   id="{{ form.title.id_for_label }}"
-                   class="form-control" 
+            <input type="text"
+                   name="{{ form.title.name }}"
+                   id="id_title_hardcoded"
+                   class="form-control"
                    value="{{ form.title.value|default:'' }}"
                    required
                    maxlength="200"
@@ -297,13 +326,13 @@
         </div>
 
         <div class="form-group">
-            <label for="{{ form.slug.id_for_label }}" class="form-label">
+            <label for="id_slug_hardcoded" class="form-label">
                 URL Slug
             </label>
-            <input type="text" 
-                   name="{{ form.slug.name }}" 
-                   id="{{ form.slug.id_for_label }}"
-                   class="form-control" 
+            <input type="text"
+                   name="{{ form.slug.name }}"
+                   id="id_slug_hardcoded"
+                   class="form-control"
                    value="{{ form.slug.value|default:'' }}"
                    maxlength="255"
                    placeholder="url-friendly-version-of-title">
@@ -314,15 +343,15 @@
         </div>
 
         <div class="form-group">
-            <label for="{{ form.image.id_for_label }}" class="form-label">
+            <label for="id_image_hardcoded" class="form-label">
                 Featured Image
             </label>
-            <div class="file-input" id="image-input">
-                <input type="file" 
-                       name="{{ form.image.name }}" 
-                       id="{{ form.image.id_for_label }}"
+            <div class="file-input" id="image-input-container">
+                <input type="file"
+                       name="{{ form.image.name }}"
+                       id="id_image_hardcoded"
                        accept="image/*">
-                <label for="{{ form.image.id_for_label }}" class="file-input-label">
+                <label for="id_image_hardcoded" class="file-input-label">
                     <span>📷</span>
                     <span id="file-label-text">Choose an image or drag and drop</span>
                 </label>
@@ -332,25 +361,25 @@
             </div>
         </div>
 
-         <div class="form-group">
-            <label for="{{ form.content.id_for_label }}" class="form-label">
+        <div class="form-group">
+            <label for="id_content_hardcoded" class="form-label">
                 Content *
             </label>
-            <textarea name="{{ form.content.name }}" 
-                      id="{{ form.content.id_for_label }}"
-                      class="form-control content-textarea" 
+            <textarea name="{{ form.content.name }}"
+                      id="id_content_hardcoded"
+                      class="form-control content-textarea"
                       required
                       placeholder="Write your post content here. You can use basic HTML tags for formatting.">{{ form.content.value|default:'' }}</textarea>
             <div class="help-text">
                 Write your complete post content. You can use basic formatting like paragraphs, lists, and links.
             </div>
-        </div> 
+        </div>
 
         <div class="form-actions">
             <a href="{% url 'post_list' %}" class="btn btn-secondary">
                 Cancel
             </a>
-            <button type="submit" class="btn btn-primary">
+            <button type="submit" class="btn btn-primary" id="submit-btn">
                 <span>✨</span>
                 Publish Post
             </button>
@@ -359,11 +388,64 @@
 </div>
 
 <script>
-    // Character counting
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM Content Loaded - Starting form initialization');
+
+    // Debug function
+    function debugLog(message, data = null) {
+        const debugDiv = document.getElementById('debug-info');
+        const timestamp = new Date().toLocaleTimeString();
+        let logMessage = `[${timestamp}] ${message}`;
+        
+        if (data !== null) {
+            logMessage += `: ${JSON.stringify(data)}`;
+        }
+        
+        console.log(message, data);
+        
+        if (debugDiv) {
+            debugDiv.innerHTML += logMessage + '<br>';
+            debugDiv.scrollTop = debugDiv.scrollHeight;
+        }
+    }
+
+    // Show debug info (uncomment this line for debugging)
+    // document.getElementById('debug-info').style.display = 'block';
+
+    debugLog('Script initialized');
+
+    // Get all form elements
+    const form = document.getElementById('post-form');
+    const titleInput = document.getElementById('id_title_hardcoded');
+    const slugInput = document.getElementById('id_slug_hardcoded');
+    const contentInput = document.getElementById('id_content_hardcoded');
+    const fileInput = document.getElementById('id_image_hardcoded');
+    const errorContainer = document.getElementById('client-side-errors');
+    const errorList = document.getElementById('error-list');
+    const submitBtn = document.getElementById('submit-btn');
+
+    // Debug element detection
+    debugLog('Elements found', {
+        form: !!form,
+        titleInput: !!titleInput,
+        slugInput: !!slugInput,
+        contentInput: !!contentInput,
+        fileInput: !!fileInput,
+        errorContainer: !!errorContainer,
+        errorList: !!errorList,
+        submitBtn: !!submitBtn
+    });
+
+    // Character counting function
     function updateCharacterCount(input, countElement, maxLength) {
+        if (!input || !countElement) {
+            debugLog('updateCharacterCount: Missing input or countElement');
+            return;
+        }
+
         const count = input.value.length;
         countElement.textContent = count + '/' + maxLength + ' characters';
-        
+
         if (count > maxLength * 0.9) {
             countElement.className = 'character-count warning';
         } else if (count > maxLength) {
@@ -373,20 +455,20 @@
         }
     }
 
-    // Title character count
-    const titleInput = document.getElementById('{{ form.title.id_for_label }}');
+    // Initialize character counting for title
     const titleCount = document.getElementById('title-count');
     if (titleInput && titleCount) {
+        debugLog('Setting up title character counting');
         updateCharacterCount(titleInput, titleCount, 200);
         titleInput.addEventListener('input', function() {
             updateCharacterCount(this, titleCount, 200);
         });
     }
 
-    // Slug character count
-    const slugInput = document.getElementById('{{ form.slug.id_for_label }}');
+    // Initialize character counting for slug
     const slugCount = document.getElementById('slug-count');
     if (slugInput && slugCount) {
+        debugLog('Setting up slug character counting');
         updateCharacterCount(slugInput, slugCount, 255);
         slugInput.addEventListener('input', function() {
             updateCharacterCount(this, slugCount, 255);
@@ -395,6 +477,7 @@
 
     // Auto-generate slug from title
     if (titleInput && slugInput) {
+        debugLog('Setting up slug auto-generation');
         titleInput.addEventListener('input', function() {
             if (!slugInput.value || slugInput.dataset.autoGenerated) {
                 const slug = this.value
@@ -417,123 +500,166 @@
     }
 
     // File input handling
-    const fileInput = document.getElementById('{{ form.image.id_for_label }}');
-    const fileInputContainer = document.getElementById('image-input');
+    const fileInputContainer = document.getElementById('image-input-container');
     const fileLabel = document.getElementById('file-label-text');
 
     if (fileInput && fileInputContainer && fileLabel) {
+        debugLog('Setting up file input handling');
+
+        // Initialize label if file is already present
+        if (fileInput.files && fileInput.files.length > 0) {
+            fileLabel.textContent = fileInput.files[0].name;
+            fileInputContainer.classList.add('has-file');
+        } else if (fileInput.dataset.initialValue) {
+            fileLabel.textContent = fileInput.dataset.initialValue.split('/').pop();
+            fileInputContainer.classList.add('has-file');
+        }
+
         fileInput.addEventListener('change', function() {
             if (this.files && this.files.length > 0) {
                 const fileName = this.files[0].name;
                 fileLabel.textContent = fileName;
                 fileInputContainer.classList.add('has-file');
+                debugLog('File selected', fileName);
             } else {
                 fileLabel.textContent = 'Choose an image or drag and drop';
                 fileInputContainer.classList.remove('has-file');
+                debugLog('File cleared');
             }
         });
 
         // Drag and drop functionality
         const fileInputLabel = fileInputContainer.querySelector('.file-input-label');
-        
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            fileInputLabel.addEventListener(eventName, preventDefaults, false);
-        });
+        if (fileInputLabel) {
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                fileInputLabel.addEventListener(eventName, function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }, false);
+            });
 
-        function preventDefaults(e) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
+            ['dragenter', 'dragover'].forEach(eventName => {
+                fileInputLabel.addEventListener(eventName, function(e) {
+                    fileInputLabel.style.borderColor = '#667eea';
+                    fileInputLabel.style.background = '#f0f2ff';
+                }, false);
+            });
 
-        ['dragenter', 'dragover'].forEach(eventName => {
-            fileInputLabel.addEventListener(eventName, highlight, false);
-        });
+            ['dragleave', 'drop'].forEach(eventName => {
+                fileInputLabel.addEventListener(eventName, function(e) {
+                    fileInputLabel.style.borderColor = '#dee2e6';
+                    fileInputLabel.style.background = '#f8f9fa';
+                }, false);
+            });
 
-        ['dragleave', 'drop'].forEach(eventName => {
-            fileInputLabel.addEventListener(eventName, unhighlight, false);
-        });
+            fileInputLabel.addEventListener('drop', function(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
 
-        function highlight(e) {
-            fileInputLabel.style.borderColor = '#667eea';
-            fileInputLabel.style.background = '#f0f2ff';
-        }
-
-        function unhighlight(e) {
-            fileInputLabel.style.borderColor = '#dee2e6';
-            fileInputLabel.style.background = '#f8f9fa';
-        }
-
-        fileInputLabel.addEventListener('drop', handleDrop, false);
-
-        function handleDrop(e) {
-            const dt = e.dataTransfer;
-            const files = dt.files;
-            
-            if (files.length > 0) {
-                fileInput.files = files;
-                const event = new Event('change', { bubbles: true });
-                fileInput.dispatchEvent(event);
-            }
+                if (files.length > 0) {
+                    fileInput.files = files;
+                    const event = new Event('change', { bubbles: true });
+                    fileInput.dispatchEvent(event);
+                    debugLog('File dropped', files[0].name);
+                }
+            }, false);
         }
     }
 
     // Form validation
-    const form = document.getElementById('post-form');
     if (form) {
+        debugLog('Setting up form validation');
+        
         form.addEventListener('submit', function(e) {
-            const title = titleInput.value.trim();
-            const content = document.getElementById('{{ form.content.id_for_label }}').value.trim();
-            
-            if (!title || !content) {
+            debugLog('Form submit event triggered');
+
+            // Hide previous errors
+            if (errorContainer) {
+                errorContainer.style.display = 'none';
+                if (errorList) {
+                    errorList.innerHTML = '';
+                }
+            }
+
+            // Get and validate form values
+            const titleValue = titleInput ? titleInput.value.trim() : '';
+            const contentValue = contentInput ? contentInput.value.trim() : '';
+
+            debugLog('Form values', {
+                title: titleValue,
+                content: contentValue,
+                titleLength: titleValue.length,
+                contentLength: contentValue.length
+            });
+
+            const errors = [];
+
+            // Validation checks
+            if (!titleValue) {
+                errors.push('Title is required.');
+                debugLog('Validation failed: Title is empty');
+            }
+
+            if (!contentValue) {
+                errors.push('Content is required.');
+                debugLog('Validation failed: Content is empty');
+            }
+
+            debugLog('Validation results', {
+                totalErrors: errors.length,
+                errors: errors
+            });
+
+            // Handle validation errors
+            if (errors.length > 0) {
                 e.preventDefault();
-                alert('Please fill in all required fields (Title and Content).');
+                debugLog('Preventing form submission due to validation errors');
+
+                if (errorContainer && errorList) {
+                    // Clear previous errors
+                    errorList.innerHTML = '';
+
+                    // Add each error to the list
+                    errors.forEach(error => {
+                        const li = document.createElement('li');
+                        li.textContent = error;
+                        errorList.appendChild(li);
+                    });
+
+                    // Show error container
+                    errorContainer.style.display = 'block';
+
+                    // Scroll to errors
+                    errorContainer.scrollIntoView({ 
+                        behavior: 'smooth', 
+                        block: 'center' 
+                    });
+
+                    debugLog('Errors displayed successfully');
+                } else {
+                    debugLog('ERROR: Error container or error list not found');
+                    // Fallback: show alert
+                    alert('Please fill in all required fields:\n' + errors.join('\n'));
+                }
+
                 return false;
             }
-            
-            // Show loading state
-            const submitBtn = form.querySelector('button[type="submit"]');
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = '<span>⏳</span> Publishing...';
+
+            // If validation passes, show loading state
+            debugLog('Validation passed, showing loading state');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span>⏳</span> Publishing...';
+            }
+
+            // Form will submit normally
+            return true;
         });
+    } else {
+        debugLog('ERROR: Form element not found!');
     }
-</script>
-{% comment %} <script src="{% static 'markdownx/js/markdownx.js' %}"></script>  {% endcomment %}
-{% comment %} <link rel="stylesheet" href="https://unpkg.com/easymde/dist/easymde.min.css">
-<script src="https://unpkg.com/easymde/dist/easymde.min.js"></script>
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-    var textarea = document.querySelector('textarea[name="content"]');
-    if (textarea) {
-        new EasyMDE({ 
-            element: textarea,
-            spellChecker: false,
-            toolbar: [
-                'bold', 'italic', 'heading', '|',
-                'quote', 'unordered-list', 'ordered-list', '|',
-                'link', 'image', '|',
-                'preview', 'side-by-side', 'fullscreen'
-            ],
-            shortcuts: {
-                toggleBold: "Ctrl-B",
-                toggleItalic: "Ctrl-I",
-                toggleHeadingSmaller: "Ctrl-H",
-                toggleQuote: "Ctrl-Q",
-                toggleUnorderedList: "Ctrl-U",
-                toggleOrderedList: "Ctrl-O",
-                togglePreview: "Ctrl-P"
-            },
-            placeholder: "Write your post content here. You can use basic HTML tags for formatting.",
-            autoDownloadFontAwesome: true,
-            forcesync: true,
-            renderingConfig: {
-                codeSyntaxHighlighting: true,
-                singleLineBreaks: false,
-            },
 
-
-
-        });
-    }
+    debugLog('Form initialization complete');
 });
-</script> {% endcomment %}
+</script>
 {% endblock %}
