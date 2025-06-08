@@ -46,7 +46,7 @@ class Category(models.Model):
     name = CharField(max_length=100, unique=True)
     slug = models.SlugField(unique=True, blank=True)
     
-    class meta:
+    class Meta:
         verbose_name_plural = 'Categories'
         
     def save(self, *args, **kwargs):
@@ -92,11 +92,14 @@ class Post(models.Model):
     def get_absolute_url(self):
         return reverse("post_detail", kwargs={"slug": self.slug})
     
-    
+    def get_tags_list(self):
+        if self.tags:
+            return [tag.strip() for tag in self.tags.split(',') if tag.strip()]
+        return []
     def __str__(self):
         return self.title
     
-    class meta: 
+    class Meta: 
         verbose_name = "Blog Post"
         verbose_name_plural = "Blog Posts"
         ordering = ['-published_at','-created_at']
