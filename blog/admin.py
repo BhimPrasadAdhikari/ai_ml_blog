@@ -1,6 +1,7 @@
 from django.contrib import admin
 from .models import Post, CustomUser, Category
 from django.contrib.auth.admin import UserAdmin
+from .forms import PostAdminForm
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
@@ -10,7 +11,7 @@ class CategoryAdmin(admin.ModelAdmin):
     search_fields = ('name','slug')
 @admin.register(Post)
 class PostAdmin(admin.ModelAdmin):
-    model=Post
+    form = PostAdminForm
     list_display = ('title','slug','summary','content','image','tags','status','created_at','updated_at','published_at')
     list_filter = ('slug','status')
     search_fields =('title','slug','author')

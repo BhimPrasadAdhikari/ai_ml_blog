@@ -126,7 +126,7 @@ celerybeat.pid
 
 # SageMath parsed files
 *.sage.py
-
+.dockerignore
 # Environments
 .env
 .venv
@@ -142,7 +142,10 @@ venv.bak/
 
 # Rope project settings
 .ropeproject
-
+*.jpg
+*.jpeg
+*.jfif
+*.png
 # mkdocs documentation
 /site
 

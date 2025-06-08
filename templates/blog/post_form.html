@@ -1,10 +1,576 @@
+{% extends 'blog/base.html' %}
+
+{% block title %}{{ form_title|default:"Create New Post"}} - AI/ML Blog{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 2rem 0;
+        text-align: center;
+        margin-bottom: 3rem;
+        border-radius: 10px;
+    }
+
+    .form-title {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-subtitle {
+        font-size: 1.1rem;
+        opacity: 0.9;
+    }
+
+    .form-container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: white;
+        padding: 2.5rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        border: 1px solid #e9ecef;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: #2c3e50;
+        font-size: 1rem;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.8rem 1rem;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        background-color: #fff;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .form-control:invalid {
+        border-color: #dc3545;
+    }
+
+    .form-control:invalid:focus {
+        box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1);
+    }
+
+    textarea.form-control {
+        min-height: 120px;
+        resize: vertical;
+        font-family: inherit;
+    }
+
+    .content-textarea {
+        min-height: 300px;
+    }
+
+    .file-input {
+        position: relative;
+        display: inline-block;
+        width: 100%;
+    }
+
+    .file-input input[type=file] {
+        position: absolute;
+        opacity: 0;
+        width: 100%;
+        height: 100%;
+        cursor: pointer;
+    }
+
+    .file-input-label {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 1rem;
+        border: 2px dashed #dee2e6;
+        border-radius: 8px;
+        background: #f8f9fa;
+        color: #6c757d;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .file-input-label:hover {
+        border-color: #667eea;
+        background: #f0f2ff;
+        color: #667eea;
+    }
+
+    .file-input.has-file .file-input-label {
+        border-color: #28a745;
+        background: #f0fff4;
+        color: #28a745;
+    }
+
+    .help-text {
+        font-size: 0.9rem;
+        color: #6c757d;
+        margin-top: 0.5rem;
+        line-height: 1.4;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: flex-end;
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 1px solid #e9ecef;
+    }
+
+    .btn {
+        padding: 0.8rem 1.5rem;
+        border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: 500;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+    }
+
+    .btn-primary:hover {
+        opacity: 0.9;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+
+    .btn-secondary {
+        background: #6c757d;
+        color: white;
+    }
+
+    .btn-secondary:hover {
+        background: #5a6268;
+        transform: translateY(-1px);
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 500;
+        margin-bottom: 2rem;
+        transition: color 0.3s ease;
+    }
+
+    .back-link:hover {
+        color: #764ba2;
+    }
+
+    .error-message {
+        background: #f8d7da;
+        color: #721c24;
+        padding: 0.75rem 1rem;
+        border-radius: 6px;
+        margin-bottom: 1rem;
+        border: 1px solid #f5c6cb;
+    }
+
+    .form-errors {
+        background: #f8d7da;
+        color: #721c24;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 2rem;
+        border: 1px solid #f5c6cb;
+    }
+
+    .form-errors ul {
+        margin: 0;
+        padding-left: 1.5rem;
+    }
+
+    .form-errors li {
+        margin-bottom: 0.5rem;
+    }
+
+    .character-count {
+        text-align: right;
+        font-size: 0.8rem;
+        color: #6c757d;
+        margin-top: 0.25rem;
+    }
+
+    .character-count.warning {
+        color: #fd7e14;
+    }
+
+    .character-count.error {
+        color: #dc3545;
+    }
+
+    @media (max-width: 768px) {
+        .form-container {
+            padding: 1.5rem;
+            margin: 0 1rem;
+        }
+
+        .form-title {
+            font-size: 2rem;
+        }
+
+        .form-actions {
+            flex-direction: column;
+        }
+
+        .btn {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<h1> Create New Post </h1>
+<a href="{% if is_edit %}{{ object.get_absolute_url }}{% else %}{% url 'post_list' %}{% endif %}" class="back-link">
+    ← {% if is_edit %}Back to Post{% else %}Back to All Posts{% endif %}
+</a>
 
-<form method="post" enctype="multipart/form-data">
-    {%csrf_token%}
-    {{form.as_p}}
-    <button type="submit">Publish</button>
-</form>
+<div class="form-header">
+    <h1 class="form-title">{{ form_title|default:"Create New Post" }}</h1>
+    <p class="form-subtitle">{{ form_subtitle|default:"Share your AI/ML insights with the community" }}</p>
+</div>
 
+<div class="form-container">
+    {% if form.errors %}
+    <div class="form-errors">
+        <h4>Please correct the following errors:</h4>
+        <ul>
+            {% for field, errors in form.errors.items %}
+                {% for error in errors %}
+                    <li>{{ field|capfirst }}: {{ error }}</li>
+                {% endfor %}
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data" id="post-form">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label for="{{ form.title.id_for_label }}" class="form-label">
+                Title *
+            </label>
+            <input type="text" name="title" class="form-control" id="{{ form.title.id_for_label }}" maxlength="200" required {% if form.title.value %}value="{{ form.title.value }}"{% endif %}>
+            {% if form.title.errors %}
+                {% for error in form.title.errors %}
+                    <div class="error-message">{{ error|escape }}</div>
+                {% endfor %}
+            {% endif %}
+            <div class="character-count" id="title-count">0 / 200 characters</div>
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.slug.id_for_label }}" class="form-label">
+                Slug *
+            </label>
+            <input type="text" name="slug" class="form-control" id="{{ form.slug.id_for_label }}" maxlength="255" {% if form.slug.value %}value="{{ form.slug.value }}"{% endif %}>
+            {% if form.slug.errors %}
+                {% for error in form.slug.errors %}
+                    <div class="error-message">{{ error|escape }}</div>
+                {% endfor %}
+            {% endif %}
+            <div class="help-text">
+                URL-friendly version of the title. Leave blank to auto-generate from title.
+                Use only letters, numbers, and hyphens.
+            </div>
+            <div class="character-count" id="slug-count">0 / 255 characters</div>
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.image.id_for_label }}" class="form-label">
+                Featured Image
+            </label>
+            <div class="file-input" id="image-input">
+                <input type="file" name="image" accept="image/*" id="{{ form.image.id_for_label }}">
+                <label for="{{ form.image.id_for_label }}" class="file-input-label">
+                    <span>📷</span>
+                    <span>Choose an image or drag and drop</span>
+                </label>
+            </div>
+            {% if form.image.errors %}
+                {% for error in form.image.errors %}
+                    <div class="error-message">{{ error|escape }}</div>
+                {% endfor %}
+            {% endif %}
+            <div class="help-text">
+                Upload a featured image for your post. Recommended size: 1200x600px.
+                Supported formats: JPG, PNG, GIF (max 5MB)
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.summary.id_for_label }}" class="form-label">
+                Summary
+            </label>
+            <textarea name="summary" class="form-control" id="{{ form.summary.id_for_label }}" maxlength="500" placeholder="A brief summary of your post...">{% if form.summary.value %}{{ form.summary.value }}{% endif %}</textarea>
+            {% if form.summary.errors %}
+                {% for error in form.summary.errors %}
+                    <div class="error-message">{{ error|escape }}</div>
+                {% endfor %}
+            {% endif %}
+            <div class="help-text">
+                A short summary that will appear on the post list page (max 500 characters).
+            </div>
+            <div class="character-count" id="summary-count">0 / 500 characters</div>
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.content.id_for_label }}" class="form-label">
+                Content *
+            </label>
+            <textarea name="content" class="form-control content-textarea" id="{{ form.content.id_for_label }}" required>{% if form.content.value %}{{ form.content.value }}{% endif %}</textarea>
+            {% if form.content.errors %}
+                {% for error in form.content.errors %}
+                    <div class="error-message">{{ error|escape }}</div>
+                {% endfor %}
+            {% endif %}
+            <div class="help-text">
+                Write your post content using Markdown or plain text. 
+                You can include code blocks, links, and formatting.
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.categories.id_for_label }}" class="form-label">
+                Categories
+            </label>
+            <select name="categories" multiple class="form-control" id="{{ form.categories.id_for_label }}" style="height: 120px;">
+                {% for category in form.categories.field.queryset %}
+                    <option value="{{ category.pk }}" {% if category in form.categories.value %}selected{% endif %}>
+                        {{ category.name|escape }}
+                    </option>
+                {% endfor %}
+            </select>
+            {% if form.categories.errors %}
+                {% for error in form.categories.errors %}
+                    <div class="error-message">{{ error|escape }}</div>
+                {% endfor %}
+            {% endif %}
+            <div class="help-text">
+                Hold Ctrl (Cmd on Mac) to select multiple categories.
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.tags.id_for_label }}" class="form-label">
+                Tags
+            </label>
+            <input type="text" name="tags" class="form-control" id="{{ form.tags.id_for_label }}" maxlength="250" placeholder="machine learning, AI, deep learning" {% if form.tags.value %}value="{{ form.tags.value }}"{% endif %}>
+            {% if form.tags.errors %}
+                {% for error in form.tags.errors %}
+                    <div class="error-message">{{ error|escape }}</div>
+                {% endfor %}
+            {% endif %}
+            <div class="help-text">
+                Comma-separated tags to help categorize your post.
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.status.id_for_label }}" class="form-label">
+                Status
+            </label>
+            <select name="status" class="form-control" id="{{ form.status.id_for_label }}">
+                {% for value, label in form.status.field.choices %}
+                    <option value="{{ value }}" {% if value == form.status.value %}selected{% endif %}>
+                        {{ label }}
+                    </option>
+                {% endfor %}
+            </select>
+            {% if form.status.errors %}
+                {% for error in form.status.errors %}
+                    <div class="error-message">{{ error|escape }}</div>
+                {% endfor %}
+            {% endif %}
+            <div class="help-text">
+                Choose whether to publish immediately or save as draft.
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <a href="{% if is_edit %}{{ object.get_absolute_url }}{% else %}{% url 'post_list' %}{% endif %}" class="btn btn-secondary">
+                Cancel
+            </a>
+            <button type="submit" class="btn btn-primary">
+                {{ submit_text|default:"📝 Publish Post" }}
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+    // Character counting functionality
+    function updateCharacterCount(inputId, countId, maxLength) {
+        const input = document.getElementById(inputId);
+        const counter = document.getElementById(countId);
+        
+        if (input && counter) {
+            function updateCount() {
+                const length = input.value.length;
+                counter.textContent = `${length} / ${maxLength} characters`;
+                
+                // Add warning/error classes
+                counter.classList.remove('warning', 'error');
+                if (length > maxLength * 0.9) {
+                    counter.classList.add('warning');
+                }
+                if (length > maxLength) {
+                    counter.classList.add('error');
+                }
+            }
+            
+            input.addEventListener('input', updateCount);
+            updateCount(); // Initial count
+        }
+    }
+
+    // Initialize character counters
+    updateCharacterCount('{{ form.title.id_for_label }}', 'title-count', 200);
+    updateCharacterCount('{{ form.slug.id_for_label }}', 'slug-count', 255);
+    updateCharacterCount('{{ form.summary.id_for_label }}', 'summary-count', 500);
+
+    // Auto-generate slug from title
+    const titleField = document.getElementById('{{ form.title.id_for_label }}');
+    const slugField = document.getElementById('{{ form.slug.id_for_label }}');
+    
+    if (titleField && slugField) {
+        titleField.addEventListener('input', function() {
+            if (!slugField.value || slugField.dataset.autoGenerated === 'true') {
+                const slug = this.value
+                    .toLowerCase()
+                    .replace(/[^a-z0-9\s-]/g, '')
+                    .replace(/\s+/g, '-')
+                    .replace(/-+/g, '-')
+                    .trim('-');
+                
+                slugField.value = slug;
+                slugField.dataset.autoGenerated = 'true';
+                
+                // Update slug character count
+                const slugCounter = document.getElementById('slug-count');
+                if (slugCounter) {
+                    slugCounter.textContent = `${slug.length} / 255 characters`;
+                }
+            }
+        });
+        
+        // Mark slug as manually edited if user types in it
+        slugField.addEventListener('input', function() {
+            this.dataset.autoGenerated = 'false';
+        });
+    }
+
+    // File input enhancement
+    const fileInput = document.getElementById('{{ form.image.id_for_label }}');
+    const fileInputContainer = document.getElementById('image-input');
+    const fileInputLabel = fileInputContainer.querySelector('.file-input-label span:last-child');
+    
+    if (fileInput && fileInputContainer && fileInputLabel) {
+        fileInput.addEventListener('change', function() {
+            if (this.files && this.files.length > 0) {
+                const fileName = this.files[0].name;
+                fileInputLabel.textContent = `Selected: ${fileName}`;
+                fileInputContainer.classList.add('has-file');
+            } else {
+                fileInputLabel.textContent = 'Choose an image or drag and drop';
+                fileInputContainer.classList.remove('has-file');
+            }
+        });
+
+        // Drag and drop functionality
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            fileInputContainer.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            fileInputContainer.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            fileInputContainer.addEventListener(eventName, unhighlight, false);
+        });
+
+        function highlight(e) {
+            fileInputContainer.style.borderColor = '#667eea';
+            fileInputContainer.style.backgroundColor = '#f0f2ff';
+        }
+
+        function unhighlight(e) {
+            fileInputContainer.style.borderColor = '';
+            fileInputContainer.style.backgroundColor = '';
+        }
+
+        fileInputContainer.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            
+            if (files.length > 0) {
+                fileInput.files = files;
+                const event = new Event('change', { bubbles: true });
+                fileInput.dispatchEvent(event);
+            }
+        }
+    }
+
+    // Form validation
+    document.getElementById('post-form').addEventListener('submit', function(e) {
+        const title = document.getElementById('{{ form.title.id_for_label }}').value.trim();
+        const content = document.getElementById('{{ form.content.id_for_label }}').value.trim();
+        
+        if (!title) {
+            e.preventDefault();
+            alert('Please enter a title for your post.');
+            return;
+        }
+        
+        if (!content) {
+            e.preventDefault();
+            alert('Please enter some content for your post.');
+            return;
+        }
+        
+        // Show loading state
+        const submitBtn = this.querySelector('button[type="submit"]');
+        submitBtn.innerHTML = '⏳ Publishing...';
+        submitBtn.disabled = true;
+    });
+</script>
 {% endblock %}

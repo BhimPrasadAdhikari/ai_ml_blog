@@ -1,4 +1,5 @@
 from django import forms
+from .models import Post
 from allauth.account.forms import SignupForm
 class CustomSignupForm(SignupForm):
     phone_number = forms.CharField(max_length=15, label='Phone Number')
@@ -8,4 +9,14 @@ class CustomSignupForm(SignupForm):
         user.phone_number = self.cleaned_data['phone_number']
         user.save()
         return user
-        
+
+class PostAdminForm(forms.ModelForm):
+    class Meta:
+        model = Post
+        fields = '__all__'
+    class Media:
+        css = {'all': ('https://unpkg.com/easymde/dist/easymde.min.css',)}
+        js = (
+            'https://unpkg.com/easymde/dist/easymde.min.js',
+            'blog/js/easymde-init.js',  # Make sure this file exists in your static files
+        )
