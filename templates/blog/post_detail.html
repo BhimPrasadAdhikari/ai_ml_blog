@@ -1,5 +1,6 @@
 {% extends 'blog/base.html' %}
 {% load blog_tags %} 
+{% load static %}
 
 {% block title %}{{ post.title }} - AI/ML Blog{% endblock %}
 
@@ -377,7 +378,8 @@
 <div class="post-content-wrapper">
     <div class="post-main">
         {% if post.image %}
-            <img src="{{ post.image.url }}" alt="{{ post.title }}" class="post-image">
+            <img src="{{ post.image.url }}" alt="{{ post.title }}" class="post-image" loading="lazy",
+            onerror="this.onerror=null; this.src='{% static 'images/default-image.jpg' %}';">
         {% endif %}
         
         <div class="post-content">

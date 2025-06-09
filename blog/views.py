@@ -7,7 +7,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib import messages
 from django.urls import reverse_lazy, reverse
 from django.http import Http404
-from .models import Post
+from .models import Post, Category
 
 # Create your views here.
 
@@ -33,6 +33,11 @@ class PostListView(ListView):
     
     def get_queryset(self):
         return Post.objects.filter(status='published').order_by('-created_at')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['categories'] = Category.objects.all()
+        return context
     
 class PostCreateView(LoginRequiredMixin, CreateView):
     model = Post
@@ -113,4 +118,25 @@ class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
         post_title = self.get_object().title
         messages.success(request, f'Post "{post_title}" deleted successfully!')
         return super().delete(request, *args, **kwargs)
+
+class CategoryPostListView(ListView):
+    model = Post
+    template_name = 'blog/post_list.html'
+    context_object_name = 'posts'
+    
+    def get_queryset(self):
+        category_slug = self.kwargs.get('slug')
+        return Post.objects.filter(
+            status='published',
+            categories__slug=category_slug
+        ).order_by('-created_at')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        category_slug = self.kwargs.get('slug')
+        category = Category.objects.get(slug=category_slug)
+        context['category'] = category
+        context['hero_title'] = f'Posts in {category.name}'
+        context['hero_subtitle'] = f'Explore our collection of {category.name} articles'
+        return context
 
