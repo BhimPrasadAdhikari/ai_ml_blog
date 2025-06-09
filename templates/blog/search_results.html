@@ -1,0 +1,251 @@
+{% extends 'blog/base.html' %}
+{% load blog_extras %}
+
+{% block title %}Search Results - AI/ML Blog{% endblock %}
+
+{% block extra_css %}
+<style>
+    .search-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 3rem 0;
+        text-align: center;
+        margin-bottom: 2rem;
+        border-radius: 10px;
+    }
+
+    .search-title {
+        font-size: 2rem;
+        font-weight: bold;
+        margin-bottom: 1rem;
+    }
+
+    .search-subtitle {
+        font-size: 1.1rem;
+        opacity: 0.9;
+    }
+
+    .search-filters {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        margin-bottom: 2rem;
+        border: 1px solid #e9ecef;
+    }
+
+    .filters-title {
+        font-size: 1.2rem;
+        font-weight: bold;
+        margin-bottom: 1rem;
+        color: #2c3e50;
+    }
+
+    .filters-form {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .filter-label {
+        font-weight: 500;
+        color: #495057;
+    }
+
+    .filter-select {
+        padding: 0.5rem;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        background-color: white;
+    }
+
+    .highlight {
+        background-color: #fff3cd;
+        padding: 0.2rem 0.4rem;
+        border-radius: 4px;
+    }
+
+    .no-results {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: #6c757d;
+    }
+
+    .no-results-icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        color: #dee2e6;
+    }
+
+    .pagination {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-top: 2rem;
+    }
+
+    .page-link {
+        padding: 0.5rem 1rem;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        color: #495057;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+
+    .page-link:hover,
+    .page-link.active {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        border-color: transparent;
+    }
+
+    .page-link.disabled {
+        color: #6c757d;
+        pointer-events: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="search-header">
+    <h1 class="search-title">Search Results</h1>
+    <p class="search-subtitle">
+        {% if query %}
+            Found {{ paginator.count }} results for "{{ query }}"
+        {% else %}
+            Enter a search term to find posts
+        {% endif %}
+    </p>
+</div>
+
+<div class="search-filters">
+    <h2 class="filters-title">Refine Search</h2>
+    <form method="get" class="filters-form">
+        <input type="hidden" name="q" value="{{ request.GET.q }}">
+        
+        <div class="filter-group">
+            <label class="filter-label" for="category">Category</label>
+            <select name="category" id="category" class="filter-select" onchange="this.form.submit()">
+                <option value="">All Categories</option>
+                {% for category in categories %}
+                    <option value="{{ category.slug }}" {% if selected_category == category.slug %}selected{% endif %}>
+                        {{ category.name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="filter-group">
+            <label class="filter-label" for="author">Author</label>
+            <select name="author" id="author" class="filter-select" onchange="this.form.submit()">
+                <option value="">All Authors</option>
+                {% for author in authors %}
+                    <option value="{{ author.id }}" {% if selected_author == author.id|stringformat:"s" %}selected{% endif %}>
+                        {{ author.email }} ({{ author.posts.count }} posts)
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="filter-group">
+            <label class="filter-label" for="date">Date Range</label>
+            <select name="date" id="date" class="filter-select" onchange="this.form.submit()">
+                <option value="">Any Time</option>
+                <option value="day" {% if selected_date == 'day' %}selected{% endif %}>Last 24 Hours</option>
+                <option value="week" {% if selected_date == 'week' %}selected{% endif %}>Last Week</option>
+                <option value="month" {% if selected_date == 'month' %}selected{% endif %}>Last Month</option>
+                <option value="year" {% if selected_date == 'year' %}selected{% endif %}>Last Year</option>
+            </select>
+        </div>
+
+        <div class="filter-group">
+            <label class="filter-label" for="sort">Sort By</label>
+            <select name="sort" id="sort" class="filter-select" onchange="this.form.submit()">
+                <option value="relevance" {% if selected_sort == 'relevance' %}selected{% endif %}>Relevance</option>
+                <option value="newest" {% if selected_sort == 'newest' %}selected{% endif %}>Newest First</option>
+                <option value="oldest" {% if selected_sort == 'oldest' %}selected{% endif %}>Oldest First</option>
+            </select>
+        </div>
+    </form>
+</div>
+
+{% if posts %}
+    <div class="posts-grid">
+        {% for post in posts %}
+        <article class="post-card">
+            {% if post.image %}
+                <img src="{{ post.image.url }}" alt="{{ post.title }}" class="post-image">
+            {% else %}
+                <div class="post-image" style="display: flex; align-items: center; justify-content: center; color: #6c757d;">
+                    <span style="font-size: 2rem;">📄</span>
+                </div>
+            {% endif %}
+            
+            <div class="post-content">
+                <h2 class="post-title">
+                    <a href="{{ post.get_absolute_url }}">{{ post.title|highlight:query }}</a>
+                </h2>
+                
+                <div class="post-meta">
+                    <span class="post-author">👤 {{ post.author.username }}</span>
+                    <span class="post-date">
+                        📅 {{ post.created_at|date:"M d, Y" }}
+                    </span>
+                </div>
+                
+                {% if post.categories.all %}
+                <div class="categories-tags">
+                    {% for category in post.categories.all %}
+                        <a href="{% url 'category_posts' category.slug %}" class="category-tag">{{ category.name }}</a>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                
+                <p class="post-summary">{{ post.summary|highlight:query }}</p>
+                
+                <a href="{{ post.get_absolute_url }}" class="read-more">
+                    Read More →
+                </a>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+
+    {% if is_paginated %}
+    <div class="pagination">
+        {% if page_obj.has_previous %}
+            <a href="?{% param_replace page=page_obj.previous_page_number %}" class="page-link">Previous</a>
+        {% else %}
+            <span class="page-link disabled">Previous</span>
+        {% endif %}
+
+        {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+                <span class="page-link active">{{ num }}</span>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                <a href="?{% param_replace page=num %}" class="page-link">{{ num }}</a>
+            {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+            <a href="?{% param_replace page=page_obj.next_page_number %}" class="page-link">Next</a>
+        {% else %}
+            <span class="page-link disabled">Next</span>
+        {% endif %}
+    </div>
+    {% endif %}
+{% else %}
+    <div class="no-results">
+        <div class="no-results-icon">🔍</div>
+        <h2>No results found</h2>
+        <p>Try adjusting your search or filters to find what you're looking for.</p>
+    </div>
+{% endif %}
+{% endblock %} 

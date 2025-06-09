@@ -2,6 +2,7 @@ from django.contrib import admin
 from .models import Post, CustomUser, Category
 from django.contrib.auth.admin import UserAdmin
 from .forms import PostAdminForm
+from .analytics import SearchAnalytics
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
@@ -23,6 +24,14 @@ class CustomUserAdmin(admin.ModelAdmin):
     fieldsets = UserAdmin.fieldsets + (
         (None, {'fields':('phone_number',)}),
     )
+    
+@admin.register(SearchAnalytics)
+class SearchAnalyticsAdmin(admin.ModelAdmin):
+    list_display = ('query', 'timestamp', 'results_count', 'user', 'ip_address')
+    list_filter = ('timestamp',)
+    search_fields = ('query', 'user__username')
+    readonly_fields = ('timestamp',)
+    date_hierarchy = 'timestamp'
     
     
     
