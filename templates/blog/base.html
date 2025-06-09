@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -106,6 +104,69 @@
         .mt-1 { margin-top: 0.5rem; }
         .mt-2 { margin-top: 1rem; }
         .mt-3 { margin-top: 1.5rem; }
+
+        .search-container {
+            margin-left: 2rem;
+        }
+
+        .search-form {
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 25px;
+            padding: 0.5rem 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .search-form:focus-within {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .search-input {
+            background: none;
+            border: none;
+            color: white;
+            padding: 0.5rem;
+            width: 200px;
+            font-size: 0.9rem;
+        }
+
+        .search-input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .search-input:focus {
+            outline: none;
+        }
+
+        .search-button {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            padding: 0.5rem;
+            font-size: 1rem;
+            transition: transform 0.3s ease;
+        }
+
+        .search-button:hover {
+            transform: scale(1.1);
+        }
+
+        @media (max-width: 768px) {
+            .search-container {
+                margin: 1rem 0 0 0;
+                width: 100%;
+            }
+
+            .search-form {
+                width: 100%;
+            }
+
+            .search-input {
+                width: 100%;
+            }
+        }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
@@ -122,6 +183,21 @@
                         <li><a href="#">About</a></li>
                     </ul>
                 </nav>
+                <div class="search-container">
+                        <form 
+                        action="{% url 'search_posts' %}" 
+                        method="get" class="search-form">
+                            <input type="search" 
+                                   name="q" 
+                                   placeholder="Search posts..." 
+                                   class="search-input"
+                                   value="{{ request.GET.q|default:'' }}"
+                                   aria-label="Search posts">
+                            <button type="submit" class="search-button" aria-label="Submit search">
+                                🔍
+                            </button>
+                        </form>
+                    </div>
             </div>
         </div>
     </header>
