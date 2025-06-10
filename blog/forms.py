@@ -1,5 +1,5 @@
 from django import forms
-from .models import Post
+from .models import Post, Comment
 from allauth.account.forms import SignupForm
 class CustomSignupForm(SignupForm):
     phone_number = forms.CharField(max_length=15, label='Phone Number')
@@ -20,3 +20,14 @@ class PostAdminForm(forms.ModelForm):
             'https://unpkg.com/easymde/dist/easymde.min.js',
             'blog/js/easymde-init.js',  # Make sure this file exists in your static files
         )
+class CommentForm(forms.ModelForm):
+    class Meta:
+        model = Comment
+        fields = ['content']
+        widgets = {
+            'content': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 3,
+                'placeholder': 'Add a comment...',
+            })
+        }
