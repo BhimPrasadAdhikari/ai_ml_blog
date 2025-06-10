@@ -109,7 +109,76 @@ class Post(models.Model):
             self.slug = slugify(self.title)
         super().save(*args, **kwargs)
     
+class Comment(models.Model):
+    """
+    Model to store comments on blog posts.
+    """
+    post = models.ForeignKey(Post, 
+                           on_delete=models.CASCADE,
+                           related_name='comments')
+    author = models.ForeignKey(get_user_model(),
+                             on_delete=models.CASCADE,
+                             related_name='comments')
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    parent = models.ForeignKey('self',
+                             on_delete=models.CASCADE,
+                             null=True,
+                             blank=True,
+                             related_name='replies')
+
+    is_edited = models.BooleanField(default=False)
+    
+    STATUS_CHOICES = (
+        ('pending', 'Pending'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected')
+    )
+    status = models.CharField(
+        max_length=10,
+        choices=STATUS_CHOICES,
+        default='pending'
+    )
+    moderated_at = models.DateTimeField(null=True, blank=True)
+    moderated_by = models.ForeignKey(
+        get_user_model(),
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='moderated_comments'
+    )
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "Comment"
+        verbose_name_plural = "Comments"
+        permissions = [
+            ("can_moderate_comments", "Can moderate comments"),
+        ]
+    
+    def __str__(self):
+        return f'Comment by {self.author.username} on {self.post.title}'
+    
+    @property
+    def is_reply(self):
+        """Check if this comment is a reply to another comment"""
+        return self.parent is not None
+    
+    @property
+    def get_replies(self):
+        """Get all replies to this comment"""
+        return self.replies.all()
+    
+    @property
+    def get_parent_comment(self):
+        """Get the parent comment if this is a reply"""
+        return self.parent if self.is_reply else None
+
         
+
+
+
     
         
         
