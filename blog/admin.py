@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Post, CustomUser, Category
+from .models import Post, CustomUser, Category, Comment
 from django.contrib.auth.admin import UserAdmin
 from .forms import PostAdminForm
 from .analytics import SearchAnalytics
@@ -33,6 +33,18 @@ class SearchAnalyticsAdmin(admin.ModelAdmin):
     readonly_fields = ('timestamp',)
     date_hierarchy = 'timestamp'
     
+
+@admin.register(Comment)
+class CommentAdmin(admin.ModelAdmin):
+    list_display = ('author', 'post', 'content', 'created_at', 'is_reply', 'is_edited')
+    list_filter = ('created_at', 'parent','is_edited')
+    search_fields = ('author__username', 'post__title', 'content')
+    readonly_fields = ('created_at', 'updated_at')
+    date_hierarchy = 'created_at'
     
+    def is_reply(self, obj):
+        return obj.is_reply
+    is_reply.boolean = True
+    is_reply.short_description = 'Is Reply'
     
     
