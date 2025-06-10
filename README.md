@@ -10,6 +10,15 @@ A modern, feature-rich blog platform focused on Artificial Intelligence and Mach
   - Category and tag organization
   - Draft and published post states
 
+- **Comment System**
+  - Nested comments with replies
+  - Comment moderation system
+  - Real-time comment updates
+  - Comment sorting options
+  - Automatic approval for moderators
+  - Edit and delete functionality
+  - Status tracking (pending, approved, rejected)
+
 - **User Management**
   - Custom user model with email authentication
   - Phone number verification
@@ -109,6 +118,27 @@ A modern, feature-rich blog platform focused on Artificial Intelligence and Mach
 5. Upload images if needed
 6. Save as draft or publish
 
+### Managing Comments
+
+- **For Regular Users**
+  - Add comments on posts
+  - Reply to existing comments
+  - Edit your own comments
+  - Delete your own comments
+  - Sort comments by newest, oldest, or most replies
+
+- **For Post Authors**
+  - Moderate comments on your posts
+  - Approve or reject comments
+  - Your comments are automatically approved
+  - View all comments including pending/rejected
+
+- **For Superusers**
+  - Moderate all comments
+  - Approve or reject any comment
+  - Your comments are automatically approved
+  - View all comments including pending/rejected
+
 ### Managing Content
 
 - Use the admin interface at `/admin`
@@ -128,7 +158,6 @@ A modern, feature-rich blog platform focused on Artificial Intelligence and Mach
 ## 🔧 Development
 
 ### Project Structure
-
 
 ### Running Tests
 
@@ -150,12 +179,14 @@ python manage.py test
 - Secure password hashing
 - Phone number verification
 - Google Cloud Storage security
+- Comment moderation system
 
 ## Analytics
 
 - Search analytics tracking
 - Post view counting
 - User engagement metrics
+- Comment activity tracking
 
 ##  Contributing
 

@@ -1,18 +1,20 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 import markdown
 from django.utils.safestring import mark_safe
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.views import View
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin, PermissionRequiredMixin
 from django.contrib import messages
 from django.urls import reverse_lazy, reverse
-from django.http import Http404
-from .models import Post, Category
-from django.db.models import Q
+from django.http import Http404, JsonResponse
+from .models import Post, Category, Comment
+from django.db.models import Q, Case, When, Value, IntegerField
 from django.utils import timezone
 from datetime import timedelta
 from django.contrib.auth import get_user_model
 from .analytics import SearchAnalytics
+from .forms import CommentForm
+from django.db import models
 
 # Create your views here.
 
@@ -21,7 +23,7 @@ class PostDetailView(DetailView):
     template_name = 'blog/post_detail.html'
     context_object_name = 'post'
     slug_field = 'slug'
-    slug_url_kwarg = 'slug'
+    slug_url_arg = 'slug'
     
     def get_queryset(self):
         return Post.objects.filter(status='published')
@@ -29,7 +31,37 @@ class PostDetailView(DetailView):
         context = super().get_context_data(**kwargs)
         post = context['post']
         context['post_content_html'] = mark_safe(markdown.markdown(post.content, extensions=['extra','codehilite', 'toc','tables']))
-        return context 
+        
+        # Get sort parameter
+        sort = self.request.GET.get('sort', 'newest')
+        
+        # Base queryset for comments
+        comments = post.comments.filter(parent=None)
+        
+        # Apply sorting
+        if sort == 'oldest':
+            comments = comments.order_by('created_at')
+        elif sort == 'most_replies':
+            comments = comments.annotate(
+                reply_count=models.Count('replies')
+            ).order_by('-reply_count', '-created_at')
+        else:  # newest is default
+            comments = comments.order_by('-created_at')
+            
+        # Filter comments based on user permissions
+        if not self.request.user.is_authenticated:
+            # Anonymous users can only see approved comments
+            comments = comments.filter(status='approved')
+        elif self.request.user.is_superuser or self.request.user == post.author:
+            # Superusers and post authors can see all comments
+            pass
+        else:
+            # Regular users can only see approved comments
+            comments = comments.filter(status='approved')
+            
+        context['comments'] = comments
+        context['comment_sort'] = sort
+        return context
     
 class PostListView(ListView):
     model = Post
@@ -240,4 +272,147 @@ class SearchView(ListView):
             )
         
         return response
+
+class AddCommentView(LoginRequiredMixin, CreateView):
+    model = Comment
+    form_class = CommentForm
+    template_name = 'blog/post_detail.html'
+
+    def form_valid(self, form):
+        post = get_object_or_404(Post, slug=self.kwargs['slug'])
+        form.instance.author = self.request.user
+        form.instance.post = post
+        
+        # Automatically approve comments from superusers and post authors
+        if self.request.user.is_superuser or self.request.user == post.author:
+            form.instance.status = 'approved'
+            form.instance.moderated_at = timezone.now()
+            form.instance.moderated_by = self.request.user
+        
+        messages.success(self.request, 'Comment added successfully!')
+        return super().form_valid(form)
+    
+    def get_success_url(self):
+        return reverse_lazy('post_detail', kwargs={'slug': self.kwargs['slug']})
+
+class AddReplyView(LoginRequiredMixin, CreateView):
+    model = Comment
+    form_class = CommentForm
+    template_name = 'blog/post_detail.html'
+
+    def form_valid(self, form):
+        post = get_object_or_404(Post, slug=self.kwargs['slug'])
+        parent_comment = get_object_or_404(Comment, id=self.kwargs['comment_id'], post=post)
+        form.instance.author = self.request.user
+        form.instance.post = post
+        form.instance.parent = parent_comment
+        
+        # Automatically approve replies from superusers and post authors
+        if self.request.user.is_superuser or self.request.user == post.author:
+            form.instance.status = 'approved'
+            form.instance.moderated_at = timezone.now()
+            form.instance.moderated_by = self.request.user
+        
+        messages.success(self.request, 'Reply added successfully')
+        return super().form_valid(form)
+    
+    def get_success_url(self):
+        return reverse_lazy('post_detail', kwargs={'slug': self.kwargs['slug']})
+
+class EditCommentView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = Comment
+    form_class = CommentForm
+    template_name = 'blog/post_detail.html'
+    pk_url_kwarg = 'comment_id'
+
+    def test_func(self):
+        comment = self.get_object()
+        return self.request.user == comment.author
+
+    def handle_no_permission(self):
+        if not self.request.user.is_authenticated:
+            return super().handle_no_permission()
+        else:
+            messages.error(self.request, 'You do not have permission to edit this comment.')
+            return redirect('post_detail', slug=self.kwargs['slug'])
+
+    def form_valid(self, form):
+        form.instance.is_edited = True
+        messages.success(self.request, 'Comment updated successfully!')
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse_lazy('post_detail', kwargs={'slug': self.kwargs['slug']})
+
+class DeleteCommentView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    model = Comment
+    template_name = 'blog/post_detail.html'
+    pk_url_kwarg = 'comment_id'
+
+    def test_func(self):
+        comment = self.get_object()
+        return self.request.user == comment.author
+
+    def handle_no_permission(self):
+        if not self.request.user.is_authenticated:
+            return super().handle_no_permission()
+        else:
+            messages.error(self.request, 'You do not have permission to delete this comment.')
+            return redirect('post_detail', slug=self.kwargs['slug'])
+
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, 'Comment deleted successfully!')
+        return super().delete(request, *args, **kwargs)
+
+    def get_success_url(self):
+        return reverse_lazy('post_detail', kwargs={'slug': self.kwargs['slug']})
+
+class ModerateCommentView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def test_func(self):
+        comment = get_object_or_404(Comment, id=self.kwargs['comment_id'])
+        # Allow superusers and post authors to moderate
+        return self.request.user.is_superuser or self.request.user == comment.post.author
+
+    def handle_no_permission(self):
+        if not self.request.user.is_authenticated:
+            return super().handle_no_permission()
+        else:
+            messages.error(self.request, 'You do not have permission to moderate this comment.')
+            return redirect('post_detail', slug=self.kwargs['slug'])
+    
+    def post(self, request, *args, **kwargs):
+        comment = get_object_or_404(Comment, id=kwargs['comment_id'])
+        action = request.POST.get('action')
+        
+        if action == 'approve':
+            comment.status = 'approved'
+        elif action == 'reject':
+            comment.status = 'rejected'
+            
+        comment.moderated_at = timezone.now()
+        comment.moderated_by = request.user
+        comment.save()
+        
+        messages.success(request, f'Comment {action}d successfully!')
+        return redirect('post_detail', slug=comment.post.slug)
+
+def check_new_comments(request):
+    post_id = request.GET.get('post_id')
+    last_id = request.GET.get('last_id', '0')
+    
+    try:
+        last_id = int(last_id)
+    except (ValueError, TypeError):
+        last_id = 0
+    
+    has_new = Comment.objects.filter(
+        post_id=post_id,
+        id__gt=last_id,
+        status='approved'
+    ).exists()
+    
+    return JsonResponse({'has_new_comments': has_new})
+
+        
+
 
