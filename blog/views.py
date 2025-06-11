@@ -413,6 +413,60 @@ def check_new_comments(request):
     
     return JsonResponse({'has_new_comments': has_new})
 
+class PostInteractionView(LoginRequiredMixin, View):
+    def post(self, request, slug):
+        post = get_object_or_404(Post, slug=slug)
+        vote_type = request.POST.get('vote_type')
+
+        if vote_type not in ['up', 'down']:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Invalid vote type'
+
+            }, status=400)
+        interaction, created = PostInteraction.objects.get_or_create(
+            post = post,
+            user = request.user,
+            defaults = {'vote_type': vote_type}
+        )
+
+        if not created and interaction.vote_type == vote_type:
+            interaction.vote_type = None
+            interaction.save()
+            return JsonResponse({
+                'status':'success',
+                'message':'Vote removed',
+                'vote_count': post.interactions.exclude(vote_type=None).count()
+            })
+
+        interaction.vote_type = vote_type
+        interaction.save()
+
+        return JsonResponse({
+            'status':'success',
+            'message': f'Vote {vote_type} recorded',
+            'vote_count': post.interactions.exclude(vote_type=None).count()
+        })
+
+
+class PostVoteCountView(view):
+
+    def get(self, request, slug):
+        post = get_object_or_404(Post, slug=slug)
+        upvotes = post.interactions.filter(vote_type='up').count()
+        downvotes = post.interactions.filter(vote_type='down').count()
+
+        return JsonResponse({
+            'upvotes': upvotes,
+            'downvotes': downvotes,
+            'total': upvotes - downvotes
+        })
+        
+
+
+
+
+
         
 
 
