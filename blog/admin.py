@@ -47,4 +47,12 @@ class CommentAdmin(admin.ModelAdmin):
     is_reply.boolean = True
     is_reply.short_description = 'Is Reply'
     
+
+@admin.register(PostInteraction)
+class PostInteractionAdmin(admin.ModelAdmin):
+    list_display=('post', 'user', 'vote_type', 'watch_time', 'created_at')
+    list_filter=('vote_type', 'created_at')
+    search_fields=('post__title', 'user__username')
+    date_hierarchy='created_at'
+
     
