@@ -488,6 +488,78 @@
         margin-top: 1rem;
         color: #6c757d;
     }
+
+    .post-voting {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin: 1rem 0;
+    }
+
+    .vote-buttons {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .vote-btn {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border: 1px solid #e9ecef;
+        border-radius: 20px;
+        background: white;
+        color: #6c757d;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .vote-btn:hover:not(:disabled) {
+        background: #f8f9fa;
+        color: #495057;
+    }
+
+    .vote-btn.active {
+        background: #667eea;
+        color: white;
+        border-color: #667eea;
+    }
+
+    .vote-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .vote-count {
+        font-weight: 500;
+        min-width: 1.5rem;
+        text-align: center;
+    }
+
+    .vote-btn.upvote.active {
+        background: #28a745;
+        border-color: #28a745;
+    }
+
+    .vote-btn.downvote.active {
+        background: #dc3545;
+        border-color: #dc3545;
+    }
+
+    .login-prompt {
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+
+    .login-prompt a {
+        color: #667eea;
+        text-decoration: none;
+    }
+
+    .login-prompt a:hover {
+        text-decoration: underline;
+    }
 </style>
 {% endblock %}
 
@@ -513,7 +585,6 @@
 
         {% endif %}
 <div class="post-header">
-     
     <h1 class="post-title">{{ post.title }}</h1>
     
     <div class="post-meta">
@@ -527,6 +598,28 @@
         <span class="meta-item">
             ✏️ Updated {{ post.updated_at|date:"F d, Y" }}
         </span>
+        {% endif %}
+    </div>
+    
+    <div class="post-voting">
+        <div class="vote-buttons">
+            <button class="vote-btn upvote {% if user.is_authenticated and user_vote == 'up' %}active{% endif %}" 
+                    data-vote-type="up" 
+                    {% if not user.is_authenticated %}disabled{% endif %}>
+                <i class="fas fa-arrow-up"></i>
+                <span class="vote-count" id="upvote-count">{{ post.get_upvotes }}</span>
+            </button>
+            <button class="vote-btn downvote {% if user.is_authenticated and user_vote == 'down' %}active{% endif %}" 
+                    data-vote-type="down" 
+                    {% if not user.is_authenticated %}disabled{% endif %}>
+                <i class="fas fa-arrow-down"></i>
+                <span class="vote-count" id="downvote-count">{{ post.get_downvotes }}</span>
+            </button>
+        </div>
+        {% if not user.is_authenticated %}
+            <div class="login-prompt">
+                <a href="{% url 'account_login' %}">Log in</a> to vote
+            </div>
         {% endif %}
     </div>
     
@@ -877,6 +970,76 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Check for new comments every 30 seconds
 setInterval(checkNewComments, 30000);
+
+// Voting functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const voteButtons = document.querySelectorAll('.vote-btn');
+    
+    voteButtons.forEach(button => {
+        button.addEventListener('click', async function() {
+            if (this.disabled) return;
+            
+            const voteType = this.dataset.voteType;
+            const postSlug = '{{ post.slug }}';
+            const isUpvote = voteType === 'up';
+            const isDownvote = voteType === 'down';
+            
+            try {
+                const response = await fetch(`/post/${postSlug}/vote/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    },
+                    body: `vote_type=${voteType}`
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    // Update vote counts
+                    updateVoteCounts();
+                    
+                    // Update button states
+                    const upvoteBtn = document.querySelector('.upvote');
+                    const downvoteBtn = document.querySelector('.downvote');
+                    
+                    // Remove active class from both buttons first
+                    upvoteBtn.classList.remove('active');
+                    downvoteBtn.classList.remove('active');
+                    
+                    // If the vote was removed (clicked same button), no button should be active
+                    if (data.message === 'Vote removed') {
+                        return;
+                    }
+                    
+                    // Add active class to the clicked button
+                    if (isUpvote) {
+                        upvoteBtn.classList.add('active');
+                    } else if (isDownvote) {
+                        downvoteBtn.classList.add('active');
+                    }
+                }
+            } catch (error) {
+                console.error('Error voting:', error);
+            }
+        });
+    });
+});
+
+async function updateVoteCounts() {
+    const postSlug = '{{ post.slug }}';
+    
+    try {
+        const response = await fetch(`/post/${postSlug}/votes/`);
+        const data = await response.json();
+        
+        document.getElementById('upvote-count').textContent = data.upvotes;
+        document.getElementById('downvote-count').textContent = data.downvotes;
+    } catch (error) {
+        console.error('Error updating vote counts:', error);
+    }
+}
 </script>
 
 {% csrf_token %}

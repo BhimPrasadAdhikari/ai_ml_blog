@@ -23,14 +23,28 @@ class PostDetailView(DetailView):
     template_name = 'blog/post_detail.html'
     context_object_name = 'post'
     slug_field = 'slug'
-    slug_url_arg = 'slug'
+    slug_url_kwarg = 'slug'
     
     def get_queryset(self):
         return Post.objects.filter(status='published')
+        
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         post = context['post']
         context['post_content_html'] = mark_safe(markdown.markdown(post.content, extensions=['extra','codehilite', 'toc','tables']))
+        
+        # Get user's vote for this post
+        if self.request.user.is_authenticated:
+            try:
+                interaction = PostInteraction.objects.get(
+                    post=post,
+                    user=self.request.user
+                )
+                context['user_vote'] = interaction.vote_type
+            except PostInteraction.DoesNotExist:
+                context['user_vote'] = None
+        else:
+            context['user_vote'] = None
         
         # Get sort parameter
         sort = self.request.GET.get('sort', 'newest')
@@ -61,6 +75,7 @@ class PostDetailView(DetailView):
             
         context['comments'] = comments
         context['comment_sort'] = sort
+        
         return context
     
 class PostListView(ListView):
@@ -414,9 +429,6 @@ def check_new_comments(request):
     return JsonResponse({'has_new_comments': has_new})
 
 class PostVoteView(LoginRequiredMixin, View):
-    """
-    View to handle post voting (upvote/downvote)
-    """
     def post(self, request, slug):
         post = get_object_or_404(Post, slug=slug)
         vote_type = request.POST.get('vote_type')
@@ -430,18 +442,17 @@ class PostVoteView(LoginRequiredMixin, View):
         # Get or create interaction
         interaction, created = PostInteraction.objects.get_or_create(
             post=post,
-            user=request.user,
-            defaults={'vote_type': vote_type}
+            user=request.user
         )
 
-        # If interaction exists and vote type is same, remove vote
-        if not created and interaction.vote_type == vote_type:
+        # If the same vote type is clicked again, remove the vote
+        if interaction.vote_type == vote_type:
             interaction.vote_type = None
             interaction.save()
             return JsonResponse({
                 'status': 'success',
                 'message': 'Vote removed',
-                'vote_count': post.interactions.exclude(vote_type=None).count()
+                'vote_count': post.get_vote_count()
             })
 
         # Update vote
@@ -451,7 +462,7 @@ class PostVoteView(LoginRequiredMixin, View):
         return JsonResponse({
             'status': 'success',
             'message': f'Vote {vote_type} recorded',
-            'vote_count': post.interactions.exclude(vote_type=None).count()
+            'vote_count': post.get_vote_count()
         })
 
 class PostVoteCountView(View):
