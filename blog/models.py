@@ -189,7 +189,9 @@ class PostInteraction(models.Model):
     
     post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='interactions')
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name='post_interactions')
-    vote = models.CharField(max_length=10, choices=VOTE_CHOICES, null=True, blank=True)
+    vote_type = models.CharField(max_length=10, choices=VOTE_CHOICES, default=None)
+    watch_time = models.IntegerField(default=0)
+    last_read_position = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -210,6 +212,26 @@ class PostInteraction(models.Model):
     @property
     def is_downvote(self):
         return self.vote == 'down'
+
+    def get_upvotes(self):
+        return self.interactions.filter(vote_type='up').count()
+    
+    def get_downvotes(self):
+        return self.interactions.filter(vote_type='down').count()
+    
+    def get_vote_count(self):
+        return self.get_upvotes() - self.get_downvotes()
+
+    def get_user_vote(self, user):
+        if not user.is_authenticated:
+            return None
+        try:
+            interaction = self.interactions.get(user=user)
+            return interaction.vote_type
+        except PostInteraction.DoesNotExist:
+            return None
+            
+
     
     
 
