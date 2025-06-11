@@ -176,7 +176,42 @@ class Comment(models.Model):
         return self.parent if self.is_reply else None
 
         
+class PostInteraction(models.Model):
+    """
+    Model to store interactions with blog posts.
+    """
+    VOTE_CHOICES = (
+        ('up', 'Upvote'),
+        ('down', 'Downvote'),
+        (None, 'No vote')
 
+    )
+    
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='interactions')
+    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name='post_interactions')
+    vote = models.CharField(max_length=10, choices=VOTE_CHOICES, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+
+    class Meta:
+        unique_together = ['post', 'user']
+        ordering = ['-created_at']
+        verbose_name = "Post Interaction"
+        verbose_name_plural = "Post Interactions"
+
+    def __str__(self):
+        return f'{self.user.username} voted {self.vote} on {self.post.title}'
+
+    @property
+    def is_upvote(self):
+        return self.vote == 'up'
+    
+    @property
+    def is_downvote(self):
+        return self.vote == 'down'
+    
+    
 
 
     
