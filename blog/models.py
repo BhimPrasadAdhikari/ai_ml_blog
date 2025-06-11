@@ -109,6 +109,28 @@ class Post(models.Model):
             self.slug = slugify(self.title)
         super().save(*args, **kwargs)
     
+    def get_upvotes(self):
+        """Get the number of upvotes for this post"""
+        return self.interactions.filter(vote_type='up').count()
+
+    def get_downvotes(self):
+        """Get the number of downvotes for this post"""
+        return self.interactions.filter(vote_type='down').count()
+
+    def get_vote_count(self):
+        """Get the total vote count (upvotes - downvotes)"""
+        return self.get_upvotes() - self.get_downvotes()
+
+    def get_user_vote(self, user):
+        """Get the user's vote for this post"""
+        if not user.is_authenticated:
+            return None
+        try:
+            interaction = self.interactions.get(user=user)
+            return interaction.vote_type
+        except PostInteraction.DoesNotExist:
+            return None
+
 class Comment(models.Model):
     """
     Model to store comments on blog posts.
@@ -178,23 +200,24 @@ class Comment(models.Model):
         
 class PostInteraction(models.Model):
     """
-    Model to store interactions with blog posts.
+    Model to track user interactions with posts including votes and watch time.
     """
-    VOTE_CHOICES = (
-        ('up', 'Upvote'),
-        ('down', 'Downvote'),
-        (None, 'No vote')
-
+    post = models.ForeignKey(Post, 
+                           on_delete=models.CASCADE,
+                           related_name='interactions')
+    user = models.ForeignKey(get_user_model(),
+                           on_delete=models.CASCADE,
+                           related_name='post_interactions')
+    vote_type = models.CharField(
+        max_length=10,
+        choices=[('up', 'Upvote'), ('down', 'Downvote')],
+        null=True,
+        blank=True
     )
-    
-    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='interactions')
-    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name='post_interactions')
-    vote_type = models.CharField(max_length=10, choices=VOTE_CHOICES, default=None)
-    watch_time = models.IntegerField(default=0)
-    last_read_position = models.IntegerField(default=0)
+    watch_time = models.IntegerField(default=0)  # in seconds
+    last_read_position = models.IntegerField(default=0)  # scroll position
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-
 
     class Meta:
         unique_together = ['post', 'user']
@@ -203,15 +226,15 @@ class PostInteraction(models.Model):
         verbose_name_plural = "Post Interactions"
 
     def __str__(self):
-        return f'{self.user.username} voted {self.vote} on {self.post.title}'
+        return f"{self.user.username}'s interaction with {self.post.title}"
 
     @property
     def is_upvote(self):
-        return self.vote == 'up'
+        return self.vote_type == 'up'
     
     @property
     def is_downvote(self):
-        return self.vote == 'down'
+        return self.vote_type == 'down'
 
     def get_upvotes(self):
         return self.interactions.filter(vote_type='up').count()

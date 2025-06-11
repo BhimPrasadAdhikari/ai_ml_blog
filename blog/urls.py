@@ -2,7 +2,8 @@ from django.urls import path, include
 from .views import (
     PostDetailView, PostListView, PostCreateView, PostUpdateView, PostDeleteView,
     CategoryPostListView, SearchView, AddCommentView, AddReplyView,
-    EditCommentView, DeleteCommentView, ModerateCommentView, check_new_comments
+    EditCommentView, DeleteCommentView, ModerateCommentView, check_new_comments,
+    PostVoteView, PostVoteCountView
 )
 
 urlpatterns = [
@@ -22,6 +23,6 @@ urlpatterns = [
     path('api/comments/check-new/', check_new_comments, name='check_new_comments'),
 
     path('post/<slug:slug>/vote/', PostVoteView.as_view(), name='post_vote'),
-    path('post/<slug:slug>/votes', PostVoteCountView.as_view(), name='post_vote_count'),
-    
+    path('post/<slug:slug>/votes/', PostVoteCountView.as_view(), name='post_vote_count'),
+
 ]

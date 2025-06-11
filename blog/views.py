@@ -7,7 +7,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin, 
 from django.contrib import messages
 from django.urls import reverse_lazy, reverse
 from django.http import Http404, JsonResponse
-from .models import Post, Category, Comment
+from .models import Post, Category, Comment, PostInteraction
 from django.db.models import Q, Case, When, Value, IntegerField
 from django.utils import timezone
 from datetime import timedelta
@@ -413,55 +413,62 @@ def check_new_comments(request):
     
     return JsonResponse({'has_new_comments': has_new})
 
-class PostInteractionView(LoginRequiredMixin, View):
+class PostVoteView(LoginRequiredMixin, View):
+    """
+    View to handle post voting (upvote/downvote)
+    """
     def post(self, request, slug):
         post = get_object_or_404(Post, slug=slug)
         vote_type = request.POST.get('vote_type')
-
+        
         if vote_type not in ['up', 'down']:
             return JsonResponse({
                 'status': 'error',
                 'message': 'Invalid vote type'
-
             }, status=400)
+
+        # Get or create interaction
         interaction, created = PostInteraction.objects.get_or_create(
-            post = post,
-            user = request.user,
-            defaults = {'vote_type': vote_type}
+            post=post,
+            user=request.user,
+            defaults={'vote_type': vote_type}
         )
 
+        # If interaction exists and vote type is same, remove vote
         if not created and interaction.vote_type == vote_type:
             interaction.vote_type = None
             interaction.save()
             return JsonResponse({
-                'status':'success',
-                'message':'Vote removed',
+                'status': 'success',
+                'message': 'Vote removed',
                 'vote_count': post.interactions.exclude(vote_type=None).count()
             })
 
+        # Update vote
         interaction.vote_type = vote_type
         interaction.save()
 
         return JsonResponse({
-            'status':'success',
+            'status': 'success',
             'message': f'Vote {vote_type} recorded',
             'vote_count': post.interactions.exclude(vote_type=None).count()
         })
 
-
-class PostVoteCountView(view):
-
+class PostVoteCountView(View):
+    """
+    View to get post vote count
+    """
     def get(self, request, slug):
         post = get_object_or_404(Post, slug=slug)
         upvotes = post.interactions.filter(vote_type='up').count()
         downvotes = post.interactions.filter(vote_type='down').count()
-
+        
         return JsonResponse({
             'upvotes': upvotes,
             'downvotes': downvotes,
             'total': upvotes - downvotes
         })
-        
+
 
 
 
