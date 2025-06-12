@@ -1,6 +1,8 @@
 from django.contrib import admin
-from .models import Post, CustomUser, Category
+from .models import Post, CustomUser, Category, Comment, PostInteraction
 from django.contrib.auth.admin import UserAdmin
+from .forms import PostAdminForm
+from .analytics import SearchAnalytics
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
@@ -10,7 +12,7 @@ class CategoryAdmin(admin.ModelAdmin):
     search_fields = ('name','slug')
 @admin.register(Post)
 class PostAdmin(admin.ModelAdmin):
-    model=Post
+    form = PostAdminForm
     list_display = ('title','slug','summary','content','image','tags','status','created_at','updated_at','published_at')
     list_filter = ('slug','status')
     search_fields =('title','slug','author')
@@ -23,6 +25,34 @@ class CustomUserAdmin(admin.ModelAdmin):
         (None, {'fields':('phone_number',)}),
     )
     
+@admin.register(SearchAnalytics)
+class SearchAnalyticsAdmin(admin.ModelAdmin):
+    list_display = ('query', 'timestamp', 'results_count', 'user', 'ip_address')
+    list_filter = ('timestamp',)
+    search_fields = ('query', 'user__username')
+    readonly_fields = ('timestamp',)
+    date_hierarchy = 'timestamp'
     
+
+@admin.register(Comment)
+class CommentAdmin(admin.ModelAdmin):
+    list_display = ('author', 'post', 'content', 'created_at', 'is_reply', 'is_edited')
+    list_filter = ('created_at', 'parent','is_edited')
+    search_fields = ('author__username', 'post__title', 'content')
+    readonly_fields = ('created_at', 'updated_at')
+    date_hierarchy = 'created_at'
     
+    def is_reply(self, obj):
+        return obj.is_reply
+    is_reply.boolean = True
+    is_reply.short_description = 'Is Reply'
+    
+
+@admin.register(PostInteraction)
+class PostInteractionAdmin(admin.ModelAdmin):
+    list_display = ('post', 'user', 'vote_type', 'watch_time', 'created_at')
+    list_filter = ('vote_type', 'created_at')
+    search_fields = ('post__title', 'user__username')
+    date_hierarchy = 'created_at'
+
     

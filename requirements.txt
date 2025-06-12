@@ -7,3 +7,5 @@ django-phonenumber-field[phonenumbers]
 PyJWT
 python-dotenv
 cryptography
+markdown
+django-markdownx

@@ -1,16 +1,1316 @@
-{% block content %}
-<article>
-    <h1>{{ post.title }}</h1>
-    <p>By {{ post.author }} on {{ post.created_at }}</p>
-    <div>{{ post.content|linebreaks }}</div>
-    
-    {% if post.image%}
-    <img src="{{ post.image.url }}" alt="{{ post.title }}" />
+{% extends 'blog/base.html' %}
+{% load blog_tags %} 
+{% load static %}
 
+{% block title %}{{ post.title }} - AI/ML Blog{% endblock %}
+
+{% block extra_head %}
+    <!-- Primary Meta Tags -->
+    <title>{{ post.title }} - AI/ML Blog</title>
+    <meta name="title" content="{{ post.title }} - AI/ML Blog">
+    <meta name="description" content="{{ post.summary|default:post.content|truncatewords:30 }}">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="{{ request.build_absolute_uri }}">
+    <meta property="og:title" content="{{ post.title }} - AI/ML Blog">
+    <meta property="og:description" content="{{ post.summary|default:post.content|truncatewords:30 }}">
+    {% if post.featured_image %}
+    <meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ post.featured_image.url }}">
     {% endif %}
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="{{ request.build_absolute_uri }}">
+    <meta property="twitter:title" content="{{ post.title }} - Your Blog Name">
+    <meta property="twitter:description" content="{{ post.summary|default:post.content|truncatewords:30 }}">
+    {% if post.featured_image %}
+    <meta property="twitter:image" content="{{ request.scheme }}://{{ request.get_host }}{{ post.featured_image.url }}">
+    {% endif %}
+
+    <!-- Article specific meta tags -->
+    <meta property="article:published_time" content="{{ post.created_at|date:'c' }}">
+    <meta property="article:modified_time" content="{{ post.updated_at|date:'c' }}">
+    <meta property="article:author" content="{{ post.author.get_full_name|default:post.author.username }}">
+    {% for tag in post.tags.all %}
+    <meta property="article:tag" content="{{ tag.name }}">
+    {% endfor %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .post-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 3rem 0;
+        margin-bottom: 2rem;
+        border-radius: 10px;
+    }
+
+    .post-title {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin-bottom: 1rem;
+        line-height: 1.2;
+    }
+
+    .post-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 2rem;
+        align-items: center;
+        font-size: 1rem;
+        opacity: 0.9;
+        margin-bottom: 1rem;
+    }
+
+    .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .post-summary {
+        font-size: 1.1rem;
+        opacity: 0.95;
+        line-height: 1.6;
+    }
+
+    .post-content-wrapper {
+        display: grid;
+        grid-template-columns: 1fr 300px;
+        gap: 3rem;
+        align-items: start;
+    }
+
+    .post-main {
+        background: white;
+        padding: 2rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        border: 1px solid #e9ecef;
+    }
+
+    .post-image {
+        width: 100%;
+        max-height: 400px;
+        object-fit: cover;
+        border-radius: 8px;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    .post-content {
+        font-size: 1.1rem;
+        line-height: 1.8;
+        color: #2c3e50;
+    }
+
+    .post-content h1,
+    .post-content h2,
+    .post-content h3,
+    .post-content h4,
+    .post-content h5,
+    .post-content h6 {
+        margin: 2rem 0 1rem 0;
+        color: #2c3e50;
+    }
+
+    .post-content p {
+        margin-bottom: 1.5rem;
+    }
+
+    .post-content ul,
+    .post-content ol {
+        margin-bottom: 1.5rem;
+        padding-left: 2rem;
+    }
+
+    .post-content blockquote {
+        border-left: 4px solid #667eea;
+        padding-left: 1.5rem;
+        margin: 2rem 0;
+        font-style: italic;
+        color: #6c757d;
+        background: #f8f9fa;
+        padding: 1rem 1.5rem;
+        border-radius: 0 8px 8px 0;
+    }
+
+    .post-content code {
+        background: #f8f9fa;
+        padding: 0.2rem 0.4rem;
+        border-radius: 4px;
+        font-family: 'Courier New', monospace;
+        font-size: 0.9rem;
+    }
+
+    .post-content pre {
+        background: #2c3e50;
+        color: white;
+        padding: 1.5rem;
+        border-radius: 8px;
+        overflow-x: auto;
+        margin: 1.5rem 0;
+    }
+
+    .post-content pre code {
+        background: none;
+        padding: 0;
+        color: inherit;
+    }
+
+    .sidebar {
+        position: sticky;
+        top: 2rem;
+    }
+
+    .sidebar-section {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        border: 1px solid #e9ecef;
+        margin-bottom: 2rem;
+    }
+
+    .sidebar-title {
+        font-size: 1.2rem;
+        font-weight: bold;
+        margin-bottom: 1rem;
+        color: #2c3e50;
+        border-bottom: 2px solid #667eea;
+        padding-bottom: 0.5rem;
+    }
+
+    .categories-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .category-link {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        padding: 0.6rem 1rem;
+        border-radius: 25px;
+        text-decoration: none;
+        text-align: center;
+        font-weight: 500;
+        transition: opacity 0.3s ease;
+    }
+
+    .category-link:hover {
+        opacity: 0.8;
+    }
+
+    .tags-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .tag-item {
+        background: #f8f9fa;
+        color: #495057;
+        padding: 0.4rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        border: 1px solid #dee2e6;
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 500;
+        margin-bottom: 2rem;
+        transition: color 0.3s ease;
+    }
+
+    .back-link:hover {
+        color: #764ba2;
+    }
+
+    .author-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1.5rem;
+        background: #f8f9fa;
+        border-radius: 12px;
+        margin-top: 2rem;
+        border-left: 4px solid #667eea;
+    }
+
+    .author-avatar {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 1.5rem;
+        font-weight: bold;
+    }
+
+    .author-details h4 {
+        margin: 0 0 0.5rem 0;
+        color: #2c3e50;
+    }
+
+    .author-details p {
+        margin: 0;
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+
+    .post-actions {
+        display: flex;
+        gap: 1rem;
+        margin: 2rem 0;
+        padding: 1.5rem;
+        background: #f8f9fa;
+        border-radius: 12px;
+        border-left: 4px solid #667eea;
+
+    }
+
+    .btn-edit {
+        background: linear-gradient(135deg, #28a745, #20c997);
+        color: white;
+        padding: 0.6rem 1.2rem;
+        border: none;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
+        font-size: 0.9rem;
+    }
+
+    .btn-edit:hover {
+        opacity: 0.9;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+        color: white;
+        text-decoration: none;
+    }
+
+    .btn-delete {
+        background: linear-gradient(135deg, #dc3545, #c82333);
+        color: white;
+        padding: 0.6rem 1.2rem;
+        border: none;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
+        font-size: 0.9rem;
+        cursor: pointer;
+    }
+     .btn-delete:hover {
+        opacity: 0.9;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+        color: white;
+        text-decoration: none;
+    }
+
+    .actions-title {
+        margin: 0 0 1rem 0;
+        color: #2c3e50;
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    @media (max-width: 1024px) {
+        .post-content-wrapper {
+            grid-template-columns: 1fr;
+            gap: 2rem;
+        }
+
+        .sidebar {
+            position: static;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .post-title {
+            font-size: 2rem;
+        }
+
+        .post-meta {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+
+        .post-main {
+            padding: 1.5rem;
+        }
+    }
+    
+    .comment-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .btn-reply, .btn-edit, .btn-delete {
+        background: none;
+        border: none;
+        font-size: 0.9rem;
+        cursor: pointer;
+        padding: 0;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .btn-reply {
+        color: #667eea;
+    }
+
+    .btn-reply:hover {
+        color: #764ba2;
+    }
+
+    .btn-edit {
+        color: #28a745;
+    }
+
+    .btn-edit:hover {
+        color: #218838;
+    }
+
+    .btn-delete {
+        color: #dc3545;
+    }
+
+    .btn-delete:hover {
+        color: #c82333;
+    }
+
+    .edit-form {
+        margin-top: 1rem;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+        border: 1px solid #e9ecef;
+    }
+
+    .edit-form-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .comments-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+    
+    .comment-sorting {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .comment-sorting select {
+        padding: 0.5rem;
+        border-radius: 4px;
+        border: 1px solid #dee2e6;
+    }
+    
+    .status-badge {
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+    
+    .status-badge.pending {
+        background-color: #ffc107;
+        color: #000;
+    }
+    
+    .status-badge.rejected {
+        background-color: #dc3545;
+        color: #fff;
+    }
+    
+    .moderation-actions {
+        margin-top: 1rem;
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .comment-form {
+        background: #f8f9fa;
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin-bottom: 2rem;
+        border: 1px solid #e9ecef;
+    }
+
+    .comment-form .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .comment-form textarea {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        resize: vertical;
+    }
+
+    .comment-form .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        padding: 0.6rem 1.2rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    .comment-form .btn-primary:hover {
+        opacity: 0.9;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+
+    .login-prompt {
+        background: #f8f9fa;
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin-bottom: 2rem;
+        text-align: center;
+        border: 1px solid #e9ecef;
+    }
+
+    .login-prompt a {
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .login-prompt a:hover {
+        color: #764ba2;
+        text-decoration: underline;
+    }
+
+    .no-comments {
+        text-align: center;
+        padding: 2rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+        margin-top: 1rem;
+        color: #6c757d;
+    }
+
+    .post-voting {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin: 1rem 0;
+    }
+
+    .vote-buttons {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .vote-btn {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border: 1px solid #e9ecef;
+        border-radius: 20px;
+        background: white;
+        color: #6c757d;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .vote-btn:hover:not(:disabled) {
+        background: #f8f9fa;
+        color: #495057;
+    }
+
+    .vote-btn.active {
+        background: #667eea;
+        color: white;
+        border-color: #667eea;
+    }
+
+    .vote-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .vote-count {
+        font-weight: 500;
+        min-width: 1.5rem;
+        text-align: center;
+    }
+
+    .vote-btn.upvote.active {
+        background: #28a745;
+        border-color: #28a745;
+    }
+
+    .vote-btn.downvote.active {
+        background: #dc3545;
+        border-color: #dc3545;
+    }
+
+    .login-prompt {
+        font-size: 0.9rem;
+        color: #6c757d;
+    }
+
+    .login-prompt a {
+        color: #667eea;
+        text-decoration: none;
+    }
+
+    .login-prompt a:hover {
+        text-decoration: underline;
+    }
+
+    .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #6c757d;
+        font-size: 0.9rem;
+    }
+    .meta-item i {
+        font-size: 1rem;
+
+    }
+
+    .meta-item .fa-clock {
+        color: #28a745;
+    }
+
+    .post-sharing {
+        margin: 2rem 0;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+    }
+
+    .post-sharing h3 {
+        margin-bottom: 1rem;
+        font-size: 1.2rem;
+        color: #495057;
+    }
+
+    .share-buttons {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .share-btn {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 20px;
+        color: white;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .share-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+
+    .share-btn.twitter {
+        background: #1DA1F2;
+    }
+
+    .share-btn.facebook {
+        background: #4267B2;
+    }
+
+    .share-btn.linkedin {
+        background: #0077B5;
+    }
+
+    .share-btn.whatsapp {
+        background: #25D366;
+    }
+
+    .share-btn.telegram {
+        background: #0088cc;
+    }
+
+    .share-count {
+        background: rgba(255,255,255,0.2);
+        padding: 0.2rem 0.5rem;
+        border-radius: 10px;
+        font-size: 0.8rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<a href="{% url 'post_list' %}" class="back-link">
+    ← Back to All Posts
+</a>
+{% if user.is_authenticated and user == post.author %}
+
+        <div class='post-actions'>
+            <h4>Manage your post </h4>
+            <div>
+                <a href="{% url 'post_edit' slug=post.slug %}" class="btn-edit">
+                 Edit Post
+                </a>
+                <button onClick="confirmDelete()" class='btn-delete'>
+                 Delete Post
+                 </button>
+
+            </div>
+
+        </div>
+
+        {% endif %}
+<div class="post-header">
+    <h1 class="post-title">{{ post.title }}</h1>
+    
+    <div class="post-meta">
+        <span class="meta-item">
+            👤 <strong>{{ post.author.username }}</strong>
+        </span>
+        <span class="meta-item">
+            📅 {{ post.created_at|date:"F d, Y" }}
+        </span>
+        {% if post.updated_at != post.created_at %}
+        <span class="meta-item">
+            ✏️ Updated {{ post.updated_at|date:"F d, Y" }}
+        </span>
+        {% endif %}
+        {% if total_watch_time_minutes > 0 %}
+            <div class="meta-item">
+                    <i class="fas fa-clock"></i>
+                    <span class="watch-time">{{ total_watch_time_minutes }} min read</span>
+            </div>
+        {% endif %}
+    </div>
+    
+    <div class="post-voting">
+        <div class="vote-buttons">
+            <button class="vote-btn upvote {% if user.is_authenticated and user_vote == 'up' %}active{% endif %}" 
+                    data-vote-type="up" 
+                    {% if not user.is_authenticated %}disabled{% endif %}>
+                <i class="fas fa-arrow-up"></i>
+                <span class="vote-count" id="upvote-count">{{ post.get_upvotes }}</span>
+            </button>
+            <button class="vote-btn downvote {% if user.is_authenticated and user_vote == 'down' %}active{% endif %}" 
+                    data-vote-type="down" 
+                    {% if not user.is_authenticated %}disabled{% endif %}>
+                <i class="fas fa-arrow-down"></i>
+                <span class="vote-count" id="downvote-count">{{ post.get_downvotes }}</span>
+            </button>
+        </div>
+        {% if not user.is_authenticated %}
+            <div class="login-prompt">
+                <a href="{% url 'account_login' %}">Log in</a> to vote
+            </div>
+        {% endif %}
+    </div>
+    
+    {% if post.summary %}
+    <p class="post-summary">{{ post.summary }}</p>
+    {% endif %}
+</div>
+
+<div class="post-sharing">
+    <h3>Share this post</h3>
+    <div class="share-buttons">
+        <button class="share-btn twitter" data-platform="twitter" title="Share on Twitter">
+            <i class="fab fa-twitter"></i>
+            <span class="share-count">{{ share_counts.twitter }}</span>
+        </button>
+        <button class="share-btn facebook" data-platform="facebook" title="Share on Facebook">
+            <i class="fab fa-facebook"></i>
+            <span class="share-count">{{ share_counts.facebook }}</span>
+        </button>
+        <button class="share-btn linkedin" data-platform="linkedin" title="Share on LinkedIn">
+            <i class="fab fa-linkedin"></i>
+            <span class="share-count">{{ share_counts.linkedin }}</span>
+        </button>
+        <button class="share-btn whatsapp" data-platform="whatsapp" title="Share on WhatsApp">
+            <i class="fab fa-whatsapp"></i>
+            <span class="share-count">{{ share_counts.whatsapp }}</span>
+        </button>
+        <button class="share-btn telegram" data-platform="telegram" title="Share on Telegram">
+            <i class="fab fa-telegram"></i>
+            <span class="share-count">{{ share_counts.telegram }}</span>
+        </button>
+    </div>
+</div>
+
+<div class="post-content-wrapper">
+    <div class="post-main">
+        {% if post.image %}
+            <img src="{{ post.image.url }}" alt="{{ post.title }}" class="post-image" loading="lazy",
+            onerror="this.onerror=null; this.src='{% static 'images/default-image.jpg' %}';">
+        {% endif %}
         
+        <div class="post-content">
+            {{ post_content_html }}
+        </div>
 
-</article>
+        
+        <div class="author-info">
+            <div class="author-avatar">
+                {{ post.author.username|first|upper }}
+            </div>
+            <div class="author-details">
+                <h4>{{ post.author.get_full_name|default:post.author.username }}</h4>
+                <p>Published on {{ post.created_at|date:"F d, Y" }}</p>
+            </div>
+        </div>
 
+        <!-- Comments Section -->
+        <div class="comments-header">
+            <h3 class="comments-title">Comments</h3>
+            <div class="comment-sorting">
+                <label for="comment-sort">Sort by:</label>
+                <select id="comment-sort" onchange="updateCommentSort(this.value)">
+                    <option value="newest" {% if comment_sort == 'newest' %}selected{% endif %}>Newest</option>
+                    <option value="oldest" {% if comment_sort == 'oldest' %}selected{% endif %}>Oldest</option>
+                    <option value="most_replies" {% if comment_sort == 'most_replies' %}selected{% endif %}>Most Replies</option>
+                </select>
+            </div>
+        </div>
 
-{% endblock  %}
+        <!-- Add Comment Form - Always show if user is authenticated -->
+        {% if user.is_authenticated %}
+            <form method="post" action="{% url 'add_comment' slug=post.slug %}" class="comment-form">
+                {% csrf_token %}
+                <div class="form-group">
+                    <textarea name="content" class="form-control" rows="3" placeholder="Add a comment..." required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Post Comment</button>
+            </form>
+        {% else %}
+            <div class="login-prompt">
+                <p>Please <a href="{% url 'account_login' %}">log in</a> to leave a comment.</p>
+            </div>
+        {% endif %}
+
+        <!-- Comments List -->
+        <div class="comments-list">
+            {% for comment in comments %}
+                <div class="comment" data-comment-id="{{ comment.id }}">
+                    <div class="comment-header">
+                        <div class="comment-author">
+                            <div class="author-avatar">
+                                {{ comment.author.username|first|upper }}
+                            </div>
+                            <div class="author-info">
+                                <h4>{{ comment.author.get_full_name|default:comment.author.username }}</h4>
+                                <span class="comment-date">{{ comment.created_at|date:"F d, Y g:i A" }}</span>
+                            </div>
+                        </div>
+                        {% if comment.is_edited %}
+                            <span class="edited-badge">edited</span>
+                        {% endif %}
+                        {% if user.is_superuser or user == post.author %}
+                            {% if comment.status == 'pending' %}
+                                <span class="status-badge pending">Pending</span>
+                            {% elif comment.status == 'rejected' %}
+                                <span class="status-badge rejected">Rejected</span>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                    <div class="comment-content">
+                        {{ comment.content }}
+                    </div>
+                    
+                    {% if user.is_authenticated %}
+                        <div class="comment-actions">
+                            <button class="btn-reply" onclick="showReplyForm('{{ comment.id }}')">Reply</button>
+                            {% if user == comment.author %}
+                                <button class="btn-edit" onclick="showEditForm('{{ comment.id }}')">Edit</button>
+                                <button class="btn-delete" onclick="confirmDeleteComment('{{ comment.id }}')">Delete</button>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+
+                    <!-- Edit Form (Hidden by default) -->
+                    {% if user == comment.author %}
+                        <div id="edit-form-{{ comment.id }}" class="edit-form" style="display: none;">
+                            <form method="post" action="{% url 'edit_comment' slug=post.slug comment_id=comment.id %}">
+                                {% csrf_token %}
+                                <div class="form-group">
+                                    <textarea name="content" class="form-control" rows="3" required>{{ comment.content }}</textarea>
+                                </div>
+                                <div class="edit-form-actions">
+                                    <button type="submit" class="btn btn-primary">Update Comment</button>
+                                    <button type="button" class="btn btn-secondary" onclick="hideEditForm('{{ comment.id }}')">Cancel</button>
+                                </div>
+                            </form>
+                        </div>
+                    {% endif %}
+
+                    <!-- Reply Form (Hidden by default) -->
+                    {% if user.is_authenticated %}
+                        <div id="reply-form-{{ comment.id }}" class="reply-form" style="display: none;">
+                            <form method="post" action="{% url 'add_reply' slug=post.slug comment_id=comment.id %}">
+                                {% csrf_token %}
+                                <div class="form-group">
+                                    <textarea name="content" class="form-control" rows="2" placeholder="Write a reply..." required></textarea>
+                                </div>
+                                <div class="reply-form-actions">
+                                    <button type="submit" class="btn btn-primary">Post Reply</button>
+                                    <button type="button" class="btn btn-secondary" onclick="hideReplyForm('{{ comment.id }}')">Cancel</button>
+                                </div>
+                            </form>
+                        </div>
+                    {% endif %}
+
+                    <!-- Replies -->
+                    {% if comment.get_replies %}
+                        <div class="replies">
+                            {% for reply in comment.get_replies %}
+                                {% if reply.status == 'approved' or user.is_superuser or user == post.author %}
+                                    <div class="reply">
+                                        <div class="comment-header">
+                                            <div class="comment-author">
+                                                <div class="author-avatar">
+                                                    {{ reply.author.username|first|upper }}
+                                                </div>
+                                                <div class="author-info">
+                                                    <h4>{{ reply.author.get_full_name|default:reply.author.username }}</h4>
+                                                    <span class="comment-date">{{ reply.created_at|date:"F d, Y g:i A" }}</span>
+                                                </div>
+                                            </div>
+                                            {% if reply.is_edited %}
+                                                <span class="edited-badge">edited</span>
+                                            {% endif %}
+                                            {% if user.is_superuser or user == post.author %}
+                                                {% if reply.status == 'pending' %}
+                                                    <span class="status-badge pending">Pending</span>
+                                                {% elif reply.status == 'rejected' %}
+                                                    <span class="status-badge rejected">Rejected</span>
+                                                {% endif %}
+                                            {% endif %}
+                                        </div>
+                                        <div class="comment-content">
+                                            {{ reply.content }}
+                                        </div>
+                                        {% if user == reply.author %}
+                                            <div class="comment-actions">
+                                                <button class="btn-edit" onclick="showEditForm('{{ reply.id }}')">Edit</button>
+                                                <button class="btn-delete" onclick="confirmDeleteComment('{{ reply.id }}')">Delete</button>
+                                            </div>
+                                        {% endif %}
+
+                                        <!-- Edit Form for Replies (Hidden by default) -->
+                                        {% if user == reply.author %}
+                                            <div id="edit-form-{{ reply.id }}" class="edit-form" style="display: none;">
+                                                <form method="post" action="{% url 'edit_comment' slug=post.slug comment_id=reply.id %}">
+                                                    {% csrf_token %}
+                                                    <div class="form-group">
+                                                        <textarea name="content" class="form-control" rows="3" required>{{ reply.content }}</textarea>
+                                                    </div>
+                                                    <div class="edit-form-actions">
+                                                        <button type="submit" class="btn btn-primary">Update Reply</button>
+                                                        <button type="button" class="btn btn-secondary" onclick="hideEditForm('{{ reply.id }}')">Cancel</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                    {% if user.is_authenticated and user != comment.author %}
+                        {% if user.is_superuser or user == post.author %}
+                            {% if comment.status == 'pending' %}
+                                <div class="moderation-actions">
+                                    <form method="post" action="{% url 'moderate_comment' slug=post.slug comment_id=comment.id %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" name="action" value="approve" class="btn btn-success btn-sm">Approve</button>
+                                        <button type="submit" name="action" value="reject" class="btn btn-danger btn-sm">Reject</button>
+                                    </form>
+                                </div>
+                            {% endif %}
+                        {% endif %}
+                    {% endif %}
+                </div>
+            {% empty %}
+                <div class="no-comments">
+                    <p>No comments yet. Be the first to comment!</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <aside class="sidebar">
+        {% if post.categories.all %}
+        <div class="sidebar-section">
+            <h3 class="sidebar-title">Categories</h3>
+            <div class="categories-list">
+                {% for category in post.categories.all %}
+                    <a class="category-link">
+                        {{ category.name }}
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if post.tags %}
+        <div class="sidebar-section">
+            <h3 class="sidebar-title">Tags</h3>
+            <div class="tags-list">
+                {% for tag in post.tags|split:"," %}
+                    <span class="tag-item">{{ tag|trim }}</span>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %} 
+        
+        <div class="sidebar-section">
+            <h3 class="sidebar-title">Post Info</h3>
+            <div style="color: #6c757d; line-height: 1.6;">
+                <p><strong>Created:</strong> {{ post.created_at|date:"F d, Y g:i A" }}</p>
+                {% if post.updated_at != post.created_at %}
+                <p><strong>Updated:</strong> {{ post.updated_at|date:"F d, Y g:i A" }}</p>
+                {% endif %}
+                <p><strong>Status:</strong> 
+                    <span style="color: #28a745; font-weight: 500;">{{ post.get_status_display }}</span>
+                </p>
+            </div>
+        </div>
+    </aside>
+</div>
+<script>
+function confirmDelete(){
+    if(confirm('Are you sure you want to delete this post? This action cannot be undoen.')){
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '{% url "post_delete" slug=post.slug %}';
+
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+        if(csrfToken){
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = 'csrfmiddlewaretoken';
+            csrfInput.value = csrfToken.value;
+            form.appendChild(csrfInput);
+
+        }
+
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+function showReplyForm(commentId) {
+    const replyForm = document.getElementById(`reply-form-${commentId}`);
+    replyForm.style.display = 'block';
+    replyForm.querySelector('textarea').focus();
+}
+
+function hideReplyForm(commentId) {
+    const replyForm = document.getElementById(`reply-form-${commentId}`);
+    replyForm.style.display = 'none';
+}
+
+function showEditForm(commentId) {
+    const editForm = document.getElementById(`edit-form-${commentId}`);
+    editForm.style.display = 'block';
+    editForm.querySelector('textarea').focus();
+}
+
+function hideEditForm(commentId) {
+    const editForm = document.getElementById(`edit-form-${commentId}`);
+    editForm.style.display = 'none';
+}
+
+function confirmDeleteComment(commentId) {
+    if (confirm('Are you sure you want to delete this comment? This action cannot be undone.')) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `{% url 'delete_comment' slug=post.slug comment_id=0 %}`.replace('0', commentId);
+
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]');
+        if (csrfToken) {
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = 'csrfmiddlewaretoken';
+            csrfInput.value = csrfToken.value;
+            form.appendChild(csrfInput);
+        }
+
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+let lastCommentId = 0;
+
+function updateCommentSort(sort) {
+    const url = new URL(window.location.href);
+    url.searchParams.set('sort', sort);
+    window.location.href = url.toString();
+}
+
+function checkNewComments() {
+    const postId = '{{ post.id }}';
+    if (!postId) return;  // Don't check if no post ID
+
+    fetch(`/api/comments/check-new/?post_id=${postId}&last_id=${lastCommentId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.has_new_comments) {
+                location.reload();
+            }
+        })
+        .catch(error => {
+            console.error('Error checking for new comments:', error);
+        });
+}
+
+// Initialize lastCommentId when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    const comments = document.querySelectorAll('.comment');
+    if (comments.length > 0) {
+        const firstComment = comments[0];
+        const commentId = firstComment.getAttribute('data-comment-id');
+        if (commentId) {
+            lastCommentId = parseInt(commentId, 10);
+        }
+    }
+});
+
+// Check for new comments every 30 seconds
+setInterval(checkNewComments, 30000);
+
+// Voting functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const voteButtons = document.querySelectorAll('.vote-btn');
+    
+    voteButtons.forEach(button => {
+        button.addEventListener('click', async function() {
+            if (this.disabled) return;
+            
+            const voteType = this.dataset.voteType;
+            const postSlug = '{{ post.slug }}';
+            const isUpvote = voteType === 'up';
+            const isDownvote = voteType === 'down';
+            
+            try {
+                const response = await fetch(`/post/${postSlug}/vote/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    },
+                    body: `vote_type=${voteType}`
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    // Update vote counts
+                    updateVoteCounts();
+                    
+                    // Update button states
+                    const upvoteBtn = document.querySelector('.upvote');
+                    const downvoteBtn = document.querySelector('.downvote');
+                    
+                    // Remove active class from both buttons first
+                    upvoteBtn.classList.remove('active');
+                    downvoteBtn.classList.remove('active');
+                    
+                    // If the vote was removed (clicked same button), no button should be active
+                    if (data.message === 'Vote removed') {
+                        return;
+                    }
+                    
+                    // Add active class to the clicked button
+                    if (isUpvote) {
+                        upvoteBtn.classList.add('active');
+                    } else if (isDownvote) {
+                        downvoteBtn.classList.add('active');
+                    }
+                }
+            } catch (error) {
+                console.error('Error voting:', error);
+            }
+        });
+    });
+});
+
+async function updateVoteCounts() {
+    const postSlug = '{{ post.slug }}';
+    
+    try {
+        const response = await fetch(`/post/${postSlug}/votes/`);
+        const data = await response.json();
+        
+        document.getElementById('upvote-count').textContent = data.upvotes;
+        document.getElementById('downvote-count').textContent = data.downvotes;
+    } catch (error) {
+        console.error('Error updating vote counts:', error);
+    }
+}
+
+// Watch time tracking
+let watchTimeInterval;
+let isTracking = false;
+
+function startWatchTimeTracking() {
+    // Debug logs to check conditions
+    console.log('User authenticated:', '{{ user.is_authenticated }}' === 'True');
+    console.log('Is superuser:', '{{ user.is_superuser }}' === 'True');
+    console.log('Is author:', '{{ user.id }}' === '{{ post.author.id }}');
+    
+    if (!isTracking && 
+        '{{ user.is_authenticated }}' === 'True' && 
+        '{{ user.is_superuser }}' !== 'True' && 
+        '{{ user.id }}' !== '{{ post.author.id }}') {
+        
+        console.log('Starting watch time tracking');
+        isTracking = true;
+        watchTimeInterval = setInterval(updateWatchTime, 30000); // 30 seconds
+    }
+}
+
+async function updateWatchTime() {
+    console.log('Updating watch time...');
+    const postSlug = '{{ post.slug }}';
+    
+    try {
+        const response = await fetch(`/post/${postSlug}/watch-time/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        });
+        
+        const data = await response.json();
+        console.log('Watch time update response:', data);
+        
+        if (data.status === 'success') {
+            // Update the displayed watch time
+            const watchTimeElement = document.querySelector('.meta-item .fa-clock').nextElementSibling;
+            const minutes = Math.floor(data.watch_time / 60);
+            watchTimeElement.textContent = `${minutes} min read`;
+        }
+    } catch (error) {
+        console.error('Error updating watch time:', error);
+    }
+}
+
+// Start tracking when the post is visible
+document.addEventListener('visibilitychange', function() {
+    console.log('Visibility changed:', document.visibilityState);
+    if (document.visibilityState === 'visible') {
+        startWatchTimeTracking();
+    } else {
+        stopWatchTimeTracking();
+    }
+});
+
+// Start tracking when the page loads
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM Content Loaded');
+    startWatchTimeTracking();
+});
+
+// Stop tracking when the user leaves the page
+window.addEventListener('beforeunload', function() {
+    console.log('Page unloading');
+    stopWatchTimeTracking();
+});
+
+function stopWatchTimeTracking() {
+    if (isTracking) {
+        console.log('Stopping watch time tracking');
+        clearInterval(watchTimeInterval);
+        isTracking = false;
+    }
+}
+
+// Social sharing functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const shareButtons = document.querySelectorAll('.share-btn');
+    
+    shareButtons.forEach(button => {
+        button.addEventListener('click', async function() {
+            const platform = this.dataset.platform;
+            const postSlug = '{{ post.slug }}';
+            const postTitle = '{{ post.title }}';
+            const postUrl = window.location.href;
+            
+            // Share URLs for different platforms
+            const shareUrls = {
+                twitter: `https://twitter.com/intent/tweet?text=${encodeURIComponent(postTitle)}&url=${encodeURIComponent(postUrl)}`,
+                facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(postUrl)}`,
+                linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(postUrl)}`,
+                whatsapp: `https://wa.me/?text=${encodeURIComponent(postTitle + ' ' + postUrl)}`,
+                telegram: `https://t.me/share/url?url=${encodeURIComponent(postUrl)}&text=${encodeURIComponent(postTitle)}`
+            };
+            
+            // Open share dialog
+            window.open(shareUrls[platform], '_blank', 'width=600,height=400');
+            
+            // Record the share
+            try {
+                const response = await fetch(`/post/${postSlug}/share/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    },
+                    body: `platform=${platform}`
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    // Update share count
+                    const countElement = this.querySelector('.share-count');
+                    const currentCount = parseInt(countElement.textContent);
+                    countElement.textContent = currentCount + 1;
+                }
+            } catch (error) {
+                console.error('Error recording share:', error);
+            }
+        });
+    });
+});
+</script>
+
+{% csrf_token %}
+{% endblock %}
