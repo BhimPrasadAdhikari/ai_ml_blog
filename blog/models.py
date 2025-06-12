@@ -256,10 +256,34 @@ class PostInteraction(models.Model):
             
 
     
+class PostWatchTime(models.Model):
+    """
+    Model to track user watch time for a post.
+    """
+    post = models.ForeignKey(Post, 
+                             on_delete=models.CASCADE,
+                             related_name='watch_times')
+    user = models.ForeignKey(get_user_model(),
+                             on_delete=models.CASCADE,
+                             related_name='post_watch_times')
+    watch_time = models.IntegerField(default=0)
+    last_updated = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ['post', 'user']
+        indexes = [
+            models.Index(fields=['post', 'user']),
+            models.Index(fields=['last_updated']),
+        ]
+
+
+    def __str__(self):
+        return f"{self.user.username}'s watch time for {self.post.title} is {self.watch_time} seconds"
+
     
 
 
-    
         
         
         
