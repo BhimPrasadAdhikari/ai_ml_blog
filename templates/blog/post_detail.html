@@ -4,6 +4,38 @@
 
 {% block title %}{{ post.title }} - AI/ML Blog{% endblock %}
 
+{% block extra_head %}
+    <!-- Primary Meta Tags -->
+    <title>{{ post.title }} - AI/ML Blog</title>
+    <meta name="title" content="{{ post.title }} - AI/ML Blog">
+    <meta name="description" content="{{ post.summary|default:post.content|truncatewords:30 }}">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="{{ request.build_absolute_uri }}">
+    <meta property="og:title" content="{{ post.title }} - AI/ML Blog">
+    <meta property="og:description" content="{{ post.summary|default:post.content|truncatewords:30 }}">
+    {% if post.featured_image %}
+    <meta property="og:image" content="{{ request.scheme }}://{{ request.get_host }}{{ post.featured_image.url }}">
+    {% endif %}
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="{{ request.build_absolute_uri }}">
+    <meta property="twitter:title" content="{{ post.title }} - Your Blog Name">
+    <meta property="twitter:description" content="{{ post.summary|default:post.content|truncatewords:30 }}">
+    {% if post.featured_image %}
+    <meta property="twitter:image" content="{{ request.scheme }}://{{ request.get_host }}{{ post.featured_image.url }}">
+    {% endif %}
+
+    <!-- Article specific meta tags -->
+    <meta property="article:published_time" content="{{ post.created_at|date:'c' }}">
+    <meta property="article:modified_time" content="{{ post.updated_at|date:'c' }}">
+    <meta property="article:author" content="{{ post.author.get_full_name|default:post.author.username }}">
+    {% for tag in post.tags.all %}
+    <meta property="article:tag" content="{{ tag.name }}">
+    {% endfor %}
+{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -577,6 +609,68 @@
         color: #28a745;
     }
 
+    .post-sharing {
+        margin: 2rem 0;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+    }
+
+    .post-sharing h3 {
+        margin-bottom: 1rem;
+        font-size: 1.2rem;
+        color: #495057;
+    }
+
+    .share-buttons {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .share-btn {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 20px;
+        color: white;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .share-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+
+    .share-btn.twitter {
+        background: #1DA1F2;
+    }
+
+    .share-btn.facebook {
+        background: #4267B2;
+    }
+
+    .share-btn.linkedin {
+        background: #0077B5;
+    }
+
+    .share-btn.whatsapp {
+        background: #25D366;
+    }
+
+    .share-btn.telegram {
+        background: #0088cc;
+    }
+
+    .share-count {
+        background: rgba(255,255,255,0.2);
+        padding: 0.2rem 0.5rem;
+        border-radius: 10px;
+        font-size: 0.8rem;
+    }
 </style>
 {% endblock %}
 
@@ -649,6 +743,32 @@
     {% if post.summary %}
     <p class="post-summary">{{ post.summary }}</p>
     {% endif %}
+</div>
+
+<div class="post-sharing">
+    <h3>Share this post</h3>
+    <div class="share-buttons">
+        <button class="share-btn twitter" data-platform="twitter" title="Share on Twitter">
+            <i class="fab fa-twitter"></i>
+            <span class="share-count">{{ share_counts.twitter }}</span>
+        </button>
+        <button class="share-btn facebook" data-platform="facebook" title="Share on Facebook">
+            <i class="fab fa-facebook"></i>
+            <span class="share-count">{{ share_counts.facebook }}</span>
+        </button>
+        <button class="share-btn linkedin" data-platform="linkedin" title="Share on LinkedIn">
+            <i class="fab fa-linkedin"></i>
+            <span class="share-count">{{ share_counts.linkedin }}</span>
+        </button>
+        <button class="share-btn whatsapp" data-platform="whatsapp" title="Share on WhatsApp">
+            <i class="fab fa-whatsapp"></i>
+            <span class="share-count">{{ share_counts.whatsapp }}</span>
+        </button>
+        <button class="share-btn telegram" data-platform="telegram" title="Share on Telegram">
+            <i class="fab fa-telegram"></i>
+            <span class="share-count">{{ share_counts.telegram }}</span>
+        </button>
+    </div>
 </div>
 
 <div class="post-content-wrapper">
@@ -1141,6 +1261,55 @@ function stopWatchTimeTracking() {
         isTracking = false;
     }
 }
+
+// Social sharing functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const shareButtons = document.querySelectorAll('.share-btn');
+    
+    shareButtons.forEach(button => {
+        button.addEventListener('click', async function() {
+            const platform = this.dataset.platform;
+            const postSlug = '{{ post.slug }}';
+            const postTitle = '{{ post.title }}';
+            const postUrl = window.location.href;
+            
+            // Share URLs for different platforms
+            const shareUrls = {
+                twitter: `https://twitter.com/intent/tweet?text=${encodeURIComponent(postTitle)}&url=${encodeURIComponent(postUrl)}`,
+                facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(postUrl)}`,
+                linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(postUrl)}`,
+                whatsapp: `https://wa.me/?text=${encodeURIComponent(postTitle + ' ' + postUrl)}`,
+                telegram: `https://t.me/share/url?url=${encodeURIComponent(postUrl)}&text=${encodeURIComponent(postTitle)}`
+            };
+            
+            // Open share dialog
+            window.open(shareUrls[platform], '_blank', 'width=600,height=400');
+            
+            // Record the share
+            try {
+                const response = await fetch(`/post/${postSlug}/share/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    },
+                    body: `platform=${platform}`
+                });
+                
+                const data = await response.json();
+                
+                if (data.status === 'success') {
+                    // Update share count
+                    const countElement = this.querySelector('.share-count');
+                    const currentCount = parseInt(countElement.textContent);
+                    countElement.textContent = currentCount + 1;
+                }
+            } catch (error) {
+                console.error('Error recording share:', error);
+            }
+        });
+    });
+});
 </script>
 
 {% csrf_token %}
