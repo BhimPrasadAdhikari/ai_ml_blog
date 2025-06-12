@@ -2,7 +2,7 @@
 
 A modern, feature-rich blog platform focused on Artificial Intelligence and Machine Learning content. Built with Django and designed for technical content creators.
 
-##  Features
+## Features
 
 - **Content Management**
   - Markdown support for rich content creation
@@ -32,6 +32,20 @@ A modern, feature-rich blog platform focused on Artificial Intelligence and Mach
   - Date range filtering
   - Search analytics
 
+- **Engagement Tracking**
+  - Watch time tracking for posts
+  - Real-time reading time updates
+  - User-specific engagement metrics
+  - Author performance tracking
+  - Future earnings calculation basis
+
+- **Social Sharing**
+  - Share to major platforms (Twitter, Facebook, LinkedIn, WhatsApp, Telegram)
+  - Share count tracking
+  - Social media preview support
+  - Real-time share count updates
+  - Mobile-friendly share buttons
+
 - **Modern UI/UX**
   - Responsive design
   - Clean and intuitive interface
@@ -52,6 +66,7 @@ A modern, feature-rich blog platform focused on Artificial Intelligence and Mach
   - CSS3
   - JavaScript
   - Responsive Design
+  - Font Awesome Icons
 
 - **Infrastructure**
   - Docker
@@ -59,7 +74,7 @@ A modern, feature-rich blog platform focused on Artificial Intelligence and Mach
   - SQLite (Development)
   - PostgreSQL (Production-ready)
 
-##  Getting Started
+## Getting Started
 
 ### Prerequisites
 
@@ -107,7 +122,7 @@ A modern, feature-rich blog platform focused on Artificial Intelligence and Mach
    - Set up your phone verification service
    - Update the settings in `core/settings.py`
 
-##  Usage
+## Usage
 
 ### Creating Posts
 
@@ -155,7 +170,23 @@ A modern, feature-rich blog platform focused on Artificial Intelligence and Mach
   - Date range
 - Sort by relevance or date
 
-## 🔧 Development
+### Engagement Features
+
+- **Watch Time Tracking**
+  - Automatic tracking of reading time
+  - 30-second interval updates
+  - Excludes superusers and authors
+  - Real-time display in post header
+  - Future earnings calculation basis
+
+- **Social Sharing**
+  - Share posts to multiple platforms
+  - Track share counts
+  - View share statistics
+  - Mobile-friendly share buttons
+  - Social media preview support
+
+## Development
 
 ### Project Structure
 
@@ -172,7 +203,7 @@ python manage.py test
 - Document functions and classes
 - Write unit tests for new features
 
-##  Security
+## Security
 
 - CSRF protection enabled
 - XSS protection
@@ -187,8 +218,10 @@ python manage.py test
 - Post view counting
 - User engagement metrics
 - Comment activity tracking
+- Watch time analytics
+- Share statistics
 
-##  Contributing
+## Contributing
 
 1. Fork the repository
 2. Create a feature branch
@@ -200,21 +233,21 @@ python manage.py test
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-##  Acknowledgments
+## Acknowledgments
 
 - Django community
 - Markdownx for rich text editing
 - Google Cloud Platform
 - All contributors and users
 
-##  Support
+## Support
 
 For support, please:
 - Open an issue
 - Contact the maintainers
 - Check the documentation
 
-##  Updates
+## Updates
 
 Stay updated with the latest changes by:
 - Watching the repository
