@@ -283,9 +283,31 @@ class PostWatchTime(models.Model):
 
     
 
+class PostShare(models.Model):
+    SHARE_PLATFORMS = [
+        ('twitter', 'Twitter'),
+        ('facebook', 'Facebook'),
+        ('linkedin', 'LinkedIn'),
+        ('whatsapp', 'WhatsApp'),
+        ('telegram', 'Telegram'),
+    ]
+    
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='shares')
+    platform = models.CharField(max_length=20, choices=SHARE_PLATFORMS)
+    shared_at = models.DateTimeField(auto_now_add=True)
+    shared_by = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL, null=True, blank=True)
+    
+    class Meta:
+        indexes = [
+            models.Index(fields=['post', 'platform']),
+            models.Index(fields=['shared_at']),
+        ]
+    
+    def __str__(self):
+        return f"{self.post.title} shared on {self.platform}"
 
-        
-        
+    
+
         
         
         

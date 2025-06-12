@@ -7,7 +7,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin, 
 from django.contrib import messages
 from django.urls import reverse_lazy, reverse
 from django.http import Http404, JsonResponse
-from .models import Post, Category, Comment, PostInteraction, PostWatchTime
+from .models import Post, Category, Comment, PostInteraction, PostWatchTime, PostShare
 from django.db.models import Q, Case, When, Value, IntegerField
 from django.utils import timezone
 from datetime import timedelta
@@ -80,6 +80,15 @@ class PostDetailView(DetailView):
         context['comments'] = comments
         context['comment_sort'] = sort
         
+        # Get share counts for each platform
+        share_counts = {}
+        for platform, _ in PostShare.SHARE_PLATFORMS:
+            share_counts[platform] = PostShare.objects.filter(
+                post=post,
+                platform=platform
+            ).count()
+        
+        context['share_counts'] = share_counts
         return context
     
 class PostListView(ListView):
@@ -517,6 +526,29 @@ class PostWatchTimeView(LoginRequiredMixin, View):
         return JsonResponse({
             'status': 'success',
             'watch_time': watch_time.watch_time
+        })
+
+class PostShareView(View):
+    def post(self, request, slug):
+        post = get_object_or_404(Post, slug=slug)
+        platform = request.POST.get('platform')
+        
+        if platform not in dict(PostShare.SHARE_PLATFORMS).keys():
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Invalid platform'
+            }, status=400)
+            
+        # Create share record
+        PostShare.objects.create(
+            post=post,
+            platform=platform,
+            shared_by=request.user if request.user.is_authenticated else None
+        )
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': f'Share recorded for {platform}'
         })
 
 
