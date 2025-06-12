@@ -7,7 +7,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin, 
 from django.contrib import messages
 from django.urls import reverse_lazy, reverse
 from django.http import Http404, JsonResponse
-from .models import Post, Category, Comment, PostInteraction
+from .models import Post, Category, Comment, PostInteraction, PostWatchTime
 from django.db.models import Q, Case, When, Value, IntegerField
 from django.utils import timezone
 from datetime import timedelta
@@ -15,6 +15,8 @@ from django.contrib.auth import get_user_model
 from .analytics import SearchAnalytics
 from .forms import CommentForm
 from django.db import models
+from django.views.decorators.csrf import ensure_csrf_cookie
+from django.utils.decorators import method_decorator
 
 # Create your views here.
 
@@ -32,6 +34,8 @@ class PostDetailView(DetailView):
         context = super().get_context_data(**kwargs)
         post = context['post']
         context['post_content_html'] = mark_safe(markdown.markdown(post.content, extensions=['extra','codehilite', 'toc','tables']))
+        total_watch_time = PostWatchTime.objects.filter(post=post, user=self.request.user).aggregate(total=models.Sum('watch_time'))['total'] or 0
+        context['total_watch_time_minutes'] = total_watch_time // 60
         
         # Get user's vote for this post
         if self.request.user.is_authenticated:
@@ -480,7 +484,43 @@ class PostVoteCountView(View):
             'total': upvotes - downvotes
         })
 
+@method_decorator(ensure_csrf_cookie, name='dispatch')
+class PostWatchTimeView(LoginRequiredMixin, View):
+    def post(self, request, slug):
+        post = get_object_or_404(Post, slug=slug)
+        
+        # Debug logging
+        print(f"Watch time update request from user: {request.user.username}")
+        print(f"Is superuser: {request.user.is_superuser}")
+        print(f"Is author: {request.user == post.author}")
+        
+        # Don't track watch time for superusers or post authors
+        if request.user.is_superuser or request.user == post.author:
+            return JsonResponse({
+                'status': 'success',
+                'message': 'Watch time not tracked for superusers or post authors'
+            })
+            
+        # Get or create watch time record
+        watch_time, created = PostWatchTime.objects.get_or_create(
+            post=post,
+            user=request.user,
+            defaults={'watch_time': 0}
+        )
+        
+        # Update watch time (assuming 30-second intervals)
+        watch_time.watch_time += 30
+        watch_time.save()
+        
+        print(f"Updated watch time for user {request.user.username}: {watch_time.watch_time} seconds")
+        
+        return JsonResponse({
+            'status': 'success',
+            'watch_time': watch_time.watch_time
+        })
 
+
+            
 
 
 
