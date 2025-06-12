@@ -3,7 +3,7 @@ from .views import (
     PostDetailView, PostListView, PostCreateView, PostUpdateView, PostDeleteView,
     CategoryPostListView, SearchView, AddCommentView, AddReplyView,
     EditCommentView, DeleteCommentView, ModerateCommentView, check_new_comments,
-    PostVoteView, PostVoteCountView
+    PostVoteView, PostVoteCountView, PostWatchTimeView
 )
 
 urlpatterns = [
@@ -24,5 +24,6 @@ urlpatterns = [
 
     path('post/<slug:slug>/vote/', PostVoteView.as_view(), name='post_vote'),
     path('post/<slug:slug>/votes/', PostVoteCountView.as_view(), name='post_vote_count'),
+    path('post/<slug:slug>/watch-time/', PostWatchTimeView.as_view(), name='post_watch_time'),
 
 ]
