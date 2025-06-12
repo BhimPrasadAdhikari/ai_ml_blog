@@ -109,6 +109,28 @@ class Post(models.Model):
             self.slug = slugify(self.title)
         super().save(*args, **kwargs)
     
+    def get_upvotes(self):
+        """Get the number of upvotes for this post"""
+        return self.interactions.filter(vote_type='up').count()
+
+    def get_downvotes(self):
+        """Get the number of downvotes for this post"""
+        return self.interactions.filter(vote_type='down').count()
+
+    def get_vote_count(self):
+        """Get the total vote count (upvotes - downvotes)"""
+        return self.get_upvotes() - self.get_downvotes()
+
+    def get_user_vote(self, user):
+        """Get the user's vote for this post"""
+        if not user.is_authenticated:
+            return None
+        try:
+            interaction = self.interactions.get(user=user)
+            return interaction.vote_type
+        except PostInteraction.DoesNotExist:
+            return None
+
 class Comment(models.Model):
     """
     Model to store comments on blog posts.
@@ -176,10 +198,92 @@ class Comment(models.Model):
         return self.parent if self.is_reply else None
 
         
+class PostInteraction(models.Model):
+    """
+    Model to track user interactions with posts including votes and watch time.
+    """
+    post = models.ForeignKey(Post, 
+                           on_delete=models.CASCADE,
+                           related_name='interactions')
+    user = models.ForeignKey(get_user_model(),
+                           on_delete=models.CASCADE,
+                           related_name='post_interactions')
+    vote_type = models.CharField(
+        max_length=10,
+        choices=[('up', 'Upvote'), ('down', 'Downvote')],
+        null=True,
+        blank=True
+    )
+    watch_time = models.IntegerField(default=0)  # in seconds
+    last_read_position = models.IntegerField(default=0)  # scroll position
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        unique_together = ['post', 'user']
+        ordering = ['-created_at']
+        verbose_name = "Post Interaction"
+        verbose_name_plural = "Post Interactions"
 
+    def __str__(self):
+        return f"{self.user.username}'s interaction with {self.post.title}"
+
+    @property
+    def is_upvote(self):
+        return self.vote_type == 'up'
+    
+    @property
+    def is_downvote(self):
+        return self.vote_type == 'down'
+
+    def get_upvotes(self):
+        return self.interactions.filter(vote_type='up').count()
+    
+    def get_downvotes(self):
+        return self.interactions.filter(vote_type='down').count()
+    
+    def get_vote_count(self):
+        return self.get_upvotes() - self.get_downvotes()
+
+    def get_user_vote(self, user):
+        if not user.is_authenticated:
+            return None
+        try:
+            interaction = self.interactions.get(user=user)
+            return interaction.vote_type
+        except PostInteraction.DoesNotExist:
+            return None
+            
 
     
+class PostWatchTime(models.Model):
+    """
+    Model to track user watch time for a post.
+    """
+    post = models.ForeignKey(Post, 
+                             on_delete=models.CASCADE,
+                             related_name='watch_times')
+    user = models.ForeignKey(get_user_model(),
+                             on_delete=models.CASCADE,
+                             related_name='post_watch_times')
+    watch_time = models.IntegerField(default=0)
+    last_updated = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = ['post', 'user']
+        indexes = [
+            models.Index(fields=['post', 'user']),
+            models.Index(fields=['last_updated']),
+        ]
+
+
+    def __str__(self):
+        return f"{self.user.username}'s watch time for {self.post.title} is {self.watch_time} seconds"
+
+    
+
+
         
         
         

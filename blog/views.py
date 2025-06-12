@@ -7,7 +7,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin, 
 from django.contrib import messages
 from django.urls import reverse_lazy, reverse
 from django.http import Http404, JsonResponse
-from .models import Post, Category, Comment
+from .models import Post, Category, Comment, PostInteraction, PostWatchTime
 from django.db.models import Q, Case, When, Value, IntegerField
 from django.utils import timezone
 from datetime import timedelta
@@ -15,6 +15,8 @@ from django.contrib.auth import get_user_model
 from .analytics import SearchAnalytics
 from .forms import CommentForm
 from django.db import models
+from django.views.decorators.csrf import ensure_csrf_cookie
+from django.utils.decorators import method_decorator
 
 # Create your views here.
 
@@ -23,14 +25,30 @@ class PostDetailView(DetailView):
     template_name = 'blog/post_detail.html'
     context_object_name = 'post'
     slug_field = 'slug'
-    slug_url_arg = 'slug'
+    slug_url_kwarg = 'slug'
     
     def get_queryset(self):
         return Post.objects.filter(status='published')
+        
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         post = context['post']
         context['post_content_html'] = mark_safe(markdown.markdown(post.content, extensions=['extra','codehilite', 'toc','tables']))
+        total_watch_time = PostWatchTime.objects.filter(post=post, user=self.request.user).aggregate(total=models.Sum('watch_time'))['total'] or 0
+        context['total_watch_time_minutes'] = total_watch_time // 60
+        
+        # Get user's vote for this post
+        if self.request.user.is_authenticated:
+            try:
+                interaction = PostInteraction.objects.get(
+                    post=post,
+                    user=self.request.user
+                )
+                context['user_vote'] = interaction.vote_type
+            except PostInteraction.DoesNotExist:
+                context['user_vote'] = None
+        else:
+            context['user_vote'] = None
         
         # Get sort parameter
         sort = self.request.GET.get('sort', 'newest')
@@ -61,6 +79,7 @@ class PostDetailView(DetailView):
             
         context['comments'] = comments
         context['comment_sort'] = sort
+        
         return context
     
 class PostListView(ListView):
@@ -412,6 +431,99 @@ def check_new_comments(request):
     ).exists()
     
     return JsonResponse({'has_new_comments': has_new})
+
+class PostVoteView(LoginRequiredMixin, View):
+    def post(self, request, slug):
+        post = get_object_or_404(Post, slug=slug)
+        vote_type = request.POST.get('vote_type')
+        
+        if vote_type not in ['up', 'down']:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Invalid vote type'
+            }, status=400)
+
+        # Get or create interaction
+        interaction, created = PostInteraction.objects.get_or_create(
+            post=post,
+            user=request.user
+        )
+
+        # If the same vote type is clicked again, remove the vote
+        if interaction.vote_type == vote_type:
+            interaction.vote_type = None
+            interaction.save()
+            return JsonResponse({
+                'status': 'success',
+                'message': 'Vote removed',
+                'vote_count': post.get_vote_count()
+            })
+
+        # Update vote
+        interaction.vote_type = vote_type
+        interaction.save()
+
+        return JsonResponse({
+            'status': 'success',
+            'message': f'Vote {vote_type} recorded',
+            'vote_count': post.get_vote_count()
+        })
+
+class PostVoteCountView(View):
+    """
+    View to get post vote count
+    """
+    def get(self, request, slug):
+        post = get_object_or_404(Post, slug=slug)
+        upvotes = post.interactions.filter(vote_type='up').count()
+        downvotes = post.interactions.filter(vote_type='down').count()
+        
+        return JsonResponse({
+            'upvotes': upvotes,
+            'downvotes': downvotes,
+            'total': upvotes - downvotes
+        })
+
+@method_decorator(ensure_csrf_cookie, name='dispatch')
+class PostWatchTimeView(LoginRequiredMixin, View):
+    def post(self, request, slug):
+        post = get_object_or_404(Post, slug=slug)
+        
+        # Debug logging
+        print(f"Watch time update request from user: {request.user.username}")
+        print(f"Is superuser: {request.user.is_superuser}")
+        print(f"Is author: {request.user == post.author}")
+        
+        # Don't track watch time for superusers or post authors
+        if request.user.is_superuser or request.user == post.author:
+            return JsonResponse({
+                'status': 'success',
+                'message': 'Watch time not tracked for superusers or post authors'
+            })
+            
+        # Get or create watch time record
+        watch_time, created = PostWatchTime.objects.get_or_create(
+            post=post,
+            user=request.user,
+            defaults={'watch_time': 0}
+        )
+        
+        # Update watch time (assuming 30-second intervals)
+        watch_time.watch_time += 30
+        watch_time.save()
+        
+        print(f"Updated watch time for user {request.user.username}: {watch_time.watch_time} seconds")
+        
+        return JsonResponse({
+            'status': 'success',
+            'watch_time': watch_time.watch_time
+        })
+
+
+            
+
+
+
 
         
 
