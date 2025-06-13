@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Post, CustomUser, Category, Comment, PostInteraction
+from .models import Post, CustomUser, Category, Comment, PostInteraction, UserProfile
 from django.contrib.auth.admin import UserAdmin
 from .forms import PostAdminForm
 from .analytics import SearchAnalytics
@@ -54,5 +54,11 @@ class PostInteractionAdmin(admin.ModelAdmin):
     list_filter = ('vote_type', 'created_at')
     search_fields = ('post__title', 'user__username')
     date_hierarchy = 'created_at'
+
+@admin.register(UserProfile)
+class UserProfileAdmin(admin.ModelAdmin):
+    list_display = ('user', 'location', 'created_at', 'updated_at')
+    search_fields = ('user__username', 'user__email', 'location')
+    list_filter = ('created_at', 'updated_at')
 
     
