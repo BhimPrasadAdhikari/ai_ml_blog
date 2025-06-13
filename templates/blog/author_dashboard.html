@@ -1,0 +1,88 @@
+{% extends 'blog/base.html' %}
+
+{% block title %}Author Dashboard - AI/ML Blog{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <h1>Author Dashboard</h1>
+
+    <div class="dashboard-stats">
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-file-alt"></i>
+            </div>
+            <div class="stat-info">
+                <h3>Total Posts</h3>
+                <p>{{ post_stats.total_posts }}</p>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-eye"></i>
+            </div>
+            <div class="stat-info">
+                <h3>Total Views</h3>
+                <p>{{ post_stats.total_views }}</p>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-thumbs-up"></i>
+            </div>
+            <div class="stat-info">
+                <h3>Total Upvotes</h3>
+                <p>{{ post_stats.total_upvotes }}</p>
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-share-alt"></i>
+            </div>
+            <div class="stat-info">
+                <h3>Total Shares</h3>
+                <p>{{ post_stats.total_shares }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-sections">
+        <section class="recent-posts">
+            <h2>Recent Posts</h2>
+            {% if recent_posts %}
+                {% for post in recent_posts %}
+                    <article class="post-card">
+                        <h3><a href="{{ post.get_absolute_url }}">{{ post.title }}</a></h3>
+                        <div class="post-meta">
+                            <span>{{ post.created_at|date:"M d, Y" }}</span>
+                            <span>{{ post.get_upvotes }} upvotes</span>
+                            <span>{{ post.get_watch_time }} minutes read</span>
+                        </div>
+                    </article>
+                {% endfor %}
+            {% else %}
+                <p>No posts yet.</p>
+            {% endif %}
+        </section>
+
+        <section class="recent-comments">
+            <h2>Recent Comments</h2>
+            {% if recent_comments %}
+                {% for comment in recent_comments %}
+                    <div class="comment-card">
+                        <p>{{ comment.content|truncatewords:30 }}</p>
+                        <div class="comment-meta">
+                            <span>on <a href="{{ comment.post.get_absolute_url }}">{{ comment.post.title }}</a></span>
+                            <span>{{ comment.created_at|date:"M d, Y" }}</span>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p>No comments yet.</p>
+            {% endif %}
+        </section>
+    </div>
+</div>
+{% endblock %} 

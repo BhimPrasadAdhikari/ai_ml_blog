@@ -1,5 +1,5 @@
 from django import forms
-from .models import Post, Comment
+from .models import Post, Comment, UserProfile
 from allauth.account.forms import SignupForm
 class CustomSignupForm(SignupForm):
     phone_number = forms.CharField(max_length=15, label='Phone Number')
@@ -30,4 +30,37 @@ class CommentForm(forms.ModelForm):
                 'rows': 3,
                 'placeholder': 'Add a comment...',
             })
+        }
+
+class UserProfileForm(forms.ModelForm):
+    class Meta:
+        model = UserProfile
+        fields = ['bio', 'profile_picture', 'website', 'location', 
+                 'github', 'twitter', 'linkedin']
+        widgets = {
+            'bio': forms.Textarea(attrs={
+                'class': 'form-control',
+                'rows': 4,
+                'placeholder': 'Tell us about yourself...'
+            }),
+            'website': forms.URLInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'https://your-website.com'
+            }),
+            'location': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Your location'
+            }),
+            'github': forms.URLInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'https://github.com/username'
+            }),
+            'twitter': forms.URLInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'https://twitter.com/username'
+            }),
+            'linkedin': forms.URLInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'https://linkedin.com/in/username'
+            }),
         }

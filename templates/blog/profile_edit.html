@@ -1,0 +1,58 @@
+{% extends 'blog/base.html' %}
+
+{% block title %}Edit Profile - AI/ML Blog{% endblock %}
+
+{% block content %}
+<div class="edit-profile-container">
+    <h1>Edit Profile</h1>
+    
+    <form method="post" enctype="multipart/form-data" class="profile-form">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label for="{{ form.bio.id_for_label }}">Bio</label>
+            {{ form.bio }}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.profile_picture.id_for_label }}">Profile Picture</label>
+            {{ form.profile_picture }}
+            {% if profile.profile_picture %}
+                <div class="current-picture">
+                    <img src="{{ profile.profile_picture.url }}" alt="Current profile picture">
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.website.id_for_label }}">Website</label>
+            {{ form.website }}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.location.id_for_label }}">Location</label>
+            {{ form.location }}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.github.id_for_label }}">GitHub</label>
+            {{ form.github }}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.twitter.id_for_label }}">Twitter</label>
+            {{ form.twitter }}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.linkedin.id_for_label }}">LinkedIn</label>
+            {{ form.linkedin }}
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn-save">Save Changes</button>
+            <a href="{% url 'profile_detail' username=user.username %}" class="btn-cancel">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %} 
