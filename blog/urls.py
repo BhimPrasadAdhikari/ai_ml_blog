@@ -3,7 +3,9 @@ from .views import (
     PostDetailView, PostListView, PostCreateView, PostUpdateView, PostDeleteView,
     CategoryPostListView, SearchView, AddCommentView, AddReplyView,
     EditCommentView, DeleteCommentView, ModerateCommentView, check_new_comments,
-    PostVoteView, PostVoteCountView, PostWatchTimeView, PostShareView
+    PostVoteView, PostVoteCountView, PostWatchTimeView, PostShareView,
+    ProfileDetailView, ProfileEditView, AuthorDashboardView
+
 )
 
 urlpatterns = [
@@ -26,5 +28,8 @@ urlpatterns = [
     path('post/<slug:slug>/votes/', PostVoteCountView.as_view(), name='post_vote_count'),
     path('post/<slug:slug>/watch-time/', PostWatchTimeView.as_view(), name='post_watch_time'),
     path('post/<slug:slug>/share/', PostShareView.as_view(), name='post_share'),
+    path('profile/<str:username>/', ProfileDetailView.as_view(), name='profile_detail'),
+    path('profile/<str:username>/edit/', ProfileEditView.as_view(), name='profile_edit'),
+    path('dashboard/', AuthorDashboardView.as_view(), name='author_dashboard'),
 
 ]

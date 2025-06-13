@@ -167,6 +167,442 @@
                 width: 100%;
             }
         }
+
+        /* User Menu Styles */
+        .user-menu {
+            margin-left: 1rem;
+            position: relative;
+        }
+
+        .user-menu-trigger {
+            cursor: pointer;
+            position: relative;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            transition: transform 0.3s ease;
+        }
+
+        .user-menu-trigger:hover .user-avatar {
+            transform: scale(1.05);
+        }
+
+        .user-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            width: 280px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            padding: 1rem;
+            margin-top: 0.5rem;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .user-menu-trigger:hover .user-dropdown {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .user-avatar-large {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+
+        .user-details h4 {
+            margin: 0;
+            color: #2c3e50;
+            font-size: 1.1rem;
+        }
+
+        .user-details p {
+            margin: 0.25rem 0 0;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+
+        .dropdown-divider {
+            height: 1px;
+            background: #e9ecef;
+            margin: 0.5rem 0;
+        }
+
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            color: #495057;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .dropdown-item:hover {
+            background: #f8f9fa;
+            color: #667eea;
+        }
+
+        .dropdown-item i {
+            width: 20px;
+            text-align: center;
+        }
+
+        /* Auth Buttons */
+        .auth-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn-login, .btn-signup {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-login {
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-signup {
+            color: white;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-login:hover, .btn-signup:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-1px);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .user-menu {
+                margin: 1rem 0 0 0;
+            }
+
+            .user-dropdown {
+                position: fixed;
+                top: auto;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                width: 100%;
+                border-radius: 12px 12px 0 0;
+                margin: 0;
+            }
+
+            .auth-buttons {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .btn-login, .btn-signup {
+                text-align: center;
+            }
+        }
+
+        /* Profile Styles */
+        .profile-header {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            overflow: hidden;
+        }
+
+        .profile-cover {
+            height: 200px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .profile-info {
+            padding: 2rem;
+            position: relative;
+            margin-top: -60px;
+        }
+
+        .profile-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 4px solid white;
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+
+        .profile-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .avatar-placeholder {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            font-weight: bold;
+        }
+
+        .profile-details h1 {
+            margin: 0 0 0.5rem 0;
+            color: #2c3e50;
+        }
+
+        .bio {
+            color: #6c757d;
+            margin-bottom: 1.5rem;
+        }
+
+        .profile-stats {
+            display: flex;
+            gap: 2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            display: block;
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .stat-label {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+
+        .btn-edit-profile {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.6rem 1.2rem;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-edit-profile:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .social-links {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .social-link {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #f8f9fa;
+            color: #495057;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .social-link:hover {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .profile-sections {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        /* Edit Profile Styles */
+        .edit-profile-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .profile-form {
+            margin-top: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #2c3e50;
+            font-weight: 500;
+        }
+
+        .current-picture {
+            margin-top: 1rem;
+        }
+
+        .current-picture img {
+            max-width: 200px;
+            border-radius: 8px;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .btn-save {
+            padding: 0.8rem 1.5rem;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-save:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-cancel {
+            padding: 0.8rem 1.5rem;
+            background: #f8f9fa;
+            color: #495057;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-cancel:hover {
+            background: #e9ecef;
+        }
+
+        /* Dashboard Styles */
+        .dashboard-container {
+            padding: 2rem;
+        }
+
+        .dashboard-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .stat-info h3 {
+            margin: 0;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+
+        .stat-info p {
+            margin: 0.25rem 0 0;
+            color: #2c3e50;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .dashboard-sections {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .profile-sections,
+            .dashboard-sections {
+                grid-template-columns: 1fr;
+            }
+
+            .profile-stats {
+                flex-wrap: wrap;
+                gap: 1rem;
+            }
+
+            .stat-item {
+                flex: 1 1 calc(50% - 1rem);
+            }
+        }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
@@ -184,20 +620,63 @@
                     </ul>
                 </nav>
                 <div class="search-container">
-                        <form 
-                        action="{% url 'search_posts' %}" 
-                        method="get" class="search-form">
-                            <input type="search" 
-                                   name="q" 
-                                   placeholder="Search posts..." 
-                                   class="search-input"
-                                   value="{{ request.GET.q|default:'' }}"
-                                   aria-label="Search posts">
-                            <button type="submit" class="search-button" aria-label="Submit search">
-                                🔍
-                            </button>
-                        </form>
-                    </div>
+                    <form 
+                    action="{% url 'search_posts' %}" 
+                    method="get" class="search-form">
+                        <input type="search" 
+                               name="q" 
+                               placeholder="Search posts..." 
+                               class="search-input"
+                               value="{{ request.GET.q|default:'' }}"
+                               aria-label="Search posts">
+                        <button type="submit" class="search-button" aria-label="Submit search">
+                            🔍
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Add User Menu -->
+                <div class="user-menu">
+                    {% if user.is_authenticated %}
+                        <div class="user-menu-trigger">
+                            <div class="user-avatar">
+                                {{ user.username|first|upper }}
+                            </div>
+                            <div class="user-dropdown">
+                                <div class="user-info">
+                                    <div class="user-avatar-large">
+                                        {{ user.username|first|upper }}
+                                    </div>
+                                    <div class="user-details">
+                                        <h4>{{ user.get_full_name|default:user.username }}</h4>
+                                        <p>{{ user.email }}</p>
+                                    </div>
+                                </div>
+                                <div class="dropdown-divider"></div>
+                                <a href="{% url 'profile_detail' username=user.username %}" class="dropdown-item">
+                                    <i class="fas fa-user"></i> My Profile
+                                </a>
+                                <a href="{% url 'author_dashboard' %}" class="dropdown-item">
+                                    <i class="fas fa-chart-line"></i> Dashboard
+                                </a>
+                                <a href="{% url 'account_email' %}" class="dropdown-item">
+                                    <i class="fas fa-envelope"></i> Email Settings
+                                </a>
+                                <a href="{% url 'account_change_password' %}" class="dropdown-item">
+                                    <i class="fas fa-key"></i> Change Password
+                                </a>
+                                <a href="{% url 'account_logout' %}" class="dropdown-item">
+                                    <i class="fas fa-sign-out-alt"></i> Sign Out
+                                </a>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="auth-buttons">
+                            <a href="{% url 'account_login' %}" class="btn-login">Sign In</a>
+                            <a href="{% url 'account_signup' %}" class="btn-signup">Sign Up</a>
+                        </div>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </header>
