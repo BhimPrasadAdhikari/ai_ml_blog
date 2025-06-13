@@ -1,19 +1,19 @@
 from django.shortcuts import render, redirect, get_object_or_404
 import markdown
 from django.utils.safestring import mark_safe
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView
 from django.views import View
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin, PermissionRequiredMixin
 from django.contrib import messages
 from django.urls import reverse_lazy, reverse
 from django.http import Http404, JsonResponse
-from .models import Post, Category, Comment, PostInteraction, PostWatchTime, PostShare
+from .models import Post, Category, Comment, PostInteraction, PostWatchTime, PostShare, UserProfile
 from django.db.models import Q, Case, When, Value, IntegerField
 from django.utils import timezone
 from datetime import timedelta
 from django.contrib.auth import get_user_model
 from .analytics import SearchAnalytics
-from .forms import CommentForm
+from .forms import CommentForm, UserProfileForm
 from django.db import models
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.utils.decorators import method_decorator
@@ -550,6 +550,90 @@ class PostShareView(View):
             'status': 'success',
             'message': f'Share recorded for {platform}'
         })
+
+class ProfileDetailView(DetailView):
+    model = UserProfile
+    template_name = 'blog/profile_detail.html'
+    context_object_name = 'profile'
+    slug_field = 'user__username'
+    slug_url_kwarg = 'username'
+
+    def get_object(self, queryset=None):
+        username = self.kwargs.get('username')
+        user = get_object_or_404(get_user_model(), username=username)
+        try:
+            return user.profile
+        except UserProfile.DoesNotExist:
+            # Create profile if it doesn't exist
+            return UserProfile.objects.create(user=user)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.object.user
+        context['user_posts'] = user.posts.filter(status='published')[:5]
+        context['user_comments'] = user.comments.filter(status='approved')[:5]
+        context['stats'] = {
+            'total_posts': self.object.total_posts,
+            'total_comments': self.object.total_comments,
+            'total_upvotes': self.object.total_upvotes_received,
+            'total_watch_time': self.object.total_watch_time,
+            'total_shares': self.object.total_shares,
+        }
+        return context
+
+class ProfileEditView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = UserProfile
+    form_class = UserProfileForm
+    template_name = 'blog/profile_edit.html'
+
+    def test_func(self):
+        """Ensure users can only edit their own profile"""
+        username = self.kwargs.get('username')
+        return self.request.user.username == username
+
+    def get_object(self, queryset=None):
+        username = self.kwargs.get('username')
+        user = get_object_or_404(get_user_model(), username=username)
+        return user.profile
+
+    def get_success_url(self):
+        return reverse('profile_detail', kwargs={'username': self.request.user.username})
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Profile updated successfully!')
+        return super().form_valid(form)
+
+class AuthorDashboardView(LoginRequiredMixin, TemplateView):
+    template_name = 'blog/author_dashboard.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        
+        # Get recent posts
+        context['recent_posts'] = user.posts.filter(status='published')[:5]
+        
+        # Get post statistics
+        context['post_stats'] = {
+            'total_posts': user.profile.total_posts,
+            'total_views': PostWatchTime.objects.filter(
+                post__author=user
+            ).count(),
+            'total_upvotes': user.profile.total_upvotes_received,
+            'total_shares': user.profile.total_shares,
+        }
+        
+        # Get recent comments
+        context['recent_comments'] = user.comments.filter(status='approved')[:5]
+        
+        # Get watch time statistics
+        context['watch_time_stats'] = PostWatchTime.objects.filter(
+            post__author=user
+        ).aggregate(
+            total_minutes=models.Sum('watch_time') / 60
+        )
+        
+        return context
 
 
             

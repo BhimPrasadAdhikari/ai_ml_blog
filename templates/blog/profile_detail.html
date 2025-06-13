@@ -1,0 +1,107 @@
+{% extends 'blog/base.html' %}
+
+{% block title %}{{ profile.user.username }}'s Profile - AI/ML Blog{% endblock %}
+
+{% block content %}
+<div class="profile-header">
+    <div class="profile-cover"></div>
+    <div class="profile-info">
+        <div class="profile-avatar">
+            {% if profile.profile_picture %}
+                <img src="{{ profile.profile_picture.url }}" alt="{{ profile.user.username }}">
+            {% else %}
+                <div class="avatar-placeholder">
+                    {{ profile.user.username|first|upper }}
+                </div>
+            {% endif %}
+        </div>
+        <div class="profile-details">
+            <h1>{{ profile.user.get_full_name|default:profile.user.username }}</h1>
+            {% if profile.bio %}
+                <p class="bio">{{ profile.bio }}</p>
+            {% endif %}
+            <div class="profile-stats">
+                <div class="stat-item">
+                    <span class="stat-value">{{ stats.total_posts }}</span>
+                    <span class="stat-label">Posts</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value">{{ stats.total_comments }}</span>
+                    <span class="stat-label">Comments</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value">{{ stats.total_upvotes }}</span>
+                    <span class="stat-label">Upvotes</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value">{{ stats.total_shares }}</span>
+                    <span class="stat-label">Shares</span>
+                </div>
+            </div>
+            {% if user == profile.user %}
+<a href="{% url 'profile_edit' username=profile.user.username %}" class="btn-edit-profile">Edit Profile</a>            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="profile-content">
+    <div class="social-links">
+        {% if profile.website %}
+            <a href="{{ profile.website }}" target="_blank" class="social-link">
+                <i class="fas fa-globe"></i>
+            </a>
+        {% endif %}
+        {% if profile.github %}
+            <a href="{{ profile.github }}" target="_blank" class="social-link">
+                <i class="fab fa-github"></i>
+            </a>
+        {% endif %}
+        {% if profile.twitter %}
+            <a href="{{ profile.twitter }}" target="_blank" class="social-link">
+                <i class="fab fa-twitter"></i>
+            </a>
+        {% endif %}
+        {% if profile.linkedin %}
+            <a href="{{ profile.linkedin }}" target="_blank" class="social-link">
+                <i class="fab fa-linkedin"></i>
+            </a>
+        {% endif %}
+    </div>
+
+    <div class="profile-sections">
+        <section class="recent-posts">
+            <h2>Recent Posts</h2>
+            {% if user_posts %}
+                {% for post in user_posts %}
+                    <article class="post-card">
+                        <h3><a href="{{ post.get_absolute_url }}">{{ post.title }}</a></h3>
+                        <div class="post-meta">
+                            <span>{{ post.created_at|date:"M d, Y" }}</span>
+                            <span>{{ post.get_upvotes }} upvotes</span>
+                        </div>
+                    </article>
+                {% endfor %}
+            {% else %}
+                <p>No posts yet.</p>
+            {% endif %}
+        </section>
+
+        <section class="recent-comments">
+            <h2>Recent Comments</h2>
+            {% if user_comments %}
+                {% for comment in user_comments %}
+                    <div class="comment-card">
+                        <p>{{ comment.content|truncatewords:30 }}</p>
+                        <div class="comment-meta">
+                            <span>on <a href="{{ comment.post.get_absolute_url }}">{{ comment.post.title }}</a></span>
+                            <span>{{ comment.created_at|date:"M d, Y" }}</span>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p>No comments yet.</p>
+            {% endif %}
+        </section>
+    </div>
+</div>
+{% endblock %} 
