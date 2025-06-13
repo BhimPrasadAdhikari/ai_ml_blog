@@ -55,6 +55,7 @@ class PostInteractionAdmin(admin.ModelAdmin):
     search_fields = ('post__title', 'user__username')
     date_hierarchy = 'created_at'
 
+
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
     list_display = ('user', 'location', 'created_at', 'updated_at')
