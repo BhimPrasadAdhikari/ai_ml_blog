@@ -2,41 +2,40 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth import get_user_model
 from django.utils.text import slugify
-from django.contrib.auth.base_user import BaseUserManager
 from django.core.validators import RegexValidator
 from phonenumber_field.modelfields import PhoneNumberField
 from django.urls import reverse
-from django.db.models.signals import post_save
-from django.dispatch import receiver
-
-from django.db.models import CharField, ImageField, DateTimeField,BooleanField, TextField, EmailField,ForeignKey, ManyToManyField
-from markdownx.models import MarkdownxField
-
-
-
-class CustomUserManager(BaseUserManager):
-    def create_user(self, email, phone_number, password=None, **extra_fields):
-        if not email:
-            raise ValueError('The email field must be set')
-        if not phone_number:
-            raise ValueError('the phone number field must be set')
-        email = self.normalize_email(email)
-        user = self.model(email=email, phone_number=phone_number, **extra_fields)
-        user.set_password(password)
-        user.save(using=self._db)
-        return user
-    def create_superuser(self, email, phone_number, password=None, **extra_fields):
-        extra_fields.setdefault('is_staff', True)
-        extra_fields.setdefault('is_superuser', True)
-        
-        return self.create_user(email, phone_number, password, **extra_fields)
-    
-    
-
+from django.core.exceptions import ValidationError
+from django.core.files.images import get_image_dimensions
+from django.db.models import (
+    CharField,
+    TextField,
+    ImageField,
+    ForeignKey,
+    ManyToManyField,
+    DateTimeField,
+    BooleanField,
+    SET_NULL,
+    IntegerField,
+    URLField,
+    OneToOneField,
+    CASCADE,
+    TextChoices,
+    Sum,
+    Index,
+    SET,
+)
+from django.contrib.auth.base_user import BaseUserManager
+from .validators import validate_image_size, validate_image_dimensions, validate_image_extension
+from .managers import CustomUserManager
+from PIL import Image
+import os
+from .constants import PostStatus, CommentStatus, VoteType, SharePlatform, PostInteractionType, MAX_IMAGE_SIZE, MAX_IMAGE_DIMENSION, MAX_THUMBNAIL_DIMENSION, VALID_IMAGE_EXTENSIONS, VALID_VIDEO_EXTENSIONS, VALID_AUDIO_EXTENSIONS, VALID_DOCUMENT_EXTENSIONS, VALID_ARCHIVE_EXTENSIONS, VALID_CODE_EXTENSIONS, VALID_TEXT_EXTENSIONS
+from .mixins import TimestampMixin, SlugMixin, ImageProcessingMixin
 class CustomUser(AbstractUser):
    
     phone_number = PhoneNumberField(unique=True, null=False, blank=False)
-    email = EmailField(unique=True)
+    email = models.EmailField(unique=True)
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['phone_number']
     objects = CustomUserManager()
@@ -44,37 +43,35 @@ class CustomUser(AbstractUser):
     def __str__(self):
         return self.email
 
-class Category(models.Model):
+class Category(SlugMixin, models.Model):
     name = CharField(max_length=100, unique=True)
-    slug = models.SlugField(unique=True, blank=True)
     
     class Meta:
         verbose_name_plural = 'Categories'
         
-    def save(self, *args, **kwargs):
-        if not self.slug:
-            self.slug = slugify(self.name)
-        super().save(*args, **kwargs)
     def __str__(self):
         return self.name
     def get_absolute_url(self):
         return reverse('category_detail', kwargs={'slug': self.slug})
-    
-class Post(models.Model):
+
+class Post(SlugMixin, TimestampMixin, ImageProcessingMixin, models.Model):
     """
     Model to store blog posts for the AI/ML blog.
     """
-    STATUS_CHOICE = (
-        ('draft', 'Draft'),
-        ('published', 'Published')
-    )
+    STATUS_CHOICE = PostStatus.choices
     title = CharField(max_length=200)
-    slug = CharField(max_length=255, unique=True, blank=True)
     summary = TextField(max_length=500, help_text="A short summary of the post")
-    content = MarkdownxField()
-    image = ImageField(upload_to='', blank=True, null=True)
+    content = TextField()
+    image = ImageField(upload_to='',
+                       blank=True, 
+                       null=True,
+                       validators=[
+                           validate_image_size,
+                           validate_image_dimensions,
+                           validate_image_extension
+                       ])
     author = ForeignKey(get_user_model(),
-                        on_delete=models.CASCADE,
+                        on_delete=CASCADE,
                         related_name='posts')
     categories = ManyToManyField(Category, 
                                  related_name='posts',
@@ -84,9 +81,7 @@ class Post(models.Model):
                      help_text="comma-separated tags")
     status = CharField(max_length=10, 
                        choices=STATUS_CHOICE,
-                       default='draft')
-    created_at = DateTimeField(auto_now_add=True)
-    updated_at = DateTimeField(auto_now=True)
+                       default=PostStatus.DRAFT)
     published_at = DateTimeField(blank=True, null=True)
     
     
@@ -107,17 +102,17 @@ class Post(models.Model):
         ordering = ['-published_at','-created_at']
         
     def save(self, *args, **kwargs):
-        if not self.slug:
-            self.slug = slugify(self.title)
         super().save(*args, **kwargs)
+        if self.image:
+            self.process_image(self.image)
     
     def get_upvotes(self):
         """Get the number of upvotes for this post"""
-        return self.interactions.filter(vote_type='up').count()
+        return self.interactions.filter(vote_type=VoteType.UP).count()
 
     def get_downvotes(self):
         """Get the number of downvotes for this post"""
-        return self.interactions.filter(vote_type='down').count()
+        return self.interactions.filter(vote_type=VoteType.DOWN).count()
 
     def get_vote_count(self):
         """Get the total vote count (upvotes - downvotes)"""
@@ -133,41 +128,35 @@ class Post(models.Model):
         except PostInteraction.DoesNotExist:
             return None
 
-class Comment(models.Model):
+class Comment(TimestampMixin, models.Model):
     """
     Model to store comments on blog posts.
     """
-    post = models.ForeignKey(Post, 
-                           on_delete=models.CASCADE,
+    post = ForeignKey(Post, 
+                           on_delete=CASCADE,
                            related_name='comments')
-    author = models.ForeignKey(get_user_model(),
-                             on_delete=models.CASCADE,
+    author = ForeignKey(get_user_model(),
+                             on_delete=CASCADE,
                              related_name='comments')
-    content = models.TextField()
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    parent = models.ForeignKey('self',
-                             on_delete=models.CASCADE,
+    content = TextField()
+    parent = ForeignKey('self',
+                             on_delete=CASCADE,
                              null=True,
                              blank=True,
                              related_name='replies')
 
-    is_edited = models.BooleanField(default=False)
+    is_edited = BooleanField(default=False)
     
-    STATUS_CHOICES = (
-        ('pending', 'Pending'),
-        ('approved', 'Approved'),
-        ('rejected', 'Rejected')
-    )
-    status = models.CharField(
+    STATUS_CHOICES = CommentStatus.choices
+    status = CharField(
         max_length=10,
         choices=STATUS_CHOICES,
-        default='pending'
+        default=CommentStatus.PENDING
     )
-    moderated_at = models.DateTimeField(null=True, blank=True)
-    moderated_by = models.ForeignKey(
+    moderated_at = DateTimeField(null=True, blank=True)
+    moderated_by = ForeignKey(
         get_user_model(),
-        on_delete=models.SET_NULL,
+        on_delete=SET_NULL,
         null=True,
         blank=True,
         related_name='moderated_comments'
@@ -200,26 +189,24 @@ class Comment(models.Model):
         return self.parent if self.is_reply else None
 
         
-class PostInteraction(models.Model):
+class PostInteraction(TimestampMixin, models.Model):
     """
     Model to track user interactions with posts including votes and watch time.
     """
-    post = models.ForeignKey(Post, 
-                           on_delete=models.CASCADE,
+    post = ForeignKey(Post, 
+                           on_delete=CASCADE,
                            related_name='interactions')
-    user = models.ForeignKey(get_user_model(),
-                           on_delete=models.CASCADE,
+    user = ForeignKey(get_user_model(),
+                           on_delete=CASCADE,
                            related_name='post_interactions')
-    vote_type = models.CharField(
+    vote_type = CharField(
         max_length=10,
-        choices=[('up', 'Upvote'), ('down', 'Downvote')],
+        choices=VoteType.choices,
         null=True,
         blank=True
     )
-    watch_time = models.IntegerField(default=0)  # in seconds
-    last_read_position = models.IntegerField(default=0)  # scroll position
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    watch_time = IntegerField(default=0)  # in seconds
+    last_read_position = IntegerField(default=0)  # scroll position
 
     class Meta:
         unique_together = ['post', 'user']
@@ -232,17 +219,17 @@ class PostInteraction(models.Model):
 
     @property
     def is_upvote(self):
-        return self.vote_type == 'up'
+        return self.vote_type == VoteType.UP
     
     @property
     def is_downvote(self):
-        return self.vote_type == 'down'
+        return self.vote_type == VoteType.DOWN
 
     def get_upvotes(self):
-        return self.interactions.filter(vote_type='up').count()
+        return self.interactions.filter(vote_type=VoteType.UP).count()
     
     def get_downvotes(self):
-        return self.interactions.filter(vote_type='down').count()
+        return self.interactions.filter(vote_type=VoteType.DOWN).count()
     
     def get_vote_count(self):
         return self.get_upvotes() - self.get_downvotes()
@@ -258,25 +245,22 @@ class PostInteraction(models.Model):
             
 
     
-class PostWatchTime(models.Model):
+class PostWatchTime(TimestampMixin, models.Model):
     """
     Model to track user watch time for a post.
     """
-    post = models.ForeignKey(Post, 
-                             on_delete=models.CASCADE,
+    post = ForeignKey(Post, 
+                             on_delete=CASCADE,
                              related_name='watch_times')
-    user = models.ForeignKey(get_user_model(),
-                             on_delete=models.CASCADE,
+    user = ForeignKey(get_user_model(),
+                             on_delete=CASCADE,
                              related_name='post_watch_times')
-    watch_time = models.IntegerField(default=0)
-    last_updated = models.DateTimeField(auto_now=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    
+    watch_time = IntegerField(default=0)   
     class Meta:
         unique_together = ['post', 'user']
         indexes = [
-            models.Index(fields=['post', 'user']),
-            models.Index(fields=['last_updated']),
+            Index(fields=['post', 'user']),
+            Index(fields=['updated_at']),
         ]
 
 
@@ -285,24 +269,17 @@ class PostWatchTime(models.Model):
 
     
 
-class PostShare(models.Model):
-    SHARE_PLATFORMS = [
-        ('twitter', 'Twitter'),
-        ('facebook', 'Facebook'),
-        ('linkedin', 'LinkedIn'),
-        ('whatsapp', 'WhatsApp'),
-        ('telegram', 'Telegram'),
-    ]
+class PostShare(TimestampMixin, models.Model):
+    SHARE_PLATFORMS = SharePlatform.choices
     
-    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='shares')
-    platform = models.CharField(max_length=20, choices=SHARE_PLATFORMS)
-    shared_at = models.DateTimeField(auto_now_add=True)
-    shared_by = models.ForeignKey(get_user_model(), on_delete=models.SET_NULL, null=True, blank=True)
-    
+    post = ForeignKey(Post, on_delete=CASCADE, related_name='shares')
+    platform = CharField(max_length=20, choices=SHARE_PLATFORMS)
+    shared_by = ForeignKey(get_user_model(), on_delete=SET_NULL, null=True, blank=True)
+   
     class Meta:
         indexes = [
-            models.Index(fields=['post', 'platform']),
-            models.Index(fields=['shared_at']),
+            Index(fields=['post', 'platform']),
+            Index(fields=['created_at']),
         ]
     
     def __str__(self):
@@ -310,17 +287,15 @@ class PostShare(models.Model):
 
     
 
-class UserProfile(models.Model):
-    user = models.OneToOneField(get_user_model(), on_delete=models.CASCADE, related_name='profile')
-    bio = models.TextField(max_length=500, blank=True)
-    profile_picture = models.ImageField(upload_to='profile_pictures/', blank=True, null=True)
-    website = models.URLField(max_length=200, blank=True)
-    location = models.CharField(max_length=100, blank=True)
-    github = models.URLField(max_length=200, blank=True)
-    twitter = models.URLField(max_length=200, blank=True)
-    linkedin = models.URLField(max_length=200, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+class UserProfile(TimestampMixin, models.Model):
+    user = OneToOneField(get_user_model(), on_delete=CASCADE, related_name='profile')
+    bio = TextField(max_length=500, blank=True)
+    profile_picture = ImageField(upload_to='profile_pictures/', blank=True, null=True)
+    website = URLField(max_length=200, blank=True)
+    location = CharField(max_length=100, blank=True)
+    github = URLField(max_length=200, blank=True)
+    twitter = URLField(max_length=200, blank=True)
+    linkedin = URLField(max_length=200, blank=True)
 
     def __str__(self):
         return f"{self.user.username}'s Profile"
@@ -330,24 +305,24 @@ class UserProfile(models.Model):
 
     @property
     def total_posts(self):
-        return self.user.posts.filter(status='published').count()
+        return self.user.posts.filter(status=PostStatus.PUBLISHED).count()
 
     @property
     def total_comments(self):
-        return self.user.comments.filter(status='approved').count()
+        return self.user.comments.filter(status=CommentStatus.APPROVED).count()
 
     @property
     def total_upvotes_received(self):
         return PostInteraction.objects.filter(
             post__author=self.user,
-            vote_type='up'
+            vote_type=VoteType.UP
         ).count()
 
     @property
     def total_watch_time(self):
         return PostWatchTime.objects.filter(
             post__author=self.user
-        ).aggregate(total=models.Sum('watch_time'))['total'] or 0
+        ).aggregate(total=Sum('watch_time'))['total'] or 0
 
     @property
     def total_shares(self):
@@ -359,22 +334,13 @@ class UserProfile(models.Model):
         verbose_name = "User Profile"
         verbose_name_plural = "User Profiles"
 
-@receiver(post_save, sender=CustomUser)
-def create_user_profile(sender, instance, created, **kwargs):
-    if created:
-        UserProfile.objects.create(user=instance)
 
-@receiver(post_save, sender=CustomUser)
-def save_user_profile(sender, instance, **kwargs):
-    instance.profile.save()
 
-    
 
-        
-        
-        
-        
-        
-        
-        
-    
+
+
+
+
+
+
+
