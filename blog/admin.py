@@ -10,13 +10,14 @@ class CategoryAdmin(admin.ModelAdmin):
     list_display = ('name','slug')
     list_filter = ('name',)
     search_fields = ('name','slug')
+
 @admin.register(Post)
 class PostAdmin(admin.ModelAdmin):
     form = PostAdminForm
     list_display = ('title','slug','summary','content','image','tags','status','created_at','updated_at','published_at')
-    list_filter = ('slug','status')
-    search_fields =('title','slug','author')
-    
+    list_filter = ('status',)  # removed 'slug'
+    search_fields =('title','slug','author__username')
+
 @admin.register(CustomUser)
 class CustomUserAdmin(admin.ModelAdmin):
     model= CustomUser
@@ -24,7 +25,7 @@ class CustomUserAdmin(admin.ModelAdmin):
     fieldsets = UserAdmin.fieldsets + (
         (None, {'fields':('phone_number',)}),
     )
-    
+
 @admin.register(SearchAnalytics)
 class SearchAnalyticsAdmin(admin.ModelAdmin):
     list_display = ('query', 'timestamp', 'results_count', 'user', 'ip_address')
@@ -32,21 +33,19 @@ class SearchAnalyticsAdmin(admin.ModelAdmin):
     search_fields = ('query', 'user__username')
     readonly_fields = ('timestamp',)
     date_hierarchy = 'timestamp'
-    
 
 @admin.register(Comment)
 class CommentAdmin(admin.ModelAdmin):
     list_display = ('author', 'post', 'content', 'created_at', 'is_reply', 'is_edited')
-    list_filter = ('created_at', 'parent','is_edited')
+    list_filter = ('is_edited',)  # removed 'created_at', 'parent'
     search_fields = ('author__username', 'post__title', 'content')
     readonly_fields = ('created_at', 'updated_at')
-    date_hierarchy = 'created_at'
-    
+    # removed date_hierarchy
+
     def is_reply(self, obj):
         return obj.is_reply
     is_reply.boolean = True
     is_reply.short_description = 'Is Reply'
-    
 
 @admin.register(PostInteraction)
 class PostInteractionAdmin(admin.ModelAdmin):
@@ -55,11 +54,9 @@ class PostInteractionAdmin(admin.ModelAdmin):
     search_fields = ('post__title', 'user__username')
     date_hierarchy = 'created_at'
 
-
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
     list_display = ('user', 'location', 'created_at', 'updated_at')
     search_fields = ('user__username', 'user__email', 'location')
     list_filter = ('created_at', 'updated_at')
 
-    
