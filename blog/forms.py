@@ -1,8 +1,16 @@
 from django import forms
 from .models import Post, Comment, UserProfile
 from allauth.account.forms import SignupForm
+from phonenumber_field.formfields import PhoneNumberField
+
 class CustomSignupForm(SignupForm):
-    phone_number = forms.CharField(max_length=15, label='Phone Number')
+    phone_number = PhoneNumberField(
+        label='Phone Number',
+        error_messages={
+            'invalid': 'Enter a valid phone number (e.g. +1234567890)',
+            'required': 'Phone number is required'
+        }
+    )
     
     def save(self, request):
         user = super(CustomSignupForm,self).save(request)

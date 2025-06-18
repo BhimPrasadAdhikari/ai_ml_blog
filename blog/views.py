@@ -17,6 +17,7 @@ from .forms import CommentForm, UserProfileForm
 from django.db import models
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.utils.decorators import method_decorator
+from django.core.paginator import Paginator
 
 # Create your views here.
 
@@ -28,13 +29,31 @@ class PostDetailView(DetailView):
     slug_url_kwarg = 'slug'
     
     def get_queryset(self):
-        return Post.objects.filter(status='published')
+        return Post.objects.select_related('author')\
+            .prefetch_related(
+                'categories',
+                models.Prefetch(
+                    'comments',
+                    queryset=Comment.objects.select_related('author', 'moderated_by')
+                        .filter(parent__isnull=True)
+                        .prefetch_related(
+                            models.Prefetch(
+                                'replies',
+                                queryset=Comment.objects.select_related('author'),
+                                to_attr='prefetched_replies'  # <-- use a unique name
+                            )
+                        )
+                )
+            )
         
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         post = context['post']
         context['post_content_html'] = mark_safe(markdown.markdown(post.content, extensions=['extra','codehilite', 'toc','tables']))
-        total_watch_time = PostWatchTime.objects.filter(post=post, user=self.request.user).aggregate(total=models.Sum('watch_time'))['total'] or 0
+        total_watch_time = PostWatchTime.objects.filter(
+            post=post, 
+            user=self.request.user
+            ).aggregate(total=models.Sum('watch_time'))['total'] or 0
         context['total_watch_time_minutes'] = total_watch_time // 60
         
         # Get user's vote for this post
@@ -77,8 +96,17 @@ class PostDetailView(DetailView):
             # Regular users can only see approved comments
             comments = comments.filter(status='approved')
             
-        context['comments'] = comments
-        context['comment_sort'] = sort
+        # Add pagination for comments
+        paginator = Paginator(comments, 10)
+        page = self.request.GET.get('page')
+        context['comments'] = paginator.get_page(page)
+        
+        if self.request.user.is_authenticated:
+            context['comment_form'] = CommentForm()
+            context['user_interaction'] = PostInteraction.objects.filter(
+                post=self.object,
+                user=self.request.user
+            ).first()
         
         # Get share counts for each platform
         share_counts = {}
@@ -95,15 +123,25 @@ class PostListView(ListView):
     model = Post
     template_name = 'blog/post_list.html'
     context_object_name = 'posts'
+    paginate_by = 10
     
     def get_queryset(self):
-        return Post.objects.filter(status='published').order_by('-created_at')
+        queryset = Post.objects.select_related('author')\
+            .prefetch_related('categories')\
+            .filter(status='published')\
+            .order_by('-published_at')
+            
+        # Search functionality
+        query = self.request.GET.get('q')
+        if query:
+            queryset = queryset.filter(
+                Q(title__icontains=query) |
+                Q(content__icontains=query) |
+                Q(summary__icontains=query)
+            )
+            
+        return queryset
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['categories'] = Category.objects.all()
-        return context
-    
 class PostCreateView(LoginRequiredMixin, CreateView):
     model = Post
     fields = ['title', 'slug', 'summary', 'content', 'image', 'categories', 'tags', 'status']
@@ -307,18 +345,23 @@ class AddCommentView(LoginRequiredMixin, CreateView):
     template_name = 'blog/post_detail.html'
 
     def form_valid(self, form):
-        post = get_object_or_404(Post, slug=self.kwargs['slug'])
-        form.instance.author = self.request.user
-        form.instance.post = post
-        
-        # Automatically approve comments from superusers and post authors
-        if self.request.user.is_superuser or self.request.user == post.author:
-            form.instance.status = 'approved'
-            form.instance.moderated_at = timezone.now()
-            form.instance.moderated_by = self.request.user
-        
-        messages.success(self.request, 'Comment added successfully!')
-        return super().form_valid(form)
+        try:
+            post = get_object_or_404(Post, slug=self.kwargs['slug'])
+            form.instance.author = self.request.user
+            form.instance.post = post
+            
+            # Automatically approve comments from superusers and post authors
+            if self.request.user.is_superuser or self.request.user == post.author:
+                form.instance.status = 'approved'
+                form.instance.moderated_at = timezone.now()
+                form.instance.moderated_by = self.request.user
+            
+            response = super().form_valid(form)
+            messages.success(self.request, 'Comment added successfully!')
+            return response
+        except Exception as e:
+            messages.error(self.request, f'Error adding comment: {str(e)}')
+            return self.form_invalid(form)
     
     def get_success_url(self):
         return reverse_lazy('post_detail', kwargs={'slug': self.kwargs['slug']})
@@ -329,20 +372,25 @@ class AddReplyView(LoginRequiredMixin, CreateView):
     template_name = 'blog/post_detail.html'
 
     def form_valid(self, form):
-        post = get_object_or_404(Post, slug=self.kwargs['slug'])
-        parent_comment = get_object_or_404(Comment, id=self.kwargs['comment_id'], post=post)
-        form.instance.author = self.request.user
-        form.instance.post = post
-        form.instance.parent = parent_comment
-        
-        # Automatically approve replies from superusers and post authors
-        if self.request.user.is_superuser or self.request.user == post.author:
-            form.instance.status = 'approved'
-            form.instance.moderated_at = timezone.now()
-            form.instance.moderated_by = self.request.user
-        
-        messages.success(self.request, 'Reply added successfully')
-        return super().form_valid(form)
+        try:
+            post = get_object_or_404(Post, slug=self.kwargs['slug'])
+            parent_comment = get_object_or_404(Comment, id=self.kwargs['comment_id'], post=post)
+            form.instance.author = self.request.user
+            form.instance.post = post
+            form.instance.parent = parent_comment
+            
+            # Automatically approve replies from superusers and post authors
+            if self.request.user.is_superuser or self.request.user == post.author:
+                form.instance.status = 'approved'
+                form.instance.moderated_at = timezone.now()
+                form.instance.moderated_by = self.request.user
+            
+            response = super().form_valid(form)
+            messages.success(self.request, 'Reply added successfully')
+            return response
+        except Exception as e:
+            messages.error(self.request, f'Error adding reply: {str(e)}')
+            return self.form_invalid(form)
     
     def get_success_url(self):
         return reverse_lazy('post_detail', kwargs={'slug': self.kwargs['slug']})
@@ -576,7 +624,9 @@ class ProfileDetailView(DetailView):
             'total_posts': self.object.total_posts,
             'total_comments': self.object.total_comments,
             'total_upvotes': self.object.total_upvotes_received,
-            'total_watch_time': self.object.total_watch_time,
+            'total_watch_time': PostWatchTime.objects.filter(
+                user=user
+            ).aggregate(total=models.Sum('watch_time'))['total'] or 0,
             'total_shares': self.object.total_shares,
         }
         return context
@@ -636,11 +686,11 @@ class AuthorDashboardView(LoginRequiredMixin, TemplateView):
         return context
 
 
-            
 
 
 
 
-        
+
+
 
 
