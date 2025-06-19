@@ -1,699 +1,265 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}AI/ML Blog{% endblock %}</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="{% static 'blog/css/dark-theme.css' %}">
+    {% block extra_css %}{% endblock %}
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root {
+            --primary: #6366f1;
+            --primary-hover: #818cf8;
+            --accent: #34d399;
+            --bg-light: #f8fafc;
+            --bg-dark: #18181b;
+            --surface-light: #fff;
+            --surface-dark: #232336;
+            --text-main: #232336;
+            --text-light: #f3f4f6;
+            --text-muted: #a1a1aa;
+            --border: #e5e7eb;
+            --radius: 0.75rem;
+            --shadow: 0 4px 24px rgba(0,0,0,0.08);
         }
-
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            background-color: #f8f9fa;
+            background: var(--bg-light);
+            color: var(--text-main);
+            font-family: 'Inter', Arial, sans-serif;
+            min-height: 100vh;
+            transition: background 0.3s, color 0.3s;
         }
-
-        .container {
+        body.dark-theme {
+            background: var(--bg-dark);
+            color: var(--text-light);
+        }
+        header {
+            background: var(--surface-light);
+            border-bottom: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            transition: background 0.3s;
+        }
+        body.dark-theme header {
+            background: var(--surface-dark);
+            border-bottom: 1px solid #232336;
+        }
+        .header-content {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 0 20px;
-        }
-
-        /* Header Styles */
-        header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 1rem 0;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-
-        .header-content {
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 1.5rem;
         }
-
         .logo {
-            font-size: 1.8rem;
-            font-weight: bold;
+            font-size: 1.7rem;
+            font-weight: 800;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
             text-decoration: none;
-            color: white;
         }
-
         nav ul {
-            list-style: none;
             display: flex;
-            gap: 2rem;
+            gap: 1.5rem;
+            margin: 0;
+            padding: 0;
+            list-style: none;
         }
-
-        nav a {
-            color: white;
+        nav ul li a {
+            color: var(--text-muted);
             text-decoration: none;
             font-weight: 500;
-            transition: opacity 0.3s ease;
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius);
+            transition: background 0.2s, color 0.2s;
         }
-
-        nav a:hover {
-            opacity: 0.8;
+        nav ul li a:hover, nav ul li a.active {
+            background: var(--primary);
+            color: #fff;
         }
-
-        /* Main Content */
-        main {
-            min-height: calc(100vh - 140px);
-            padding: 2rem 0;
+        body.dark-theme nav ul li a {
+            color: #bdbdfc;
         }
-
-        /* Footer */
-        footer {
-            background-color: #2c3e50;
-            color: white;
-            text-align: center;
-            padding: 1rem 0;
-            margin-top: auto;
-        }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .header-content {
-                flex-direction: column;
-                gap: 1rem;
-            }
-
-            nav ul {
-                flex-direction: column;
-                text-align: center;
-                gap: 1rem;
-            }
-
-            .container {
-                padding: 0 15px;
-            }
-        }
-
-        /* Utility Classes */
-        .text-center { text-align: center; }
-        .mb-1 { margin-bottom: 0.5rem; }
-        .mb-2 { margin-bottom: 1rem; }
-        .mb-3 { margin-bottom: 1.5rem; }
-        .mt-1 { margin-top: 0.5rem; }
-        .mt-2 { margin-top: 1rem; }
-        .mt-3 { margin-top: 1.5rem; }
-
-        .search-container {
-            margin-left: 2rem;
-        }
-
-        .search-form {
+        .nav-right {
             display: flex;
             align-items: center;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 25px;
-            padding: 0.5rem 1rem;
-            transition: all 0.3s ease;
+            gap: 1rem;
         }
-
-        .search-form:focus-within {
-            background: rgba(255, 255, 255, 0.2);
+        .search-container {
+            position: relative;
+            width: 260px;
         }
-
         .search-input {
-            background: none;
-            border: none;
-            color: white;
-            padding: 0.5rem;
-            width: 200px;
-            font-size: 0.9rem;
+            width: 100%;
+            padding: 0.5rem 2.5rem 0.5rem 1rem;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            background: var(--surface-light);
+            color: var(--text-main);
+            transition: background 0.3s, color 0.3s;
         }
-
-        .search-input::placeholder {
-            color: rgba(255, 255, 255, 0.7);
+        body.dark-theme .search-input {
+            background: var(--surface-dark);
+            color: var(--text-light);
+            border-color: #232336;
         }
-
-        .search-input:focus {
-            outline: none;
-        }
-
         .search-button {
+            position: absolute;
+            right: 0.5rem;
+            top: 50%;
+            transform: translateY(-50%);
             background: none;
             border: none;
-            color: white;
+            color: var(--primary);
+            font-size: 1.1rem;
             cursor: pointer;
-            padding: 0.5rem;
-            font-size: 1rem;
-            transition: transform 0.3s ease;
         }
-
-        .search-button:hover {
-            transform: scale(1.1);
-        }
-
-        @media (max-width: 768px) {
-            .search-container {
-                margin: 1rem 0 0 0;
-                width: 100%;
-            }
-
-            .search-form {
-                width: 100%;
-            }
-
-            .search-input {
-                width: 100%;
-            }
-        }
-
-        /* User Menu Styles */
         .user-menu {
-            margin-left: 1rem;
             position: relative;
         }
-
-        .user-menu-trigger {
-            cursor: pointer;
-            position: relative;
-        }
-
         .user-avatar {
-            width: 40px;
-            height: 40px;
+            width: 38px;
+            height: 38px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
+            background: var(--primary);
+            color: #fff;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: bold;
-            font-size: 1.2rem;
-            transition: transform 0.3s ease;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 1.1rem;
         }
-
-        .user-menu-trigger:hover .user-avatar {
-            transform: scale(1.05);
-        }
-
         .user-dropdown {
             position: absolute;
-            top: 100%;
+            top: 120%;
             right: 0;
-            width: 280px;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            min-width: 220px;
+            background: var(--surface-light);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
             padding: 1rem;
-            margin-top: 0.5rem;
             opacity: 0;
             visibility: hidden;
             transform: translateY(-10px);
-            transition: all 0.3s ease;
+            transition: all 0.2s;
             z-index: 1000;
         }
-
-        .user-menu-trigger:hover .user-dropdown {
+        body.dark-theme .user-dropdown {
+            background: var(--surface-dark);
+            border-color: #232336;
+        }
+        .user-menu:hover .user-dropdown, .user-dropdown:hover {
             opacity: 1;
             visibility: visible;
             transform: translateY(0);
         }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid #e9ecef;
-        }
-
-        .user-avatar-large {
-            width: 50px;
-            height: 50px;
+        #theme-toggle {
+            background: none;
+            border: 1px solid var(--border);
             border-radius: 50%;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
+            color: var(--primary);
+            width: 38px;
+            height: 38px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: bold;
-            font-size: 1.5rem;
-        }
-
-        .user-details h4 {
-            margin: 0;
-            color: #2c3e50;
-            font-size: 1.1rem;
-        }
-
-        .user-details p {
-            margin: 0.25rem 0 0;
-            color: #6c757d;
-            font-size: 0.9rem;
-        }
-
-        .dropdown-divider {
-            height: 1px;
-            background: #e9ecef;
-            margin: 0.5rem 0;
-        }
-
-        .dropdown-item {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            padding: 0.75rem;
-            color: #495057;
-            text-decoration: none;
-            border-radius: 8px;
-            transition: all 0.2s ease;
-        }
-
-        .dropdown-item:hover {
-            background: #f8f9fa;
-            color: #667eea;
-        }
-
-        .dropdown-item i {
-            width: 20px;
-            text-align: center;
-        }
-
-        /* Auth Buttons */
-        .auth-buttons {
-            display: flex;
-            gap: 1rem;
-        }
-
-        .btn-login, .btn-signup {
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-            text-decoration: none;
-            font-weight: 500;
-            transition: all 0.3s ease;
-        }
-
-        .btn-login {
-            color: white;
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        .btn-signup {
-            color: white;
-            background: rgba(255, 255, 255, 0.2);
-        }
-
-        .btn-login:hover, .btn-signup:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: translateY(-1px);
-        }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .user-menu {
-                margin: 1rem 0 0 0;
-            }
-
-            .user-dropdown {
-                position: fixed;
-                top: auto;
-                bottom: 0;
-                left: 0;
-                right: 0;
-                width: 100%;
-                border-radius: 12px 12px 0 0;
-                margin: 0;
-            }
-
-            .auth-buttons {
-                flex-direction: column;
-                width: 100%;
-            }
-
-            .btn-login, .btn-signup {
-                text-align: center;
-            }
-        }
-
-        /* Profile Styles */
-        .profile-header {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            margin-bottom: 2rem;
-            overflow: hidden;
-        }
-
-        .profile-cover {
-            height: 200px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-
-        .profile-info {
-            padding: 2rem;
-            position: relative;
-            margin-top: -60px;
-        }
-
-        .profile-avatar {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            border: 4px solid white;
-            overflow: hidden;
-            margin-bottom: 1rem;
-        }
-
-        .profile-avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .avatar-placeholder {
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 3rem;
-            font-weight: bold;
-        }
-
-        .profile-details h1 {
-            margin: 0 0 0.5rem 0;
-            color: #2c3e50;
-        }
-
-        .bio {
-            color: #6c757d;
-            margin-bottom: 1.5rem;
-        }
-
-        .profile-stats {
-            display: flex;
-            gap: 2rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .stat-item {
-            text-align: center;
-        }
-
-        .stat-value {
-            display: block;
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: #2c3e50;
-        }
-
-        .stat-label {
-            color: #6c757d;
-            font-size: 0.9rem;
-        }
-
-        .btn-edit-profile {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.6rem 1.2rem;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: 500;
-            transition: all 0.3s ease;
-        }
-
-        .btn-edit-profile:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-        }
-
-        .social-links {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 2rem;
-        }
-
-        .social-link {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: #f8f9fa;
-            color: #495057;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-decoration: none;
-            transition: all 0.3s ease;
-        }
-
-        .social-link:hover {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            transform: translateY(-2px);
-        }
-
-        .profile-sections {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 2rem;
-        }
-
-        /* Edit Profile Styles */
-        .edit-profile-container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 2rem;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
-
-        .profile-form {
-            margin-top: 2rem;
-        }
-
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            color: #2c3e50;
-            font-weight: 500;
-        }
-
-        .current-picture {
-            margin-top: 1rem;
-        }
-
-        .current-picture img {
-            max-width: 200px;
-            border-radius: 8px;
-        }
-
-        .form-actions {
-            display: flex;
-            gap: 1rem;
-            margin-top: 2rem;
-        }
-
-        .btn-save {
-            padding: 0.8rem 1.5rem;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-weight: 500;
+            font-size: 1.2rem;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: background 0.2s, color 0.2s;
         }
-
-        .btn-save:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        #theme-toggle:hover {
+            background: var(--primary);
+            color: #fff;
         }
-
-        .btn-cancel {
-            padding: 0.8rem 1.5rem;
-            background: #f8f9fa;
-            color: #495057;
-            border: 1px solid #dee2e6;
-            border-radius: 8px;
-            text-decoration: none;
-            font-weight: 500;
-            transition: all 0.3s ease;
+        @media (max-width: 900px) {
+            .header-content { flex-direction: column; gap: 1rem; }
+            nav ul { gap: 1rem; }
+            .search-container { width: 100%; }
         }
-
-        .btn-cancel:hover {
-            background: #e9ecef;
-        }
-
-        /* Dashboard Styles */
-        .dashboard-container {
-            padding: 2rem;
-        }
-
-        .dashboard-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .stat-card {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-        }
-
-        .stat-icon {
-            width: 50px;
-            height: 50px;
-            border-radius: 12px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-        }
-
-        .stat-info h3 {
-            margin: 0;
-            color: #6c757d;
-            font-size: 0.9rem;
-        }
-
-        .stat-info p {
-            margin: 0.25rem 0 0;
-            color: #2c3e50;
-            font-size: 1.5rem;
-            font-weight: bold;
-        }
-
-        .dashboard-sections {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 2rem;
-        }
-
-        @media (max-width: 768px) {
-            .profile-sections,
-            .dashboard-sections {
-                grid-template-columns: 1fr;
-            }
-
-            .profile-stats {
-                flex-wrap: wrap;
-                gap: 1rem;
-            }
-
-            .stat-item {
-                flex: 1 1 calc(50% - 1rem);
-            }
+        @media (max-width: 600px) {
+            .header-content { padding: 0.5rem; }
+            .logo { font-size: 1.2rem; }
+            nav ul { flex-direction: column; gap: 0.5rem; }
+            .nav-right { flex-direction: column; gap: 0.5rem; }
         }
     </style>
-    {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <header>
-        <div class="container">
-            <div class="header-content">
-                <a href="{% url 'post_list' %}" class="logo">AI/ML Blog</a>
-                <nav>
-                    <ul>
-                        <li><a href="{% url 'post_list' %}">Home</a></li>
-                        <li><a href="{% url 'post_create' %}">Write Post</a></li>
-                        <li><a href="#">Categories</a></li>
-                        <li><a href="#">About</a></li>
-                    </ul>
-                </nav>
-                <div class="search-container">
-                    <form 
-                    action="{% url 'search_posts' %}" 
-                    method="get" class="search-form">
-                        <input type="search" 
-                               name="q" 
-                               placeholder="Search posts..." 
-                               class="search-input"
-                               value="{{ request.GET.q|default:'' }}"
-                               aria-label="Search posts">
-                        <button type="submit" class="search-button" aria-label="Submit search">
-                            🔍
-                        </button>
-                    </form>
-                </div>
-
-                <!-- Add User Menu -->
-                <div class="user-menu">
-                    {% if user.is_authenticated %}
-                        <div class="user-menu-trigger">
-                            <div class="user-avatar">
-                                {{ user.username|first|upper }}
-                            </div>
-                            <div class="user-dropdown">
-                                <div class="user-info">
-                                    <div class="user-avatar-large">
-                                        {{ user.username|first|upper }}
-                                    </div>
-                                    <div class="user-details">
-                                        <h4>{{ user.get_full_name|default:user.username }}</h4>
-                                        <p>{{ user.email }}</p>
-                                    </div>
-                                </div>
-                                <div class="dropdown-divider"></div>
-                                <a href="{% url 'profile_detail' username=user.username %}" class="dropdown-item">
-                                    <i class="fas fa-user"></i> My Profile
-                                </a>
-                                <a href="{% url 'author_dashboard' %}" class="dropdown-item">
-                                    <i class="fas fa-chart-line"></i> Dashboard
-                                </a>
-                                <a href="{% url 'account_email' %}" class="dropdown-item">
-                                    <i class="fas fa-envelope"></i> Email Settings
-                                </a>
-                                <a href="{% url 'account_change_password' %}" class="dropdown-item">
-                                    <i class="fas fa-key"></i> Change Password
-                                </a>
-                                <a href="{% url 'account_logout' %}" class="dropdown-item">
-                                    <i class="fas fa-sign-out-alt"></i> Sign Out
-                                </a>
-                            </div>
-                        </div>
-                    {% else %}
-                        <div class="auth-buttons">
-                            <a href="{% url 'account_login' %}" class="btn-login">Sign In</a>
-                            <a href="{% url 'account_signup' %}" class="btn-signup">Sign Up</a>
-                        </div>
-                    {% endif %}
+<header>
+    <div class="header-content">
+        <a href="{% url 'post_list' %}" class="logo">AI/ML Blog</a>
+        <nav>
+            <ul>
+                <li><a href="{% url 'post_list' %}" class="{% if request.resolver_match.url_name == 'post_list' %}active{% endif %}">Home</a></li>
+                <li><a href="{% url 'post_create' %}" class="{% if request.resolver_match.url_name == 'post_create' %}active{% endif %}">Write</a></li>
+                <li><a href="#">Categories</a></li>
+                <li><a href="#">About</a></li>
+            </ul>
+        </nav>
+        <div class="nav-right">
+            <div class="search-container">
+                <form action="{% url 'search_posts' %}" method="get" class="search-form">
+                    <input type="search" name="q" placeholder="Search posts..." class="search-input" value="{{ request.GET.q|default:'' }}" aria-label="Search posts" autocomplete="off">
+                    <button type="submit" class="search-button" aria-label="Submit search">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </form>
+            </div>
+            <button id="theme-toggle" aria-label="Toggle theme">
+                <i class="fas fa-moon"></i>
+            </button>
+            {% if user.is_authenticated %}
+            <div class="user-menu">
+                <div class="user-avatar">{{ user.username|first|upper }}</div>
+                <div class="user-dropdown">
+                    <div style="font-weight:600; margin-bottom:0.5rem;">{{ user.get_full_name|default:user.username }}</div>
+                    <a href="{% url 'profile_detail' username=user.username %}" class="dropdown-item"><i class="fas fa-user"></i> Profile</a>
+                    <a href="{% url 'author_dashboard' %}" class="dropdown-item"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+                    <a href="{% url 'account_logout' %}" class="dropdown-item"><i class="fas fa-sign-out-alt"></i> Logout</a>
                 </div>
             </div>
+            {% else %}
+            <a href="{% url 'login' %}" class="btn btn-primary">Login</a>
+            <a href="{% url 'signup' %}" class="btn btn-secondary">Sign Up</a>
+            {% endif %}
         </div>
-    </header>
-
-    <main>
-        <div class="container">
-            {% block content %}
-            {% endblock %}
-        </div>
-    </main>
-
-    <footer>
-        <div class="container">
-            <p>&copy; 2025 AI/ML Blog. All rights reserved.</p>
-        </div>
-    </footer>
-
-    {% block extra_js %}{% endblock %}
+    </div>
+</header>
+<main style="max-width:1200px;margin:0 auto;padding:2rem 1rem;">
+    {% block content %}{% endblock %}
+</main>
+<footer class="text-center py-4" style="background:var(--surface-light);color:var(--text-muted);border-top:1px solid var(--border);">
+    <div>© {{ now|date:'Y' }} AI/ML Blog. All rights reserved.</div>
+</footer>
+<script>
+// Theme toggling
+const themeToggle = document.getElementById('theme-toggle');
+const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+const body = document.body;
+function setTheme(isDark) {
+    body.classList.toggle('dark-theme', isDark);
+    themeToggle.innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+}
+const savedTheme = localStorage.getItem('theme');
+const isDark = savedTheme ? savedTheme === 'dark' : prefersDark.matches;
+setTheme(isDark);
+themeToggle?.addEventListener('click', () => {
+    setTheme(!body.classList.contains('dark-theme'));
+});
+prefersDark.addEventListener('change', (e) => {
+    if (!localStorage.getItem('theme')) setTheme(e.matches);
+});
+</script>
+{% block extra_js %}{% endblock %}
 </body>
 </html>
