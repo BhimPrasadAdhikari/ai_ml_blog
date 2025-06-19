@@ -87,7 +87,7 @@ A modern, feature-rich blog platform focused on Artificial Intelligence and Mach
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/aiml-blog.git
+   git clone https://github.com/BhimPrasadAdhikari/aiml-blog.git
    cd aiml-blog
    ```
 
