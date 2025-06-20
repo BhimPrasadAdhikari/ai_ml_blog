@@ -82,7 +82,7 @@ body.dark-theme .stat {
             <span class="stat"><i class="fas fa-share-alt"></i> {{ category.total_shares }}</span>
             <span class="stat"><i class="fas fa-comments"></i> {{ category.total_comments }}</span>
         </div>
-        <a href="#" class="category-link">View Posts</a>
+        <a href="{% url 'category_posts' category.slug%}" class="category-link">View Posts</a>
     </div>
     {% endfor %}
 </div>
