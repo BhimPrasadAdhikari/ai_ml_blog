@@ -4,7 +4,7 @@ from .views import (
     CategoryPostListView, SearchView, AddCommentView, AddReplyView,
     EditCommentView, DeleteCommentView, ModerateCommentView, check_new_comments,
     PostVoteView, PostVoteCountView, PostWatchTimeView, PostShareView,
-    ProfileDetailView, ProfileEditView, AuthorDashboardView
+    ProfileDetailView, ProfileEditView, AuthorDashboardView, CategoriesListView
 
 )
 
@@ -20,6 +20,7 @@ urlpatterns = [
     path('post/<slug:slug>/comment/<int:comment_id>/edit/', EditCommentView.as_view(), name='edit_comment'),
     path('post/<slug:slug>/comment/<int:comment_id>/delete/', DeleteCommentView.as_view(), name='delete_comment'),
     path('post/<slug:slug>/comment/<int:comment_id>/moderate/', ModerateCommentView.as_view(), name='moderate_comment'),
+    path('categories/', CategoriesListView.as_view(), name='categories_list'),
     path('category/<slug:slug>/', CategoryPostListView.as_view(), name='category_posts'),
     path('search/', SearchView.as_view(), name='search_posts'),
     path('api/comments/check-new/', check_new_comments, name='check_new_comments'),
