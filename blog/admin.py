@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Post, CustomUser, Category, Comment, PostInteraction, UserProfile
+from .models import Post, CustomUser, Category, Comment, PostInteraction, UserProfile, EmailSubscription
 from django.contrib.auth.admin import UserAdmin
 from .forms import PostAdminForm
 from .analytics import SearchAnalytics
@@ -60,3 +60,18 @@ class UserProfileAdmin(admin.ModelAdmin):
     search_fields = ('user__username', 'user__email', 'location')
     list_filter = ('created_at', 'updated_at')
 
+@admin.register(EmailSubscription)
+class EmailSubscriptionAdmin(admin.ModelAdmin):
+    list_display = ('email', 'first_name', 'last_name', 'is_active', 'subscribed_at')
+    list_filter = ('is_active', 'subscribed_at')
+    search_fields = ('email', 'first_name', 'last_name')
+    actions = ('activate_subscriptions', 'deactivate_subscriptions')
+
+    def activate_subscriptions(self, request, queryset):
+        queryset.update(is_active=True)
+    activate_subscriptions.short_description = 'Activate selected subscriptions'
+
+    def deactivate_subscriptions(self, request, queryset):
+        queryset.update(is_active=False)
+    deactivate_subscriptions.short_description = 'Deactivate selected subscriptions'
+    
