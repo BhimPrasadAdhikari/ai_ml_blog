@@ -75,3 +75,4 @@ class EmailSubscriptionAdmin(admin.ModelAdmin):
         queryset.update(is_active=False)
     deactivate_subscriptions.short_description = 'Deactivate selected subscriptions'
     
+
