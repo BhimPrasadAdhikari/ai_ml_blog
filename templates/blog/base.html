@@ -232,15 +232,133 @@
             <a href="{% url 'signup' %}" class="btn btn-secondary">Sign Up</a>
             {% endif %}
         </div>
-    </div>
-</header>
-<main style="max-width:1200px;margin:0 auto;padding:2rem 1rem;">
-    {% block content %}{% endblock %}
-</main>
-<footer class="text-center py-4" style="background:var(--surface-light);color:var(--text-muted);border-top:1px solid var(--border);">
-    <div>© {{ now|date:'Y' }} AI/ML Blog. All rights reserved.</div>
-</footer>
-<script>
+    </header>
+    <main>
+        <div class="container">
+            {% block content %}
+            {% endblock %}
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <!-- Newsletter Subscription Form -->
+            <div id="newsletter-subscribe" style="margin-bottom: 1.5rem;">
+                <h3 style="margin-bottom:0.5rem;">Newsletter</h3>
+                
+                <!-- Subscribe Form (shown by default) -->
+                <div id="subscribe-form">
+                    <form id="newsletter-form" method="post" action="{% url 'email_subscribe' %}">
+                        {% csrf_token %}
+                        <input type="email" name="email" placeholder="Your email" required style="padding:0.5rem; margin-right:0.5rem;">
+                        <input type="text" name="first_name" placeholder="First name (optional)" style="padding:0.5rem; margin-right:0.5rem;">
+                        <input type="text" name="last_name" placeholder="Last name (optional)" style="padding:0.5rem; margin-right:0.5rem;">
+                        <button type="submit" style="padding:0.5rem 1rem; background:#667eea; color:white; border:none; border-radius:4px;">Subscribe</button>
+                    </form>
+                </div>
+                
+                <!-- Unsubscribe Form (hidden by default) -->
+                <div id="unsubscribe-form" style="display: none;">
+                    <p>You are subscribed to our newsletter.</p>
+                    <form id="unsubscribe-newsletter-form" method="post" action="{% url 'email_unsubscribe' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="email" id="unsubscribe-email">
+                        <button type="submit" style="padding:0.5rem 1rem; background:#dc3545; color:white; border:none; border-radius:4px;">Unsubscribe</button>
+                    </form>
+                </div>
+                
+                <div id="newsletter-message" style="margin-top:0.5rem; color: #28a745;"></div>
+            </div>
+            
+            <p>&copy; 2025 AI/ML Blog. All rights reserved.</p>
+        </div>
+    </footer>
+
+    {% block extra_js %}
+    <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const subscribeForm = document.getElementById('newsletter-form');
+    const unsubscribeForm = document.getElementById('unsubscribe-newsletter-form');
+    const subscribeDiv = document.getElementById('subscribe-form');
+    const unsubscribeDiv = document.getElementById('unsubscribe-form');
+    const messageDiv = document.getElementById('newsletter-message');
+    
+    // Check subscription status when email is entered
+    const emailInput = document.querySelector('input[name="email"]');
+    if (emailInput) {
+        emailInput.addEventListener('blur', function() {
+            const email = this.value;
+            if (email && email.includes('@')) {
+                fetch(`{% url 'email_subscribe' %}?email=${encodeURIComponent(email)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.is_subscribed) {
+                            subscribeDiv.style.display = 'none';
+                            unsubscribeDiv.style.display = 'block';
+                            document.getElementById('unsubscribe-email').value = email;
+                        } else {
+                            subscribeDiv.style.display = 'block';
+                            unsubscribeDiv.style.display = 'none';
+                        }
+                    });
+            }
+        });
+    }
+    
+    // Handle subscribe form submission
+    if (subscribeForm) {
+        subscribeForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const data = new FormData(this);
+            fetch(this.action, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': data.get('csrfmiddlewaretoken'),
+                },
+                body: data
+            })
+            .then(response => response.json())
+            .then(data => {
+                messageDiv.innerText = data.message;
+                messageDiv.style.color = data.status === 'success' ? '#28a745' : '#dc3545';
+                if (data.status === 'success') {
+                    // Show unsubscribe form after successful subscription
+                    subscribeDiv.style.display = 'none';
+                    unsubscribeDiv.style.display = 'block';
+                    document.getElementById('unsubscribe-email').value = data.email || '';
+                    this.reset();
+                }
+            });
+        });
+    }
+    
+    // Handle unsubscribe form submission
+    if (unsubscribeForm) {
+        unsubscribeForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const data = new FormData(this);
+            fetch(this.action, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': data.get('csrfmiddlewaretoken'),
+                },
+                body: data
+            })
+            .then(response => response.json())
+            .then(data => {
+                messageDiv.innerText = data.message;
+                messageDiv.style.color = data.status === 'success' ? '#28a745' : '#dc3545';
+                if (data.status === 'success') {
+                    // Show subscribe form after successful unsubscription
+                    subscribeDiv.style.display = 'block';
+                    unsubscribeDiv.style.display = 'none';
+                    this.reset();
+                }
+            });
+        });
+    }
+});
+    
 // Theme toggling
 const themeToggle = document.getElementById('theme-toggle');
 const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
@@ -260,6 +378,6 @@ prefersDark.addEventListener('change', (e) => {
     if (!localStorage.getItem('theme')) setTheme(e.matches);
 });
 </script>
-{% block extra_js %}{% endblock %}
+{% endblock %}
 </body>
 </html>

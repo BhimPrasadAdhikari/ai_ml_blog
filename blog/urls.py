@@ -4,8 +4,7 @@ from .views import (
     CategoryPostListView, SearchView, AddCommentView, AddReplyView,
     EditCommentView, DeleteCommentView, ModerateCommentView, check_new_comments,
     PostVoteView, PostVoteCountView, PostWatchTimeView, PostShareView,
-    ProfileDetailView, ProfileEditView, AuthorDashboardView, CategoriesListView
-
+    ProfileDetailView, ProfileEditView, AuthorDashboardView, EmailSubscriptionView, EmailUnsubscribeView
 )
 
 urlpatterns = [
@@ -32,5 +31,7 @@ urlpatterns = [
     path('profile/<str:username>/', ProfileDetailView.as_view(), name='profile_detail'),
     path('profile/<str:username>/edit/', ProfileEditView.as_view(), name='profile_edit'),
     path('dashboard/', AuthorDashboardView.as_view(), name='author_dashboard'),
+    path('subscribe/', EmailSubscriptionView.as_view(), name='email_subscribe'),
+    path('unsubscribe/', EmailUnsubscribeView.as_view(), name='email_unsubscribe'),
 
 ]
