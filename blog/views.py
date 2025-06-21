@@ -7,13 +7,13 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin, 
 from django.contrib import messages
 from django.urls import reverse_lazy, reverse
 from django.http import Http404, JsonResponse
-from .models import Post, Category, Comment, PostInteraction, PostWatchTime, PostShare, UserProfile
+from .models import Post, Category, Comment, PostInteraction, PostWatchTime, PostShare, UserProfile, EmailSubscription
 from django.db.models import Q, Case, When, Value, IntegerField
 from django.utils import timezone
 from datetime import timedelta
 from django.contrib.auth import get_user_model
 from .analytics import SearchAnalytics
-from .forms import CommentForm, UserProfileForm
+from .forms import CommentForm, UserProfileForm, EmailSubscriptionForm
 from django.db import models
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.utils.decorators import method_decorator
@@ -685,8 +685,82 @@ class AuthorDashboardView(LoginRequiredMixin, TemplateView):
         
         return context
 
+class EmailSubscriptionView(View):
+    def post(self, request):
+        form = EmailSubscriptionForm(request.POST)
+        if form.is_valid():
+            email = form.cleaned_data['email']
+
+            existing_subscription = EmailSubscription.objects.filter(email=email).first()
+
+            if existing_subscription:
+                if existing_subscription.is_active:
+                    return JsonResponse({
+                        'status': 'error',
+                        'message': 'You are already subscribed to our newsletter.'
+                    }, status=400)
+                else:
+                    existing_subscription.is_active = True
+                    existing_subscription.unsubscribed_at = None
+                    existing_subscription.save()
+                    messages.success(request, 'You have been re-subscribed to our newsletter.')
+                    return JsonResponse({
+                        'status': 'success',
+                        'message': 'You have been re-subscribed to our newsletter.'
+                    })
+            else:
+                subscription = form.save()
+                messages.success(request, 'You have been subscribed to our newsletter!')
+                return JsonResponse({
+                'status': 'success',
+                'message': 'Subscription successful'
+
+            })
+        else:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Invalid email address'
+            }, status=400)
+
+    def get(self, request):
+
+        email = request.GET.get('email')
+        if email:
+            try:
+                subscription = EmailSubscription.objects.get(email=email)
+                return JsonResponse({
+                    'is_subscribed': subscription is not None
+                })
+            except EmailSubscription.DoesNotExist:
+                return JsonResponse({
+                    'is_subscribed': False
+                })
+        return JsonResponse({
+            'is_subscribed': False
+        })
 
 
+class EmailUnsubscribeView(View):
+    def post(self, request):
+        email = request.POST.get('email')
+        if email:
+            try:
+                subscription = EmailSubscription.objects.get(email=email)
+                subscription.unsubscribe()
+                messages.success(request, 'You have been unsubscribed from our newsletter.')
+                return JsonResponse({
+                    'status': 'success',
+                    'message': 'Unsubscribed successfully'
+                })
+            except EmailSubscription.DoesNotExist:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Email not found in our subscription list.'
+                }, status=404)
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Email is required'
+        }, status=400)
 
 
 

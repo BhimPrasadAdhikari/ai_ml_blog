@@ -15,6 +15,7 @@ from django.db.models import (
     ManyToManyField,
     DateTimeField,
     BooleanField,
+    EmailField,
     SET_NULL,
     IntegerField,
     URLField,
@@ -336,7 +337,31 @@ class UserProfile(TimestampMixin, models.Model):
 
 
 
+class EmailSubscription(TimestampMixin, models.Model):
+    """
+    Model to store email subscriptions for the blog.
+    """
+    email = EmailField(unique=True)
+    first_name = CharField(max_length=100, blank=True)
+    last_name = CharField(max_length=100, blank=True)
+    is_active = BooleanField(default=True)
+    subscribed_at = DateTimeField(auto_now_add=True)
+    unsubscribed_at = DateTimeField(null=True, blank=True)
 
+    class Meta:
+        verbose_name = "Email Subscription"
+        verbose_name_plural = "Email Subscriptions"
+        ordering = ['-subscribed_at']
+
+    def __str__(self):
+        return self.email
+    
+    def unsubscribe(self):
+        self.is_active = False
+        self.unsubscribed_at = timezone.now()
+        self.save()
+
+    
 
 
 

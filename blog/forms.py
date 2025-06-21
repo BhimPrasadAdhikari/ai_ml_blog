@@ -1,5 +1,5 @@
 from django import forms
-from .models import Post, Comment, UserProfile
+from .models import Post, Comment, UserProfile, EmailSubscription
 from allauth.account.forms import SignupForm
 from phonenumber_field.formfields import PhoneNumberField
 
@@ -70,5 +70,24 @@ class UserProfileForm(forms.ModelForm):
             'linkedin': forms.URLInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'https://linkedin.com/in/username'
+            }),
+        }
+
+class EmailSubscriptionForm(forms.ModelForm):
+    class Meta:
+        model = EmailSubscription
+        fields = ['email', 'first_name', 'last_name']
+        widgets = {
+            'email': forms.EmailInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Email'
+            }),
+            'first_name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'First Name'
+            }),
+            'last_name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Last Name'
             }),
         }
