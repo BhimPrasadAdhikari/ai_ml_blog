@@ -4,7 +4,8 @@ from .views import (
     CategoryPostListView, SearchView, AddCommentView, AddReplyView,
     EditCommentView, DeleteCommentView, ModerateCommentView, check_new_comments,
     PostVoteView, PostVoteCountView, PostWatchTimeView, PostShareView,
-    ProfileDetailView, ProfileEditView, AuthorDashboardView, EmailSubscriptionView, EmailUnsubscribeView
+    ProfileDetailView, ProfileEditView, AuthorDashboardView, EmailSubscriptionView, EmailUnsubscribeView,
+    CategoriesListView
 )
 
 urlpatterns = [
