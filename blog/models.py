@@ -362,6 +362,23 @@ class EmailSubscription(TimestampMixin, models.Model):
         self.save()
 
     
+class Newsletter(TimestampMixin, models.Model):
+    """
+    Model for newsletter campaigns
+    """
+    subject = CharField(max_length=200)
+    content = TextField()
+    sent_at = DateTimeField(null=True, blank=True)
+    is_sent = BooleanField(default=False)
+    sent_count = IntegerField(default=0)
+
+    class Meta:
+        verbose_name = "Newsletter"
+        verbose_name_plural = "Newsletters"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return self.subject
 
 
 
