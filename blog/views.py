@@ -7,13 +7,13 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin, 
 from django.contrib import messages
 from django.urls import reverse_lazy, reverse
 from django.http import Http404, JsonResponse
-from .models import Post, Category, Comment, PostInteraction, PostWatchTime, PostShare, UserProfile, EmailSubscription
+from .models import Post, Category, Comment, PostInteraction, PostWatchTime, PostShare, UserProfile, EmailSubscription, Newsletter
 from django.db.models import Q, Case, When, Value, IntegerField
 from django.utils import timezone
 from datetime import timedelta
 from django.contrib.auth import get_user_model
 from .analytics import SearchAnalytics
-from .forms import CommentForm, UserProfileForm, EmailSubscriptionForm
+from .forms import CommentForm, UserProfileForm, EmailSubscriptionForm, NewsletterForm
 from django.db import models
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.utils.decorators import method_decorator
@@ -783,6 +783,24 @@ class CategoriesListView(TemplateView):
         context['categories'] = categories
         return context
 
+class NewsletterCreateView(LoginRequiredMixin, CreateView):
+    model = Newsletter
+    form_class = NewsletterForm
+    template_name = 'blog/newsletter_form.html'
+    success_url = reverse_lazy('newsletter_list')
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Newsletter created successfully!')
+        return super().form_valid(form)
+
+class NewsletterListView(LoginRequiredMixin, ListView):
+    model = Newsletter
+    template_name = 'blog/newsletter_list.html'
+    context_object_name = 'newsletters'
+    paginate_by = 10
+    
+    def get_queryset(self):
+        return Newsletter.objects.filter(is_sent=True).order_by('-sent_at')
 
 
 
