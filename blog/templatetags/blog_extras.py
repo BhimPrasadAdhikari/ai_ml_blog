@@ -1,7 +1,7 @@
 from django import template
 from django.utils.html import mark_safe
 import re
-
+from blog.models import EmailSubscription
 register = template.Library()
 
 @register.filter
@@ -32,3 +32,11 @@ def param_replace(context, **kwargs):
     for k, v in kwargs.items():
         updated[k] = v
     return updated.urlencode() 
+
+
+@register.simple_tag
+def get_subscriber_count():
+    """
+    Get the number of active subscribers
+    """
+    return EmailSubscription.objects.filter(is_active=True).count()
