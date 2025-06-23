@@ -803,6 +803,45 @@ class NewsletterListView(LoginRequiredMixin, ListView):
         return Newsletter.objects.filter(is_sent=True).order_by('-sent_at')
 
 
+class NewsletterPreviewView(LoginRequiredMixin, DetailView):
+    model = Newsletter
+    template_name = 'blog/newsletter_preview.html'
+    context_object_name = 'newsletter'
+    pk_url_kwarg = 'newsletter_id'
+    
+
+class NewsletterUpdateView(LoginRequiredMixin, UpdateView):
+    model = Newsletter
+    form_class = NewsletterForm
+    template_name = 'blog/newsletter_form.html'
+    pk_url_kwarg = 'newsletter_id'
+    success_url = reverse_lazy('newsletter_list')
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Newsletter updated successfully!')
+        return super().form_valid(form)
+
+
+class NewsletterDeleteView(LoginRequiredMixin, DeleteView):
+    model = Newsletter
+    success_url = reverse_lazy('newsletter_list')
+    pk_url_kwarg = 'newsletter_id'
+
+    def delete(self, request, *args, **kwargs):
+        newsletter = self.get_object()
+        if newsletter.is_sent:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Cannot delete a sent newsletter.'
+            }, status=400)
+        
+        newsletter.delete()
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Newsletter deleted successfully'
+        })
+
+
 
 
 
