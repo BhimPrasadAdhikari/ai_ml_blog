@@ -53,7 +53,10 @@ VALID_ARCHIVE_EXTENSIONS= ['.zip', '.rar', '.7z', '.tar', '.gz', '.bz2']
 VALID_CODE_EXTENSIONS= ['.py', '.js', '.html', '.css', '.php', '.java', '.cpp', '.c', '.h', '.hpp', '.hxx']
 VALID_TEXT_EXTENSIONS= ['.txt', '.md', '.csv', '.tsv', '.log', '.ini', '.conf', '.cfg', '.json', '.xml', '.yaml', '.yml']
 
-
+class NewsletterStatus(models.TextChoices):
+    DRAFT = 'draft', 'Draft'
+    SCHEDULED = 'scheduled', 'Scheduled'
+    SENT = 'sent', 'Sent'
 
 
 
