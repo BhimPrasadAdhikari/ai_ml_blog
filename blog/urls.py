@@ -5,7 +5,7 @@ from .views import (
     EditCommentView, DeleteCommentView, ModerateCommentView, check_new_comments,
     PostVoteView, PostVoteCountView, PostWatchTimeView, PostShareView,
     ProfileDetailView, ProfileEditView, AuthorDashboardView, EmailSubscriptionView, EmailUnsubscribeView,
-    CategoriesListView, NewsletterListView, NewsletterCreateView
+    CategoriesListView, NewsletterListView, NewsletterCreateView, NewsletterPreviewView, NewsletterUpdateView, NewsletterDeleteView
 )
 
 urlpatterns = [
@@ -36,5 +36,8 @@ urlpatterns = [
     path('unsubscribe/', EmailUnsubscribeView.as_view(), name='email_unsubscribe'),
     path('newsletters/', NewsletterListView.as_view(), name='newsletter_list'),
     path('newsletters/create/', NewsletterCreateView.as_view(), name='newsletter_create'),
+    path('newsletters/<int:newsletter_id>/preview/', NewsletterPreviewView.as_view(), name='newsletter_preview'),
+    path('newsletters/<int:newsletter_id>/edit/', NewsletterUpdateView.as_view(), name='newsletter_edit'),
+    path('newsletters/<int:newsletter_id>/delete/', NewsletterDeleteView.as_view(), name='newsletter_delete'),
 
 ]
