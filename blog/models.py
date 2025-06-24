@@ -287,6 +287,19 @@ class PostShare(TimestampMixin, models.Model):
         return f"{self.post.title} shared on {self.platform}"
 
     
+class PostBookmark(TimestampMixin, models.Model):
+    """Model for user bookmarks/favorites"""
+    post = ForeignKey(Post, on_delete=CASCADE, related_name='bookmarks')
+    user = ForeignKey(get_user_model(), on_delete=CASCADE, related_name='bookmarked_posts')
+    notes = TextField(blank=True, help_text="Personal notes about this post")
+
+    class Meta:
+        unique_together = ['post','user']
+        verbose_name = "Post Bookmark"
+        verbose_name_plural = "Post Bookmarks"
+
+    def __str__(self):
+        return f"{self.user.username} bookmarked {self.post.title}"
 
 class UserProfile(TimestampMixin, models.Model):
     user = OneToOneField(get_user_model(), on_delete=CASCADE, related_name='profile')
