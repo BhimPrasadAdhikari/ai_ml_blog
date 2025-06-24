@@ -224,6 +224,7 @@
                     <div style="font-weight:600; margin-bottom:0.5rem;">{{ user.get_full_name|default:user.username }}</div>
                     <a href="{% url 'profile_detail' username=user.username %}" class="dropdown-item"><i class="fas fa-user"></i> Profile</a>
                     <a href="{% url 'author_dashboard' %}" class="dropdown-item"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+                    <a href="{% url 'user_bookmarks' %}" class="dropdown-item"><i class="fas fa-bookmark"></i> My Bookmarks </a>
                     <a href="{% url 'account_logout' %}" class="dropdown-item"><i class="fas fa-sign-out-alt"></i> Logout</a>
                 </div>
             </div>

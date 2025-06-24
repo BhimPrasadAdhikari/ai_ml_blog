@@ -1,0 +1,36 @@
+{% extends 'blog/base.html' %}
+{% load blog_extras %}
+{% block title %}My Bookmarks - AI/ML Blog{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>My Bookmarked Posts</h1>
+    {% if bookmarked_posts %}
+        <div class="posts-grid">
+            {% for post in bookmarked_posts %}
+                <article class="post-card">
+                    {% if post.image %}
+                        <img src="{{ post.image.url }}" alt="{{ post.title }}" class="post-image">
+                    {% endif %}
+                    <div class="post-content">
+                        <h2 class="post-title">
+                            <a href="{{ post.get_absolute_url }}">{{ post.title }}</a>
+                        </h2>
+                        <p class="post-summary">{{ post.summary }}</p>
+                        <a href="{{ post.get_absolute_url }}" class="read-more">Read More →</a>
+                    </div>
+                    {% with bookmark=bookmarks_map|get_item:post.id %}
+                        {% if bookmark and bookmark.notes %}
+                            <div class="bookmark-notes">
+                                <strong>Notes:</strong> {{ bookmark.notes }}
+                            </div>
+                        {% endif %}
+                    {% endwith %}
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p>You have not bookmarked any posts yet.</p>
+    {% endif %}
+</div>
+{% endblock %}

@@ -771,6 +771,22 @@
     </div>
 </div>
 
+{% if user.is_authenticated %}
+<form id="bookmark-form" method="post" action="{% url 'post_bookmark' slug=post.slug %}" style="display:inline;">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="{% if user_bookmarked %}remove{% else %}add{% endif %}">
+    <button type="submit" id="bookmark-btn" class="btn" style="background: none; border: none; color: #f59e42; font-size: 1.3rem;">
+        <i class="fa{% if user_bookmarked %}s{% else %}r{% endif %} fa-bookmark"></i>
+        <span id="bookmark-label">{% if user_bookmarked %}Bookmarked{% else %}Bookmark{% endif %}</span>
+    </button>
+    <div id="bookmark-notes-section" style="margin-top: 0.5rem; {% if not user_bookmarked %}display:none;{% endif %}">
+        <textarea name="notes" id="bookmark-notes" rows="2" placeholder="Add personal notes about this post..." style="width:100%;">{% if user_bookmarked and bookmark_notes %}{{ bookmark_notes }}{% endif %}</textarea>
+        <button type="button" id="save-notes-btn" class="btn btn-sm btn-primary" style="margin-top:0.5rem;">Save Notes</button>
+    </div>
+
+</form>
+{% endif %}
+
 <div class="post-content-wrapper">
     <div class="post-main">
         {% if post.image %}
@@ -1113,7 +1129,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Check for new comments every 30 seconds
 setInterval(checkNewComments, 30000);
-
 // Voting functionality
 document.addEventListener('DOMContentLoaded', function() {
     const voteButtons = document.querySelectorAll('.vote-btn');
@@ -1309,6 +1324,83 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    const bookmarkForm = document.getElementById('bookmark-form');
+    const notesSection = document.getElementById('bookmark-notes-section');
+    const saveNotesBtn = document.getElementById('save-notes-btn');
+    const postSlug = '{{ post.slug }}';
+
+
+    if (bookmarkForm) {
+        if (notesSection && '{{ user_bookmarked }}' === 'True') {
+            notesSection.style.display = 'block';
+        }
+
+        bookmarkForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const actionInput = bookmarkForm.querySelector('input[name="action"]');
+            // Get the current action value
+            let currentAction = actionInput.value;
+
+            // Prepare FormData with the current action
+            const formData = new FormData();
+            formData.append('notes', document.getElementById('bookmark-notes')?.value || '');
+            formData.append('csrfmiddlewaretoken', bookmarkForm.querySelector('[name=csrfmiddlewaretoken]').value);
+            formData.append('action', currentAction);
+
+            fetch(`/post/${postSlug}/bookmark/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                const btn = document.getElementById('bookmark-btn');
+                if (data.status === 'success') {
+                    if (currentAction === 'add') {
+                        btn.innerHTML = '<i class="fas fa-bookmark"></i> <span id="bookmark-label">Bookmarked</span>';
+                        actionInput.value = 'remove';
+                        if (notesSection) notesSection.style.display = 'block';
+                    } else {
+                        btn.innerHTML = '<i class="far fa-bookmark"></i> <span id="bookmark-label">Bookmark</span>';
+                        actionInput.value = 'add';
+                        if (notesSection) notesSection.style.display = 'none';
+
+                    }
+                }
+            });
+        });
+        if (saveNotesBtn) {
+
+            saveNotesBtn.addEventListener('click', function() {
+                const notes = document.getElementById('bookmark-notes').value;
+                const csrfToken = bookmarkForm.querySelector('[name=csrfmiddlewaretoken]').value;
+                fetch(`/post/${postSlug}/bookmark/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrfToken,
+                    },
+                    body: new URLSearchParams({
+                        action: 'update_notes',
+                        notes: notes,
+                        csrfmiddlewaretoken: csrfToken
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        alert('Notes saved!');
+                    }
+                });
+            });
+        }
+
+
+    }
 });
 </script>
 

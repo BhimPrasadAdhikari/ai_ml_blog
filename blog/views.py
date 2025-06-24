@@ -7,13 +7,13 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin, 
 from django.contrib import messages
 from django.urls import reverse_lazy, reverse
 from django.http import Http404, JsonResponse
-from .models import Post, Category, Comment, PostInteraction, PostWatchTime, PostShare, UserProfile, EmailSubscription, Newsletter
+from .models import Post, Category, Comment, PostInteraction, PostWatchTime, PostShare, UserProfile, EmailSubscription, Newsletter, PostBookmark
 from django.db.models import Q, Case, When, Value, IntegerField
 from django.utils import timezone
 from datetime import timedelta
 from django.contrib.auth import get_user_model
 from .analytics import SearchAnalytics
-from .forms import CommentForm, UserProfileForm, EmailSubscriptionForm, NewsletterForm
+from .forms import CommentForm, UserProfileForm, EmailSubscriptionForm, NewsletterForm, PostBookmarkForm
 from django.db import models
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.utils.decorators import method_decorator
@@ -58,6 +58,10 @@ class PostDetailView(DetailView):
         
         # Get user's vote for this post
         if self.request.user.is_authenticated:
+            bookmark = PostBookmark.objects.filter(post=post, user=self.request.user).first()
+            context['user_bookmarked'] = post.bookmarks.filter(user=self.request.user).exists()
+            context['bookmark_notes'] = bookmark.notes if bookmark else ''
+
             try:
                 interaction = PostInteraction.objects.get(
                     post=post,
@@ -68,6 +72,10 @@ class PostDetailView(DetailView):
                 context['user_vote'] = None
         else:
             context['user_vote'] = None
+            context['bookmark_notes'] = ''
+            context['user_bookmarked'] = False
+        
+
         
         # Get sort parameter
         sort = self.request.GET.get('sort', 'newest')
@@ -141,6 +149,18 @@ class PostListView(ListView):
             )
             
         return queryset
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if self.request.user.is_authenticated:
+            # Get IDs of posts bookmarked by the user
+            context['bookmarked_post_ids'] = set(
+                self.request.user.bookmarked_posts.values_list('post_id', flat=True)
+            )
+        else:
+            context['bookmarked_post_ids'] = set()
+        # ... any other context ...
+        return context
 
 class PostCreateView(LoginRequiredMixin, CreateView):
     model = Post
@@ -841,8 +861,73 @@ class NewsletterDeleteView(LoginRequiredMixin, DeleteView):
             'message': 'Newsletter deleted successfully'
         })
 
+class PostBookmarkView(LoginRequiredMixin, View):
+    def post(self, request, slug):
+        post = get_object_or_404(Post, slug=slug)
+        action = request.POST.get('action')
+        notes = request.POST.get('notes', '').strip()
 
+        if action == 'add':
+            bookmark, created = PostBookmark.objects.get_or_create(
+                post=post,
+                user=request.user
+            )
+            message = 'Post bookmarked successfully'
+        elif action == 'remove':
+            try:
+                bookmark = PostBookmark.objects.get(post=post, user=request.user)
+                bookmark.delete()
+                message = 'Bookmark removed successfully'
+            except PostBookmark.DoesNotExist:
+                message = 'Bookmark not found'
+        elif action == 'update_notes':
+            try:
+                bookmark = PostBookmark.objects.get(post=post, user=request.user)
+                bookmark.notes = notes
+                bookmark.save()
+                message = 'Notes updated successfully'
+            except PostBookmark.DoesNotExist:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Bookmark not found'
+                }, status=404)
 
+        
+        else:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Invalid action'
+            }, status=400)
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': message
+        })
+
+class UserBookmarksView(LoginRequiredMixin, ListView):
+    model = Post
+    template_name = 'blog/user_bookmarks.html'
+    context_object_name = 'bookmarked_posts'
+    paginate_by = 10
+
+    def get_queryset(self):
+        return Post.objects.filter(
+            bookmarks__user=self.request.user,
+            status = 'published'
+        ).order_by('-bookmarks__created_at')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        bookmarks = self.request.user.bookmarked_posts.filter(
+            post__in=context['bookmarked_posts']
+
+        ).select_related('post')
+
+        context['bookmarks_map'] = {
+            bookmark.post.id: bookmark for bookmark in bookmarks
+        
+        }
+        return context
 
 
 

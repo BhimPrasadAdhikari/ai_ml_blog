@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Post, CustomUser, Category, Comment, PostInteraction, UserProfile, EmailSubscription, Newsletter
+from .models import Post, CustomUser, Category, Comment, PostInteraction, UserProfile, EmailSubscription, Newsletter, PostBookmark
 from django.contrib.auth.admin import UserAdmin
 from .forms import PostAdminForm
 from .analytics import SearchAnalytics
@@ -81,3 +81,9 @@ class NewsletterAdmin(admin.ModelAdmin):
     list_filter = ('is_sent', 'created_at')
     search_fields = ('subject', 'content')
     readonly_fields = ('sent_at', 'sent_count')
+
+@admin.register(PostBookmark)
+class PostBookmarkAdmin(admin.ModelAdmin):
+    list_display = ('post', 'user', 'created_at')
+    list_filter = ('created_at',)
+    search_fields = ('post__title', 'user__username', 'notes')
