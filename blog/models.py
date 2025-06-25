@@ -25,6 +25,7 @@ from django.db.models import (
     Sum,
     Index,
     SET,
+    Avg,
 )
 from django.contrib.auth.base_user import BaseUserManager
 from .validators import validate_image_size, validate_image_dimensions, validate_image_extension
@@ -85,8 +86,6 @@ class Post(SlugMixin, TimestampMixin, ImageProcessingMixin, models.Model):
                        default=PostStatus.DRAFT)
     published_at = DateTimeField(blank=True, null=True)
     
-    
-    
     def get_absolute_url(self):
         return reverse("post_detail", kwargs={"slug": self.slug})
     
@@ -128,6 +127,14 @@ class Post(SlugMixin, TimestampMixin, ImageProcessingMixin, models.Model):
             return interaction.vote_type
         except PostInteraction.DoesNotExist:
             return None
+
+    def get_average_rating(self):
+        """Get the average rating for this post"""
+        return self.ratings.aggregate(avg_rating=Avg('rating'))['avg_rating'] or 0
+    
+    def get_rating_count(self):
+        """Get the number of ratings for this post"""
+        return self.ratings.count()
 
 class Comment(TimestampMixin, models.Model):
     """
