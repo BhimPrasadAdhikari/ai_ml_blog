@@ -35,6 +35,8 @@
     {% for tag in post.tags.all %}
     <meta property="article:tag" content="{{ tag.name }}">
     {% endfor %}
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 {% endblock %}
 
 {% block extra_css %}
@@ -739,6 +741,25 @@
             </div>
         {% endif %}
     </div>
+    <div id="post-rating" style="margin: 1rem 0;">
+        <strong>Average Rating:</strong>
+        <span id="average-rating">{{ post.get_average_rating|floatformat:1 }}</span>
+        <span>({{ post.get_rating_count }})</span>
+        <br>
+        {% if user.is_authenticated %}
+            <div id="user-rating">
+                <strong>Your Rating:</strong>
+                <span>
+                {{user_rating}}
+                    {% for i in "12345"|make_list %}
+                             <i class="fa-star {% if user_rating|add:'0' >= forloop.counter %}fas{% else %}far{% endif %}" data-value="{{ forloop.counter }}"></i>
+                    {% endfor %}
+                </span>
+            </div>
+        {% else %}
+            <em><a href="{% url 'account_login' %}?next={{ request.path }}">Log in</a> to rate this post.</em>
+        {% endif %}
+    </div>
     
     {% if post.summary %}
     <p class="post-summary">{{ post.summary }}</p>
@@ -1402,6 +1423,43 @@ document.addEventListener('DOMContentLoaded', function() {
 
     }
 });
+
+{% if user.is_authenticated %}
+document.addEventListener('DOMContentLoaded', function() {
+    const stars = document.querySelectorAll('#user-rating .fa-star');
+    stars.forEach(star => {
+        star.addEventListener('click', function() {
+            const rating = this.getAttribute('data-value');
+            fetch("{% url 'post_rate' slug=post.slug %}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: `rating=${rating}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    document.getElementById('average-rating').textContent = parseFloat(data.average_rating).toFixed(1);
+                    // Optionally update the user's stars visually
+                    stars.forEach((s, idx) => {
+                        if (idx < rating) {
+                            s.classList.remove('far');
+                            s.classList.add('fas');
+                        } else {
+                            s.classList.remove('fas');
+                            s.classList.add('far');
+                        }
+                    });
+                } else {
+                    alert(data.message);
+                }
+            });
+        });
+    });
+});
+{% endif %}
 </script>
 
 {% csrf_token %}
