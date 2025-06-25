@@ -6,7 +6,7 @@ from .views import (
     PostVoteView, PostVoteCountView, PostWatchTimeView, PostShareView,
     ProfileDetailView, ProfileEditView, AuthorDashboardView, EmailSubscriptionView, EmailUnsubscribeView,
     CategoriesListView, NewsletterListView, NewsletterCreateView, NewsletterPreviewView, NewsletterUpdateView, NewsletterDeleteView,
-    PostBookmarkView, UserBookmarksView
+    PostBookmarkView, UserBookmarksView, PostRatingView
 )
 
 urlpatterns = [
@@ -25,7 +25,7 @@ urlpatterns = [
     path('post/<slug:slug>/watch-time/', PostWatchTimeView.as_view(), name='post_watch_time'),
     path('post/<slug:slug>/share/', PostShareView.as_view(), name='post_share'),
     path('post/<slug:slug>/bookmark/', PostBookmarkView.as_view(), name='post_bookmark'),
-
+    path('post/<slug:slug>/rate/', PostRatingView.as_view(), name='post_rate'),
     path('categories/', CategoriesListView.as_view(), name='categories_list'),
     path('category/<slug:slug>/', CategoryPostListView.as_view(), name='category_posts'),
 
