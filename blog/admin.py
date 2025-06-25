@@ -1,5 +1,7 @@
 from django.contrib import admin
-from .models import Post, CustomUser, Category, Comment, PostInteraction, UserProfile, EmailSubscription, Newsletter, PostBookmark
+from .models import (
+    Post, CustomUser, Category, Comment, PostInteraction, UserProfile, 
+    EmailSubscription, Newsletter, PostBookmark, PostRating)
 from django.contrib.auth.admin import UserAdmin
 from .forms import PostAdminForm
 from .analytics import SearchAnalytics
@@ -87,3 +89,9 @@ class PostBookmarkAdmin(admin.ModelAdmin):
     list_display = ('post', 'user', 'created_at')
     list_filter = ('created_at',)
     search_fields = ('post__title', 'user__username', 'notes')
+
+@admin.register(PostRating)
+class PostRatingAdmin(admin.ModelAdmin):
+    list_display =('post', 'user', 'rating', 'created_at')
+    list_filter = ('rating', 'created_at')
+    search_fields = ('post__title', 'user__username')
