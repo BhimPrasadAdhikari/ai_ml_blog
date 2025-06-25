@@ -13,8 +13,8 @@ class CommentStatus(models.TextChoices):
 
 # Vote types
 class VoteType(models.TextChoices):
-    UP = 'upvote', 'Upvote'
-    DOWN = 'downvote', 'Downvote'
+    UP = 'up', 'Upvote'
+    DOWN = 'down', 'Downvote'
 
 # Share platforms
 class SharePlatform(models.TextChoices):
