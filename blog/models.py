@@ -301,6 +301,22 @@ class PostBookmark(TimestampMixin, models.Model):
     def __str__(self):
         return f"{self.user.username} bookmarked {self.post.title}"
 
+
+class PostRating(TimestampMixin, models.Model):
+    post = ForeignKey(Post, on_delete=CASCADE, related_name='ratings' )
+    user = ForeignKey(get_user_model(), on_delete=CASCADE, related_name='post_ratings')
+    rating = IntegerField(choices=[ (i,i)for i in range(1,6)], default=0)
+
+    class Meta:
+        unique_together = ['post', 'user']
+        verbose_name = "Post Rating"
+        verbose_name_plural = "Post Ratings"
+        
+    def __str__(self):
+        return f"{self.user.username} rated {self.post.title} {self.rating}"
+    
+    
+
 class UserProfile(TimestampMixin, models.Model):
     user = OneToOneField(get_user_model(), on_delete=CASCADE, related_name='profile')
     bio = TextField(max_length=500, blank=True)
