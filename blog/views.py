@@ -7,13 +7,13 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin, 
 from django.contrib import messages
 from django.urls import reverse_lazy, reverse
 from django.http import Http404, JsonResponse
-from .models import Post, Category, Comment, PostInteraction, PostWatchTime, PostShare, UserProfile, EmailSubscription, Newsletter, PostBookmark
+from .models import Post, Category, Comment, PostInteraction, PostWatchTime, PostShare, UserProfile, EmailSubscription, Newsletter, PostBookmark, PostRating
 from django.db.models import Q, Case, When, Value, IntegerField
 from django.utils import timezone
 from datetime import timedelta
 from django.contrib.auth import get_user_model
 from .analytics import SearchAnalytics
-from .forms import CommentForm, UserProfileForm, EmailSubscriptionForm, NewsletterForm, PostBookmarkForm
+from .forms import CommentForm, UserProfileForm, EmailSubscriptionForm, NewsletterForm, PostBookmarkForm, PostRatingForm
 from django.db import models
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.utils.decorators import method_decorator
@@ -74,6 +74,17 @@ class PostDetailView(DetailView):
             context['user_vote'] = None
             context['bookmark_notes'] = ''
             context['user_bookmarked'] = False
+
+        if self.request.user.is_authenticated:
+            try:
+                rating_obj = PostRating.objects.get(post=post, user=self.request.user)
+                context['user_rating'] = rating_obj.rating
+            except PostRating.DoesNotExist:
+                context['user_rating'] = 0
+
+        else:
+            context['user_rating'] = 0
+
         
 
         
@@ -929,5 +940,45 @@ class UserBookmarksView(LoginRequiredMixin, ListView):
         }
         return context
 
+class PostRatingView(LoginRequiredMixin, View):
+    def post(self, request, slug):
+        post = get_object_or_404(Post, slug=slug)
+        rating = request.POST.get('rating')
 
+        try:
+            rating = int(rating)
+            if rating < 1 or rating > 5:
+                raise ValueError
+                
+        except (ValueError, TypeError):
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Invalid rating value'
+            }, status=400)
+
+        try:
+            rating_obj, created = PostRating.objects.get_or_create(
+                post=post,
+                user=request.user,
+                defaults={'rating': rating}
+            )
+
+            if not created:
+                rating_obj.rating = rating
+                rating_obj.save()
+        except Exception as e:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Failed to save rating'
+            }, status=500)
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Rating saved successfully',
+            'average_rating': post.get_average_rating(),
+            'rating_count': post.get_rating_count(),
+        })
+
+
+            
 
