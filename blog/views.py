@@ -136,6 +136,25 @@ class PostDetailView(DetailView):
             ).count()
         
         context['share_counts'] = share_counts
+
+        # Related posts logic
+        # Get categories and tags for the current post
+        categories = post.categories.all()
+        tags = post.get_tags_list()
+        related_posts = Post.objects.filter(status='published').exclude(id=post.id)
+        # Filter by categories
+        if categories.exists():
+            related_posts = related_posts.filter(categories__in=categories)
+        # Filter by tags
+        if tags:
+            tag_query = Q()
+            for tag in tags:
+                tag_query |= Q(tags__icontains=tag)
+            related_posts = related_posts.filter(tag_query)
+        # Remove duplicates, order by published date, and limit
+        related_posts = related_posts.distinct().order_by('-published_at')[:4]
+        context['related_posts'] = related_posts
+
         return context
     
 class PostListView(ListView):
