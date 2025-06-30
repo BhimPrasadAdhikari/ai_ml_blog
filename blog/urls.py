@@ -6,11 +6,13 @@ from .views import (
     PostVoteView, PostVoteCountView, PostWatchTimeView, PostShareView,
     ProfileDetailView, ProfileEditView, AuthorDashboardView, EmailSubscriptionView, EmailUnsubscribeView,
     CategoriesListView, NewsletterListView, NewsletterCreateView, NewsletterPreviewView, NewsletterUpdateView, NewsletterDeleteView,
-    PostBookmarkView, UserBookmarksView, PostRatingView
+    PostBookmarkView, UserBookmarksView, PostRatingView, LandingPageView
 )
 
 urlpatterns = [
-    path('', PostListView.as_view(), name = 'post_list'),
+
+    path('', LandingPageView.as_view(), name="landing_page"),
+    path('posts/', PostListView.as_view(), name = 'post_list'),
     path('post/<slug:slug>/',PostDetailView.as_view(),name='post_detail'),
     path('post/new', PostCreateView.as_view(), name='post_create'),
     path('post/<slug:slug>/edit/', PostUpdateView.as_view(), name='post_edit'),

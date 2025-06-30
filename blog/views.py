@@ -21,6 +21,15 @@ from django.core.paginator import Paginator
 
 # Create your views here.
 
+class LandingPageView(TemplateView):
+    template_name = 'blog/landing.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['latest_posts'] = Post.objects.filter(status='published').order_by('-published_at')[:6]
+        context['categories'] = Category.objects.annotate(num_posts=models.Count('posts')).order_by('-num_posts')[:10]
+        return context
+
 class PostDetailView(DetailView):
     model = Post
     template_name = 'blog/post_detail.html'

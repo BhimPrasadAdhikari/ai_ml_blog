@@ -196,10 +196,11 @@
 <body>
 <header>
     <div class="header-content">
-        <a href="{% url 'post_list' %}" class="logo">AI/ML Blog</a>
+        <a href="{% url 'landing_page' %}" class="logo">AI/ML Blog</a>
         <nav>
             <ul>
-                <li><a href="{% url 'post_list' %}" class="{% if request.resolver_match.url_name == 'post_list' %}active{% endif %}">Home</a></li>
+                <li><a href="{% url 'landing_page' %}" class="{% if request.resolver_match.url_name == 'landing_page' %}active{% endif %}">Home</a></li>
+                <li><a href="{% url 'post_list' %}" class="{% if request.resolver_match.url_name == 'post_list' %}active{% endif %}">Blogs</a></li>
                 <li><a href="{% url 'post_create' %}" class="{% if request.resolver_match.url_name == 'post_create' %}active{% endif %}">Write</a></li>
                 <li><a href="{% url 'categories_list' %}" class = "{% if request.resolver_match.url_name == 'categories_list'%}active {% endif %}">Categories</a></li>
                 <li><a href="#">About</a></li>
