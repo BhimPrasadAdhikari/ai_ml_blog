@@ -1,5 +1,6 @@
 {% extends 'blog/base.html' %}
 {% load blog_extras %}
+{% load static %}
 {% block title %}My Bookmarks - AI/ML Blog{% endblock %}
 
 {% block content %}
@@ -33,4 +34,8 @@
         <p>You have not bookmarked any posts yet.</p>
     {% endif %}
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'blog/js/user_bookmarks.js' %}"></script>
 {% endblock %}

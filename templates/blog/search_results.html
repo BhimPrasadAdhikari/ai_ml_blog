@@ -1,5 +1,7 @@
 {% extends 'blog/base.html' %}
 {% load blog_extras %}
+{% load static %}
+
 
 {% block title %}Search Results - AI/ML Blog{% endblock %}
 
@@ -248,4 +250,8 @@
         <p>Try adjusting your search or filters to find what you're looking for.</p>
     </div>
 {% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'blog/js/search_results.js' %}"></script>
 {% endblock %} 

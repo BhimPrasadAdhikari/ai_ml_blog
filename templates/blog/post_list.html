@@ -1,6 +1,6 @@
 {% extends 'blog/base.html' %}
 {% load blog_tags %} 
-
+{% load static %}
 {% block title %}
 {% if category %}
     {{ category.name }} - AI/ML Blog
@@ -330,4 +330,8 @@ Latest Posts - AI/ML Blog
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'blog/js/post_list.js' %}"></script>
 {% endblock %}

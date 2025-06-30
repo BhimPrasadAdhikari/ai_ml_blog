@@ -1,5 +1,5 @@
 {% extends 'blog/base.html' %}
-
+{% load static %}
 {% block title %}Author Dashboard - AI/ML Blog{% endblock %}
 
 {% block extra_css %}
@@ -189,4 +189,8 @@ body.dark-theme .post-card, body.dark-theme .comment-card {
         </section>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'blog/js/author_dashboard.js' %}"></script>
 {% endblock %}
