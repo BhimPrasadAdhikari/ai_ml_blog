@@ -1,0 +1,226 @@
+.newsletter-preview-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.preview-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.preview-header h1 {
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+}
+
+.preview-header p {
+    color: #6c757d;
+    margin-bottom: 1.5rem;
+}
+
+.preview-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.btn-edit, .btn-back {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-edit {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+}
+
+.btn-edit:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    color: white;
+}
+
+.btn-back {
+    background: #f8f9fa;
+    color: #495057;
+    border: 1px solid #dee2e6;
+}
+
+.btn-back:hover {
+    background: #e9ecef;
+    color: #495057;
+}
+
+.newsletter-preview-content {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    overflow: hidden;
+    margin-bottom: 2rem;
+}
+
+.email-preview {
+    max-width: 600px;
+    margin: 0 auto;
+    background: white;
+}
+
+.email-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid #e9ecef;
+    background: #f8f9fa;
+}
+
+.email-subject {
+    font-size: 1.2rem;
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+}
+
+.email-meta {
+    display: flex;
+    gap: 1rem;
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+.email-meta span {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.email-body {
+    padding: 2rem;
+}
+
+.newsletter-content {
+    line-height: 1.6;
+    color: #495057;
+}
+
+.newsletter-content h1, .newsletter-content h2, .newsletter-content h3 {
+    color: #2c3e50;
+    margin-bottom: 1rem;
+}
+
+.newsletter-content p {
+    margin-bottom: 1rem;
+}
+
+.newsletter-content a {
+    color: #667eea;
+    text-decoration: none;
+}
+
+.newsletter-content a:hover {
+    text-decoration: underline;
+}
+
+.email-footer {
+    padding: 1.5rem;
+    background: #f8f9fa;
+    border-top: 1px solid #e9ecef;
+    text-align: center;
+    color: #6c757d;
+    font-size: 0.9rem;
+}
+
+.email-footer p {
+    margin-bottom: 0.5rem;
+}
+
+.email-footer a {
+    color: #667eea;
+    text-decoration: none;
+}
+
+.email-footer a:hover {
+    text-decoration: underline;
+}
+
+.preview-actions-bottom {
+    text-align: center;
+    padding: 2rem;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.btn-send-newsletter {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem 2rem;
+    background: #28a745;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-bottom: 1rem;
+}
+
+.btn-send-newsletter:hover {
+    background: #218838;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+}
+
+.send-warning {
+    color: #856404;
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    padding: 1rem;
+    border-radius: 6px;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.sent-status {
+    text-align: center;
+    padding: 2rem;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.sent-info {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    color: #28a745;
+    font-size: 1.1rem;
+}
+
+@media (max-width: 768px) {
+    .newsletter-preview-container {
+        padding: 1rem;
+    }
+    
+    .preview-actions {
+        flex-direction: column;
+    }
+    
+    .email-meta {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .email-body {
+        padding: 1rem;
+    }
+}
