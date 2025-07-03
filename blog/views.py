@@ -7,7 +7,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin, 
 from django.contrib import messages
 from django.urls import reverse_lazy, reverse
 from django.http import Http404, JsonResponse
-from .models import Post, Category, Comment, PostInteraction, PostWatchTime, PostShare, UserProfile, EmailSubscription, Newsletter, PostBookmark, PostRating
+from .models import Post, Category, Comment, PostInteraction, PostWatchTime, PostShare, UserProfile, EmailSubscription, Newsletter, PostBookmark, PostRating, Annotation
 from django.db.models import Q, Case, When, Value, IntegerField
 from django.utils import timezone
 from datetime import timedelta
@@ -1008,5 +1008,71 @@ class PostRatingView(LoginRequiredMixin, View):
         })
 
 
-            
+class AnnotationListCreateView(LoginRequiredMixin, View):
 
+    def get(self, request, slug):
+        post = Post.objects.filter(slug=slug, status='published').first()
+
+        annotations = Annotation.objects.filter(post=post).filter(
+            Q(author=request.user) | Q(is_public=True)
+        ).order_by('-created_at')
+        data = [
+            {
+                "id": ann.id,
+                "user": ann.user.username if ann.user else None,
+                "selected_text": ann.selected_text,
+                "content": ann.content,
+                "is_public": ann.is_public,
+                "status": ann.status,
+                "created_at": ann.created_at.isoformat(),
+                
+            }
+            for ann in annotations
+        ]
+
+        return JsonResponse({"annotations": data})
+
+    def post(self, request, slug):
+        post = Post.objects.filter(slug=slug, status='published').first()
+        selected_text = request.POST.get('selected_text', '').strip()
+        content = request.POST.get('content', '').strip()
+        is_public = request.POST.get('is_public', 'false').lower() == 'true'
+
+        if not selected_text or not content:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Selected text and content are required'
+            }, status=400)
+
+        if Annotation.objects.filter(
+            post=post,
+            user=request.user,
+            selected_text=selected_text
+        ).exists():
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Annotation for this text already exists'
+            }, status=400)
+
+        annotation = Annotation.objects.create(
+            post=post,
+            user=request.user,
+            selected_text=selected_text,
+            content=content,
+            is_public=is_public,
+            status='open',
+        )
+
+        return JsonResponse({
+            'id': annotation.id,
+            'user': annotation.user.username if annotation.user else None,
+            'selected_text': annotation.selected_text,
+            'content': annotation.content,
+            'is_public': annotation.is_public,
+            'status': annotation.status,
+            'created_at': annotation.created_at.isoformat(),
+            'status': 'success',
+        }, status=201)
+
+
+    
