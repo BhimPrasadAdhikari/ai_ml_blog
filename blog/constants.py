@@ -35,6 +35,11 @@ class PostInteractionType(models.TextChoices):
     EDIT = 'edit', 'Edit'
     DELETE = 'delete', 'Delete'
 
+class AnnotationStatus(models.TextChoices):
+    OPEN = 'open', 'Open'
+    RESOLVED = 'resolved', 'Resolved'
+    
+
 
 # File sizes
 MAX_IMAGE_SIZE = 5 * 1024 * 1024  # 5MB

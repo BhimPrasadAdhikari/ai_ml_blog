@@ -32,7 +32,7 @@ from .validators import validate_image_size, validate_image_dimensions, validate
 from .managers import CustomUserManager
 from PIL import Image
 import os
-from .constants import PostStatus, CommentStatus, VoteType, SharePlatform, PostInteractionType, MAX_IMAGE_SIZE, MAX_IMAGE_DIMENSION, MAX_THUMBNAIL_DIMENSION, VALID_IMAGE_EXTENSIONS, VALID_VIDEO_EXTENSIONS, VALID_AUDIO_EXTENSIONS, VALID_DOCUMENT_EXTENSIONS, VALID_ARCHIVE_EXTENSIONS, VALID_CODE_EXTENSIONS, VALID_TEXT_EXTENSIONS
+from .constants import PostStatus, CommentStatus, VoteType, SharePlatform, PostInteractionType, AnnotationStatus, MAX_IMAGE_SIZE, MAX_IMAGE_DIMENSION, MAX_THUMBNAIL_DIMENSION, VALID_IMAGE_EXTENSIONS, VALID_VIDEO_EXTENSIONS, VALID_AUDIO_EXTENSIONS, VALID_DOCUMENT_EXTENSIONS, VALID_ARCHIVE_EXTENSIONS, VALID_CODE_EXTENSIONS, VALID_TEXT_EXTENSIONS
 from .mixins import TimestampMixin, SlugMixin, ImageProcessingMixin
 class CustomUser(AbstractUser):
    
@@ -417,6 +417,29 @@ class Newsletter(TimestampMixin, models.Model):
         return self.subject
 
 
+class Annotation(TimestampMixin, models.Model):
+    """
+    Model to store annotations on posts.
+    """
+    post = ForeignKey(Post, on_delete=CASCADE, related_name='annotations')
+    user = ForeignKey(get_user_model(), on_delete=CASCADE, related_name='annotations')
+    selected_text = TextField(help_text="Text selected by the user for annotation")
+    content = TextField()
+    is_public = BooleanField(default=False, help_text="Whether this annotation is public or private")
+    status = CharField(
+        max_length=10,
+        choices=AnnotationStatus.choices,
+        default=AnnotationStatus.OPEN,
+    )
+
+    class Meta:
+        unique_together = ['post', 'user', 'selected_text']
+        verbose_name = "Annotation"
+        verbose_name_plural = "Annotations"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Annotation by {self.user.username} on {self.post.title}"
 
 
 
