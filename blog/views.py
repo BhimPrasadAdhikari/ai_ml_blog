@@ -1074,5 +1074,27 @@ class AnnotationListCreateView(LoginRequiredMixin, View):
             'status': 'success',
         }, status=201)
 
+class AnnotationResolveView(LoginRequiredMixin, View):
 
+    def post(self, request, pk):
+        annotation = Annotation.objects.filter(id=pk).first()
+        if not annotation:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Annotation not found'
+            }, status=404)
+        if request.user != annotation.user and request.user!=annotation.post.author and not request.user.is_superuser:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'You do not have permission to resolve this annotation'
+            }, status=403)
+
+        annotation.status = 'resolved'
+        annotation.save()
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Annotation resolved successfully',
+            'annotation_id': annotation.id
+        })
+        
     
