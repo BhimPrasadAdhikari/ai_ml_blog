@@ -193,6 +193,29 @@
                 <p>Published on {{ post.created_at|date:"F d, Y" }}</p>
             </div>
         </div>
+        <div id="annotation-layer">
+            <h3>Annotations</h3>
+            <div id="annotations-list"></div>
+            {% if user.is_authenticated %}
+            <div id="annotation-form" style="display:none;">
+                <div>
+                    <label><strong>Selected Text:</strong></label>
+                    <div id="selected-text"></div>
+                </div>
+                <textarea id="annotation-content" rows="3" placeholder="Add your annotation, question, or insight..." ></textarea>
+                <div>
+                    <label><input type="checkbox" id="annotation-public" checked > Public annotation </lebel>
+                </div>
+                <button id="submit-annotation"> Submit Annotation </button>
+                <button id="cancel-annotation"> Cancel </button>
+            </div>
+            {% else %}
+            <div class="login-prompt">
+                <a href="{% url 'account_login' %}?next={{request.path}}"> Log in </a> to add annotations
+            </div>
+            {% endif %}
+
+        </div>
         <!-- Comments Section -->
         <div class="comments-header" style="margin-top:2.5rem;">
             <h3 class="comments-title">Comments</h3>
@@ -402,6 +425,10 @@
 </div>
 
 <script>
+window.postSlug = '{{post.slug}}';
+window.currentUserEmail = '{{user.email}}';
+window.postAuthorEmail = '{{post.author.email}}';
+window.currentUsername = '{{user.username}}';
 function confirmDelete(){
     if(confirm('Are you sure you want to delete this post? This action cannot be undoen.')){
         const form = document.createElement('form');
@@ -814,6 +841,6 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 {% endif %}
 </script>
-
+<script src="{% static 'blog/js/annotations.js' %}"></script>
 {% csrf_token %}
 {% endblock %}
