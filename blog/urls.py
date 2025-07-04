@@ -6,7 +6,7 @@ from .views import (
     PostVoteView, PostVoteCountView, PostWatchTimeView, PostShareView,
     ProfileDetailView, ProfileEditView, AuthorDashboardView, EmailSubscriptionView, EmailUnsubscribeView,
     CategoriesListView, NewsletterListView, NewsletterCreateView, NewsletterPreviewView, NewsletterUpdateView, NewsletterDeleteView,
-    PostBookmarkView, UserBookmarksView, PostRatingView, LandingPageView
+    PostBookmarkView, UserBookmarksView, PostRatingView, LandingPageView, AnnotationListCreateView, AnnotationResolveView
 )
 
 urlpatterns = [
@@ -28,6 +28,9 @@ urlpatterns = [
     path('post/<slug:slug>/share/', PostShareView.as_view(), name='post_share'),
     path('post/<slug:slug>/bookmark/', PostBookmarkView.as_view(), name='post_bookmark'),
     path('post/<slug:slug>/rate/', PostRatingView.as_view(), name='post_rate'),
+    path('post/<slug:slug>/annotations/', AnnotationListCreateView.as_view(), name='post_annotations'),
+    path('post/<slug:slug>/annotations/<int:pk>/resolve/', AnnotationResolveView.as_view(), name='resolve_annotation'),
+
     path('categories/', CategoriesListView.as_view(), name='categories_list'),
     path('category/<slug:slug>/', CategoryPostListView.as_view(), name='category_posts'),
 
@@ -50,5 +53,7 @@ urlpatterns = [
     path('newsletters/<int:newsletter_id>/preview/', NewsletterPreviewView.as_view(), name='newsletter_preview'),
     path('newsletters/<int:newsletter_id>/edit/', NewsletterUpdateView.as_view(), name='newsletter_edit'),
     path('newsletters/<int:newsletter_id>/delete/', NewsletterDeleteView.as_view(), name='newsletter_delete'),
+
+    
 
 ]
