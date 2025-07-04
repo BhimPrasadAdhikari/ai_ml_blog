@@ -1014,7 +1014,7 @@ class AnnotationListCreateView(LoginRequiredMixin, View):
         post = Post.objects.filter(slug=slug, status='published').first()
 
         annotations = Annotation.objects.filter(post=post).filter(
-            Q(author=request.user) | Q(is_public=True)
+            Q(user=request.user) | Q(is_public=True)
         ).order_by('-created_at')
         data = [
             {
