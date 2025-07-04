@@ -1076,7 +1076,7 @@ class AnnotationListCreateView(LoginRequiredMixin, View):
 
 class AnnotationResolveView(LoginRequiredMixin, View):
 
-    def post(self, request, pk):
+    def post(self, request, slug, pk):
         annotation = Annotation.objects.filter(id=pk).first()
         if not annotation:
             return JsonResponse({
