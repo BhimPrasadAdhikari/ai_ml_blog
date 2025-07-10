@@ -1107,7 +1107,7 @@ class PostQnAListCreateView(LoginRequiredMixin, View):
                 "id": qna.id,
                 "user": qna.user.username if qna.user else None,
                 "question": qna.question,
-                "answer": qna.ansewer,
+                "answer": qna.answer,
                 "is_answered": qna.is_answered,
                 "created_at": qna.created_at.isoformat(),
                 "answered_at": qna.answered_at.isoformat() if qna.answered_at else None,
