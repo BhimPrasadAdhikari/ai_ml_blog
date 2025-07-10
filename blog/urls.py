@@ -6,7 +6,7 @@ from .views import (
     PostVoteView, PostVoteCountView, PostWatchTimeView, PostShareView,
     ProfileDetailView, ProfileEditView, AuthorDashboardView, EmailSubscriptionView, EmailUnsubscribeView,
     CategoriesListView, NewsletterListView, NewsletterCreateView, NewsletterPreviewView, NewsletterUpdateView, NewsletterDeleteView,
-    PostBookmarkView, UserBookmarksView, PostRatingView, LandingPageView, AnnotationListCreateView, AnnotationResolveView
+    PostBookmarkView, UserBookmarksView, PostRatingView, LandingPageView, AnnotationListCreateView, AnnotationResolveView, PostQnAListCreateView, PostQnAAnswerView
 )
 
 urlpatterns = [
@@ -30,6 +30,8 @@ urlpatterns = [
     path('post/<slug:slug>/rate/', PostRatingView.as_view(), name='post_rate'),
     path('post/<slug:slug>/annotations/', AnnotationListCreateView.as_view(), name='post_annotations'),
     path('post/<slug:slug>/annotations/<int:pk>/resolve/', AnnotationResolveView.as_view(), name='resolve_annotation'),
+    path('post/<slug:slug>/qna/', PostQnAListCreateView.as_view(), name='post_qna'),
+    path('post/<slug:slug>/qna/<int:pk>/answer/', PostQnAAnswerView.as_view(), name='post_qna_answer'),
 
     path('categories/', CategoriesListView.as_view(), name='categories_list'),
     path('category/<slug:slug>/', CategoryPostListView.as_view(), name='category_posts'),

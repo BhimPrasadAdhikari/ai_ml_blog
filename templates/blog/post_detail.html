@@ -217,6 +217,21 @@
             </div>
             {% endif %}
         </div>
+        <!-- Q&A section -->
+        <div id="qna-section">
+            <h3>Peer Review & Author Q&amp;A</h3>
+            <div id="qna-list"></div>
+            {% if user.is_authenticated %}
+                <div id="qna-form">
+                    <textarea id="qna-question" rows="2" placeholder="Ask the author a question or leave peer review feedback..."></textarea>
+                    <button id="qna-submit">Submit Question</button>
+                </div>
+            {% else %}
+                <div>
+                    <a href="{% url 'account_login' %}?next={{ request.path }}">Log in</a> to ask a question.
+                </div>
+            {% endif %}
+        </div>
         <!-- Comments Section -->
         <div class="comments-header" style="margin-top:2.5rem;">
             <h3 class="comments-title">Comments</h3>
@@ -843,5 +858,6 @@ document.addEventListener('DOMContentLoaded', function() {
 {% endif %}
 </script>
 <script src="{% static 'blog/js/annotations.js' %}"></script>
+<script src="{% static 'blog/js/qna.js' %}"></script>
 {% csrf_token %}
 {% endblock %}

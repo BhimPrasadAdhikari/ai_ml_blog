@@ -442,5 +442,17 @@ class Annotation(TimestampMixin, models.Model):
         return f"Annotation by {self.user.username} on {self.post.title}"
 
 
+class PostQnA(TimestampMixin, models.Model):
+    post = ForeignKey('Post', on_delete=CASCADE, related_name='qna')
+    user = ForeignKey(get_user_model(), on_delete=CASCADE, related_name='qna_questions')
+    question = TextField()
+    answer = TextField(blank=True, null=True)
+    is_answered = BooleanField(default=False, help_text="Whether the question has been answered")
+    answered_at = DateTimeField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = "Post Q&A"
+        verbose_name_plural = "Post Q&As"
+        ordering = ['-created_at']
 
 
