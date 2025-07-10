@@ -7,7 +7,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin, 
 from django.contrib import messages
 from django.urls import reverse_lazy, reverse
 from django.http import Http404, JsonResponse
-from .models import Post, Category, Comment, PostInteraction, PostWatchTime, PostShare, UserProfile, EmailSubscription, Newsletter, PostBookmark, PostRating, Annotation
+from .models import Post, Category, Comment, PostInteraction, PostWatchTime, PostShare, UserProfile, EmailSubscription, Newsletter, PostBookmark, PostRating, Annotation, PostQnA
 from django.db.models import Q, Case, When, Value, IntegerField
 from django.utils import timezone
 from datetime import timedelta
@@ -1098,3 +1098,73 @@ class AnnotationResolveView(LoginRequiredMixin, View):
         })
         
     
+class PostQnAListCreateView(LoginRequiredMixin, View):
+    def get(self, request, slug):
+        post = get_object_or_404(Post, slug=slug, status='published')
+        qnas = PostQnA.objects.filter(post=post).order_by('-created_at')
+        data = [
+            {
+                "id": qna.id,
+                "user": qna.user.username if qna.user else None,
+                "question": qna.question,
+                "answer": qna.ansewer,
+                "is_answered": qna.is_answered,
+                "created_at": qna.created_at.isoformat(),
+                "answered_at": qna.answered_at.isoformat() if qna.answered_at else None,
+            }
+            for qna in qnas
+        ]
+        return JsonResponse({"qnas": data}, status=200)
+
+    def post(self, request, slug):
+        post = get_object_or_404(Post, slug=slug, status='published')
+        question = request.POST.get('question', '').strip()
+        if not question:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Question is required'
+            }, status=400)
+        qna = PostQnA.objects.create(
+            post = post,
+            user = request.user, 
+            question = question
+        )
+
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Question submitted successfully',
+            'user': qna.user.username if qna.user else None,
+            'question': qna.question,
+            'created_at': qna.created_at.isoformat(),
+            'id': qna.id, 
+        }, status=201)
+
+class PostQnAAnswerView(LoginRequiredMixin, View):
+    def post(self, request, slug, pk):
+        post = get_object_or_404(Post, slug=slug, status='published')
+        qna = get_object_or_404(PostQnA, id=pk, post=post)
+        if request.user != qna.post.author and not request.user.is_superuser:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'You do not have permission to answer this question'
+            }, status=403)
+
+        answer = request.POST.get('answer', '').strip()
+        if not answer:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Answer is required'
+            }, status=400)
+
+        qna.answer = answer
+        qna.is_answered = True
+        qna.answered_at = timezone.now()
+        qna.save()
+
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Answer submitted successfully',
+            'id': qna.id,
+            'answer': qna.answer,
+            'answered_at': qna.answered_at.isoformat(),
+        }, status=200)
