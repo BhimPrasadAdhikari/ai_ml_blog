@@ -218,17 +218,17 @@
             {% endif %}
         </div>
         <!-- Q&A section -->
-        <div id="qna-section">
-            <h3>Peer Review & Author Q&amp;A</h3>
-            <div id="qna-list"></div>
+        <div id="qna-section" style="background: #f4f6fb; border-radius: 1.2rem; padding: 2rem 1.5rem; margin-top: 2.5rem; box-shadow: 0 2px 8px rgba(102,126,234,0.07); border: 1px solid #e9ecef;">
+            <h3 style="color: #3d348b; font-weight: 800; margin-bottom: 1.2rem;">Peer Review & Author Q&amp;A</h3>
+            <div id="qna-list" style="margin-bottom: 1.5rem;"></div>
             {% if user.is_authenticated %}
-                <div id="qna-form">
-                    <textarea id="qna-question" rows="2" placeholder="Ask the author a question or leave peer review feedback..."></textarea>
-                    <button id="qna-submit">Submit Question</button>
+                <div id="qna-form" style="background: #fff; border-radius: 1rem; box-shadow: 0 2px 8px rgba(102,126,234,0.06); padding: 1.5rem 1.2rem; border: 1px solid #e9ecef;">
+                    <textarea id="qna-question" rows="2" placeholder="Ask the author a question or leave peer review feedback..." style="width: 100%; border-radius: 8px; border: 1px solid #dee2e6; padding: 0.8em; font-size: 1.07rem; margin-bottom: 1rem; background: #f8f9fa; color: #232946; resize: vertical;"></textarea>
+                    <button id="qna-submit" style="background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; border: none; border-radius: 999px; padding: 0.6rem 1.4rem; font-weight: 700; font-size: 1.05rem; cursor: pointer; box-shadow: 0 2px 8px rgba(102,126,234,0.08); transition: background 0.2s, box-shadow 0.2s;">Submit Question</button>
                 </div>
             {% else %}
-                <div>
-                    <a href="{% url 'account_login' %}?next={{ request.path }}">Log in</a> to ask a question.
+                <div style="margin-top: 1.2rem; background: #fff; border-radius: 1rem; box-shadow: 0 2px 8px rgba(102,126,234,0.06); padding: 1.2rem; border: 1px solid #e9ecef;">
+                    <a href="{% url 'account_login' %}?next={{ request.path }}" style="color: #667eea; font-weight: 700;">Log in</a> to ask a question.
                 </div>
             {% endif %}
         </div>
