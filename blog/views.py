@@ -761,6 +761,27 @@ class EmailUnsubscribeView(View):
             'status': 'error',
             'message': 'Email is required'
         }, status=400)
+      
+class CategoriesListView(TemplateView):
+    template_name = 'blog/categories_list.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        categories = Category.objects.annotate(
+            post_count=models.Count('posts', filter=models.Q(posts__status='published')),
+            total_watch_time=models.Sum('posts__watch_times__watch_time'),
+            total_likes=models.Count(
+                'posts__interactions',
+                filter=models.Q(posts__interactions__vote_type='up')
+            ),
+            total_shares=models.Count('posts__shares'),
+            total_comments=models.Count(
+                'posts__comments',
+                filter=models.Q(posts__comments__status='approved')
+            )
+        )
+        context['categories'] = categories
+        return context
 
 
 
