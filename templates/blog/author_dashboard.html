@@ -1,109 +1,8 @@
 {% extends 'blog/base.html' %}
-
+{% load static %}
 {% block title %}Author Dashboard - AI/ML Blog{% endblock %}
 
 {% block extra_css %}
-<style>
-.dashboard-container {
-    max-width: 1000px;
-    margin: 0 auto;
-    padding: 2rem 1rem;
-}
-.dashboard-container h1 {
-    font-size: 2.2rem;
-    font-weight: 800;
-    margin-bottom: 2rem;
-    background: linear-gradient(90deg, var(--primary), var(--accent));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-.dashboard-stats {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-    gap: 2rem;
-    margin-bottom: 2.5rem;
-}
-.stat-card {
-    background: var(--surface-light);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    padding: 2rem 1.5rem 1.5rem 1.5rem;
-    display: flex;
-    align-items: center;
-    gap: 1.2rem;
-    transition: box-shadow 0.2s, transform 0.2s;
-}
-body.dark-theme .stat-card {
-    background: var(--surface-dark);
-}
-.stat-card:hover {
-    box-shadow: 0 8px 32px rgba(99,102,241,0.10);
-    transform: translateY(-4px) scale(1.03);
-}
-.stat-icon {
-    font-size: 2.2rem;
-    color: var(--primary);
-    background: rgba(99,102,241,0.08);
-    border-radius: 50%;
-    width: 56px;
-    height: 56px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-.stat-info h3 {
-    font-size: 1.1rem;
-    font-weight: 700;
-    margin: 0 0 0.2rem 0;
-    color: var(--text-main);
-}
-body.dark-theme .stat-info h3 {
-    color: var(--text-light);
-}
-.stat-info p {
-    font-size: 1.5rem;
-    font-weight: 800;
-    margin: 0;
-    color: var(--primary);
-}
-.dashboard-sections {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 2rem;
-}
-@media (max-width: 900px) {
-    .dashboard-sections { grid-template-columns: 1fr; }
-}
-.recent-posts, .recent-comments {
-    background: var(--surface-light);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    padding: 1.5rem;
-}
-body.dark-theme .recent-posts, body.dark-theme .recent-comments {
-    background: var(--surface-dark);
-}
-.post-card, .comment-card {
-    background: rgba(99,102,241,0.06);
-    border-radius: var(--radius);
-    margin-bottom: 1.2rem;
-    padding: 1rem 1.2rem;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-    transition: background 0.2s;
-}
-body.dark-theme .post-card, body.dark-theme .comment-card {
-    background: rgba(99,102,241,0.12);
-}
-.post-card h3, .comment-card p {
-    margin: 0 0 0.5rem 0;
-}
-.post-meta, .comment-meta {
-    font-size: 0.95rem;
-    color: var(--text-muted);
-    display: flex;
-    gap: 1.2rem;
-}
-</style>
 {% endblock %}
 
 {% block content %}
@@ -189,4 +88,8 @@ body.dark-theme .post-card, body.dark-theme .comment-card {
         </section>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'blog/js/author_dashboard.js' %}"></script>
 {% endblock %}

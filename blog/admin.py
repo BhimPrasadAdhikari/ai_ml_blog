@@ -1,5 +1,7 @@
 from django.contrib import admin
-from .models import Post, CustomUser, Category, Comment, PostInteraction, UserProfile, EmailSubscription
+from .models import (
+    Post, CustomUser, Category, Comment, PostInteraction, UserProfile, 
+    EmailSubscription, Newsletter, PostBookmark, PostRating)
 from django.contrib.auth.admin import UserAdmin
 from .forms import PostAdminForm
 from .analytics import SearchAnalytics
@@ -75,4 +77,21 @@ class EmailSubscriptionAdmin(admin.ModelAdmin):
         queryset.update(is_active=False)
     deactivate_subscriptions.short_description = 'Deactivate selected subscriptions'
     
+@admin.register(Newsletter)
+class NewsletterAdmin(admin.ModelAdmin):
+    list_display = ('subject', 'sent_at', 'is_sent', 'sent_count')
+    list_filter = ('is_sent', 'created_at')
+    search_fields = ('subject', 'content')
+    readonly_fields = ('sent_at', 'sent_count')
 
+@admin.register(PostBookmark)
+class PostBookmarkAdmin(admin.ModelAdmin):
+    list_display = ('post', 'user', 'created_at')
+    list_filter = ('created_at',)
+    search_fields = ('post__title', 'user__username', 'notes')
+
+@admin.register(PostRating)
+class PostRatingAdmin(admin.ModelAdmin):
+    list_display =('post', 'user', 'rating', 'created_at')
+    list_filter = ('rating', 'created_at')
+    search_fields = ('post__title', 'user__username')

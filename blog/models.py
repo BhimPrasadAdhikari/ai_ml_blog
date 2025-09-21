@@ -25,13 +25,14 @@ from django.db.models import (
     Sum,
     Index,
     SET,
+    Avg,
 )
 from django.contrib.auth.base_user import BaseUserManager
 from .validators import validate_image_size, validate_image_dimensions, validate_image_extension
 from .managers import CustomUserManager
 from PIL import Image
 import os
-from .constants import PostStatus, CommentStatus, VoteType, SharePlatform, PostInteractionType, MAX_IMAGE_SIZE, MAX_IMAGE_DIMENSION, MAX_THUMBNAIL_DIMENSION, VALID_IMAGE_EXTENSIONS, VALID_VIDEO_EXTENSIONS, VALID_AUDIO_EXTENSIONS, VALID_DOCUMENT_EXTENSIONS, VALID_ARCHIVE_EXTENSIONS, VALID_CODE_EXTENSIONS, VALID_TEXT_EXTENSIONS
+from .constants import PostStatus, CommentStatus, VoteType, SharePlatform, PostInteractionType, AnnotationStatus, MAX_IMAGE_SIZE, MAX_IMAGE_DIMENSION, MAX_THUMBNAIL_DIMENSION, VALID_IMAGE_EXTENSIONS, VALID_VIDEO_EXTENSIONS, VALID_AUDIO_EXTENSIONS, VALID_DOCUMENT_EXTENSIONS, VALID_ARCHIVE_EXTENSIONS, VALID_CODE_EXTENSIONS, VALID_TEXT_EXTENSIONS
 from .mixins import TimestampMixin, SlugMixin, ImageProcessingMixin
 class CustomUser(AbstractUser):
    
@@ -85,8 +86,6 @@ class Post(SlugMixin, TimestampMixin, ImageProcessingMixin, models.Model):
                        default=PostStatus.DRAFT)
     published_at = DateTimeField(blank=True, null=True)
     
-    
-    
     def get_absolute_url(self):
         return reverse("post_detail", kwargs={"slug": self.slug})
     
@@ -128,6 +127,14 @@ class Post(SlugMixin, TimestampMixin, ImageProcessingMixin, models.Model):
             return interaction.vote_type
         except PostInteraction.DoesNotExist:
             return None
+
+    def get_average_rating(self):
+        """Get the average rating for this post"""
+        return self.ratings.aggregate(avg_rating=Avg('rating'))['avg_rating'] or 0
+    
+    def get_rating_count(self):
+        """Get the number of ratings for this post"""
+        return self.ratings.count()
 
 class Comment(TimestampMixin, models.Model):
     """
@@ -287,6 +294,35 @@ class PostShare(TimestampMixin, models.Model):
         return f"{self.post.title} shared on {self.platform}"
 
     
+class PostBookmark(TimestampMixin, models.Model):
+    """Model for user bookmarks/favorites"""
+    post = ForeignKey(Post, on_delete=CASCADE, related_name='bookmarks')
+    user = ForeignKey(get_user_model(), on_delete=CASCADE, related_name='bookmarked_posts')
+    notes = TextField(blank=True, help_text="Personal notes about this post")
+
+    class Meta:
+        unique_together = ['post','user']
+        verbose_name = "Post Bookmark"
+        verbose_name_plural = "Post Bookmarks"
+
+    def __str__(self):
+        return f"{self.user.username} bookmarked {self.post.title}"
+
+
+class PostRating(TimestampMixin, models.Model):
+    post = ForeignKey(Post, on_delete=CASCADE, related_name='ratings' )
+    user = ForeignKey(get_user_model(), on_delete=CASCADE, related_name='post_ratings')
+    rating = IntegerField(choices=[ (i,i)for i in range(1,6)], default=0)
+
+    class Meta:
+        unique_together = ['post', 'user']
+        verbose_name = "Post Rating"
+        verbose_name_plural = "Post Ratings"
+        
+    def __str__(self):
+        return f"{self.user.username} rated {self.post.title} {self.rating}"
+    
+    
 
 class UserProfile(TimestampMixin, models.Model):
     user = OneToOneField(get_user_model(), on_delete=CASCADE, related_name='profile')
@@ -362,9 +398,61 @@ class EmailSubscription(TimestampMixin, models.Model):
         self.save()
 
     
+class Newsletter(TimestampMixin, models.Model):
+    """
+    Model for newsletter campaigns
+    """
+    subject = CharField(max_length=200)
+    content = TextField()
+    sent_at = DateTimeField(null=True, blank=True)
+    is_sent = BooleanField(default=False)
+    sent_count = IntegerField(default=0)
+
+    class Meta:
+        verbose_name = "Newsletter"
+        verbose_name_plural = "Newsletters"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return self.subject
 
 
+class Annotation(TimestampMixin, models.Model):
+    """
+    Model to store annotations on posts.
+    """
+    post = ForeignKey(Post, on_delete=CASCADE, related_name='annotations')
+    user = ForeignKey(get_user_model(), on_delete=CASCADE, related_name='annotations')
+    selected_text = TextField(help_text="Text selected by the user for annotation")
+    content = TextField()
+    is_public = BooleanField(default=False, help_text="Whether this annotation is public or private")
+    status = CharField(
+        max_length=10,
+        choices=AnnotationStatus.choices,
+        default=AnnotationStatus.OPEN,
+    )
+
+    class Meta:
+        unique_together = ['post', 'user', 'selected_text']
+        verbose_name = "Annotation"
+        verbose_name_plural = "Annotations"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Annotation by {self.user.username} on {self.post.title}"
 
 
+class PostQnA(TimestampMixin, models.Model):
+    post = ForeignKey('Post', on_delete=CASCADE, related_name='qna')
+    user = ForeignKey(get_user_model(), on_delete=CASCADE, related_name='qna_questions')
+    question = TextField()
+    answer = TextField(blank=True, null=True)
+    is_answered = BooleanField(default=False, help_text="Whether the question has been answered")
+    answered_at = DateTimeField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = "Post Q&A"
+        verbose_name_plural = "Post Q&As"
+        ordering = ['-created_at']
 
 

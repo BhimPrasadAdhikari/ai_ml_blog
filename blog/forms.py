@@ -1,5 +1,5 @@
 from django import forms
-from .models import Post, Comment, UserProfile, EmailSubscription
+from .models import Post, Comment, UserProfile, EmailSubscription, Newsletter, PostBookmark, PostRating
 from allauth.account.forms import SignupForm
 from phonenumber_field.formfields import PhoneNumberField
 
@@ -91,3 +91,29 @@ class EmailSubscriptionForm(forms.ModelForm):
                 'placeholder': 'Last Name'
             }),
         }
+
+class NewsletterForm(forms.ModelForm):
+    class Meta:
+        model = Newsletter
+        fields = ['subject', 'content']
+        widgets = {
+            'subject': forms.TextInput(attrs={'class': 'form-control'}),
+            'content': forms.Textarea(attrs={'class': 'form-control'}),
+        }
+
+class PostBookmarkForm(forms.ModelForm):
+    class Meta:
+        model = PostBookmark
+        fields = ['notes']
+        widgets = {
+            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Add personal notes about this post...'}),
+        }
+
+class PostRatingForm(forms.ModelForm):
+    class Meta:
+        model = PostRating
+        fields = ['rating']
+        widgets = {
+            'rating': forms.Select(attrs={'class': 'form-select'}),
+        }
+        

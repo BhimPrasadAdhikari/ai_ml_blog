@@ -1,0 +1,88 @@
+{% extends 'blog/base.html' %}
+{% load static %}
+{% load blog_extras %}
+
+{% block title %}{% if form.instance.pk %}Edit Newsletter{% else %}Create Newsletter{% endif %} - AI/ML Blog{% endblock %}
+
+{% block content %}
+<div class="newsletter-form-container">
+    <div class="newsletter-form-header">
+        <h1>{% if form.instance.pk %}Edit Newsletter{% else %}Create Newsletter{% endif %}</h1>
+        <p>{% if form.instance.pk %}Update your newsletter content{% else %}Create a new newsletter to send to your subscribers{% endif %}</p>
+    </div>
+
+    <div class="newsletter-form-wrapper">
+        <form method="post" class="newsletter-form">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="{{ form.subject.id_for_label }}">Subject Line *</label>
+                {{ form.subject }}
+                {% if form.subject.errors %}
+                    <div class="error-message">
+                        {% for error in form.subject.errors %}
+                            <span>{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                <small class="form-help">Keep it concise and engaging. This is what subscribers will see in their inbox.</small>
+            </div>
+
+            <div class="form-group">
+                <label for="{{ form.content.id_for_label }}">Newsletter Content *</label>
+                {{ form.content }}
+                {% if form.content.errors %}
+                    <div class="error-message">
+                        {% for error in form.content.errors %}
+                            <span>{{ error }}</span>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                <small class="form-help">Write your newsletter content. You can use HTML for formatting.</small>
+            </div>
+
+            <div class="newsletter-preview">
+                <h3>Preview</h3>
+                <div class="preview-content">
+                    <div class="preview-subject">
+                        <strong>Subject:</strong> <span id="preview-subject">Your newsletter subject will appear here</span>
+                    </div>
+                    <div class="preview-body" id="preview-body">
+                        Your newsletter content will appear here
+                    </div>
+                </div>
+            </div>
+
+            <div class="newsletter-stats">
+                <div class="stat-item">
+                    <i class="fas fa-users"></i>
+                    <span>Active Subscribers: <strong>{% get_subscriber_count %}</strong></span>
+                </div>
+                <div class="stat-item">
+                    <i class="fas fa-clock"></i>
+                    <span>Estimated Send Time: <strong>Immediate</strong></span>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn-save">
+                    <i class="fas fa-save"></i>
+                    {% if form.instance.pk %}Update Newsletter{% else %}Create Newsletter{% endif %}
+                </button>
+                <a href="{% url 'newsletter_list' %}" class="btn-cancel">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+                {% if form.instance.pk and not form.instance.is_sent %}
+                    <button type="button" class="btn-send" onclick="sendNewsletter()">
+                        <i class="fas fa-paper-plane"></i> Send Now
+                    </button>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+
+{% block extra_js %}
+<script src="{% static 'blog/js/newsletter_form.js' %}"></script>
+{% endblock %}
+{% endblock %} 

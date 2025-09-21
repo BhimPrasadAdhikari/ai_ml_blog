@@ -7,19 +7,28 @@ from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin, 
 from django.contrib import messages
 from django.urls import reverse_lazy, reverse
 from django.http import Http404, JsonResponse
-from .models import Post, Category, Comment, PostInteraction, PostWatchTime, PostShare, UserProfile, EmailSubscription
+from .models import Post, Category, Comment, PostInteraction, PostWatchTime, PostShare, UserProfile, EmailSubscription, Newsletter, PostBookmark, PostRating, Annotation, PostQnA
 from django.db.models import Q, Case, When, Value, IntegerField
 from django.utils import timezone
 from datetime import timedelta
 from django.contrib.auth import get_user_model
 from .analytics import SearchAnalytics
-from .forms import CommentForm, UserProfileForm, EmailSubscriptionForm
+from .forms import CommentForm, UserProfileForm, EmailSubscriptionForm, NewsletterForm, PostBookmarkForm, PostRatingForm
 from django.db import models
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.utils.decorators import method_decorator
 from django.core.paginator import Paginator
 
 # Create your views here.
+
+class LandingPageView(TemplateView):
+    template_name = 'blog/landing.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['latest_posts'] = Post.objects.filter(status='published').order_by('-published_at')[:6]
+        context['categories'] = Category.objects.annotate(num_posts=models.Count('posts')).order_by('-num_posts')[:10]
+        return context
 
 class PostDetailView(DetailView):
     model = Post
@@ -58,6 +67,10 @@ class PostDetailView(DetailView):
         
         # Get user's vote for this post
         if self.request.user.is_authenticated:
+            bookmark = PostBookmark.objects.filter(post=post, user=self.request.user).first()
+            context['user_bookmarked'] = post.bookmarks.filter(user=self.request.user).exists()
+            context['bookmark_notes'] = bookmark.notes if bookmark else ''
+
             try:
                 interaction = PostInteraction.objects.get(
                     post=post,
@@ -68,6 +81,21 @@ class PostDetailView(DetailView):
                 context['user_vote'] = None
         else:
             context['user_vote'] = None
+            context['bookmark_notes'] = ''
+            context['user_bookmarked'] = False
+
+        if self.request.user.is_authenticated:
+            try:
+                rating_obj = PostRating.objects.get(post=post, user=self.request.user)
+                context['user_rating'] = rating_obj.rating
+            except PostRating.DoesNotExist:
+                context['user_rating'] = 0
+
+        else:
+            context['user_rating'] = 0
+
+        
+
         
         # Get sort parameter
         sort = self.request.GET.get('sort', 'newest')
@@ -117,6 +145,25 @@ class PostDetailView(DetailView):
             ).count()
         
         context['share_counts'] = share_counts
+
+        # Related posts logic
+        # Get categories and tags for the current post
+        categories = post.categories.all()
+        tags = post.get_tags_list()
+        related_posts = Post.objects.filter(status='published').exclude(id=post.id)
+        # Filter by categories
+        if categories.exists():
+            related_posts = related_posts.filter(categories__in=categories)
+        # Filter by tags
+        if tags:
+            tag_query = Q()
+            for tag in tags:
+                tag_query |= Q(tags__icontains=tag)
+            related_posts = related_posts.filter(tag_query)
+        # Remove duplicates, order by published date, and limit
+        related_posts = related_posts.distinct().order_by('-published_at')[:4]
+        context['related_posts'] = related_posts
+
         return context
     
 class PostListView(ListView):
@@ -141,6 +188,18 @@ class PostListView(ListView):
             )
             
         return queryset
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if self.request.user.is_authenticated:
+            # Get IDs of posts bookmarked by the user
+            context['bookmarked_post_ids'] = set(
+                self.request.user.bookmarked_posts.values_list('post_id', flat=True)
+            )
+        else:
+            context['bookmarked_post_ids'] = set()
+        # ... any other context ...
+        return context
 
 class PostCreateView(LoginRequiredMixin, CreateView):
     model = Post
@@ -783,9 +842,329 @@ class CategoriesListView(TemplateView):
         context['categories'] = categories
         return context
 
+class NewsletterCreateView(LoginRequiredMixin, CreateView):
+    model = Newsletter
+    form_class = NewsletterForm
+    template_name = 'blog/newsletter_form.html'
+    success_url = reverse_lazy('newsletter_list')
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Newsletter created successfully!')
+        return super().form_valid(form)
+
+class NewsletterListView(LoginRequiredMixin, ListView):
+    model = Newsletter
+    template_name = 'blog/newsletter_list.html'
+    context_object_name = 'newsletters'
+    paginate_by = 10
+    
+    def get_queryset(self):
+        return Newsletter.objects.filter(is_sent=True).order_by('-sent_at')
 
 
+class NewsletterPreviewView(LoginRequiredMixin, DetailView):
+    model = Newsletter
+    template_name = 'blog/newsletter_preview.html'
+    context_object_name = 'newsletter'
+    pk_url_kwarg = 'newsletter_id'
+    
+
+class NewsletterUpdateView(LoginRequiredMixin, UpdateView):
+    model = Newsletter
+    form_class = NewsletterForm
+    template_name = 'blog/newsletter_form.html'
+    pk_url_kwarg = 'newsletter_id'
+    success_url = reverse_lazy('newsletter_list')
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Newsletter updated successfully!')
+        return super().form_valid(form)
 
 
+class NewsletterDeleteView(LoginRequiredMixin, DeleteView):
+    model = Newsletter
+    success_url = reverse_lazy('newsletter_list')
+    pk_url_kwarg = 'newsletter_id'
+
+    def delete(self, request, *args, **kwargs):
+        newsletter = self.get_object()
+        if newsletter.is_sent:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Cannot delete a sent newsletter.'
+            }, status=400)
+        
+        newsletter.delete()
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Newsletter deleted successfully'
+        })
+
+class PostBookmarkView(LoginRequiredMixin, View):
+    def post(self, request, slug):
+        post = get_object_or_404(Post, slug=slug)
+        action = request.POST.get('action')
+        notes = request.POST.get('notes', '').strip()
+
+        if action == 'add':
+            bookmark, created = PostBookmark.objects.get_or_create(
+                post=post,
+                user=request.user
+            )
+            message = 'Post bookmarked successfully'
+        elif action == 'remove':
+            try:
+                bookmark = PostBookmark.objects.get(post=post, user=request.user)
+                bookmark.delete()
+                message = 'Bookmark removed successfully'
+            except PostBookmark.DoesNotExist:
+                message = 'Bookmark not found'
+        elif action == 'update_notes':
+            try:
+                bookmark = PostBookmark.objects.get(post=post, user=request.user)
+                bookmark.notes = notes
+                bookmark.save()
+                message = 'Notes updated successfully'
+            except PostBookmark.DoesNotExist:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Bookmark not found'
+                }, status=404)
+
+        
+        else:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Invalid action'
+            }, status=400)
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': message
+        })
+
+class UserBookmarksView(LoginRequiredMixin, ListView):
+    model = Post
+    template_name = 'blog/user_bookmarks.html'
+    context_object_name = 'bookmarked_posts'
+    paginate_by = 10
+
+    def get_queryset(self):
+        return Post.objects.filter(
+            bookmarks__user=self.request.user,
+            status = 'published'
+        ).order_by('-bookmarks__created_at')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        bookmarks = self.request.user.bookmarked_posts.filter(
+            post__in=context['bookmarked_posts']
+
+        ).select_related('post')
+
+        context['bookmarks_map'] = {
+            bookmark.post.id: bookmark for bookmark in bookmarks
+        
+        }
+        return context
+
+class PostRatingView(LoginRequiredMixin, View):
+    def post(self, request, slug):
+        post = get_object_or_404(Post, slug=slug)
+        rating = request.POST.get('rating')
+
+        try:
+            rating = int(rating)
+            if rating < 1 or rating > 5:
+                raise ValueError
+                
+        except (ValueError, TypeError):
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Invalid rating value'
+            }, status=400)
+
+        try:
+            rating_obj, created = PostRating.objects.get_or_create(
+                post=post,
+                user=request.user,
+                defaults={'rating': rating}
+            )
+
+            if not created:
+                rating_obj.rating = rating
+                rating_obj.save()
+        except Exception as e:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Failed to save rating'
+            }, status=500)
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Rating saved successfully',
+            'average_rating': post.get_average_rating(),
+            'rating_count': post.get_rating_count(),
+        })
 
 
+class AnnotationListCreateView(LoginRequiredMixin, View):
+
+    def get(self, request, slug):
+        post = Post.objects.filter(slug=slug, status='published').first()
+
+        annotations = Annotation.objects.filter(post=post).filter(
+            Q(user=request.user) | Q(is_public=True)
+        ).order_by('-created_at')
+        data = [
+            {
+                "id": ann.id,
+                "user": ann.user.username if ann.user else None,
+                "selected_text": ann.selected_text,
+                "content": ann.content,
+                "is_public": ann.is_public,
+                "status": ann.status,
+                "created_at": ann.created_at.isoformat(),
+                
+            }
+            for ann in annotations
+        ]
+
+        return JsonResponse({"annotations": data})
+
+    def post(self, request, slug):
+        post = Post.objects.filter(slug=slug, status='published').first()
+        selected_text = request.POST.get('selected_text', '').strip()
+        content = request.POST.get('content', '').strip()
+        is_public = request.POST.get('is_public', 'false').lower() == 'true'
+
+        if not selected_text or not content:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Selected text and content are required'
+            }, status=400)
+
+        if Annotation.objects.filter(
+            post=post,
+            user=request.user,
+            selected_text=selected_text
+        ).exists():
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Annotation for this text already exists'
+            }, status=400)
+
+        annotation = Annotation.objects.create(
+            post=post,
+            user=request.user,
+            selected_text=selected_text,
+            content=content,
+            is_public=is_public,
+            status='open',
+        )
+
+        return JsonResponse({
+            'id': annotation.id,
+            'user': annotation.user.username if annotation.user else None,
+            'selected_text': annotation.selected_text,
+            'content': annotation.content,
+            'is_public': annotation.is_public,
+            'status': annotation.status,
+            'created_at': annotation.created_at.isoformat(),
+            'status': 'success',
+        }, status=201)
+
+class AnnotationResolveView(LoginRequiredMixin, View):
+
+    def post(self, request, slug, pk):
+        annotation = Annotation.objects.filter(id=pk).first()
+        if not annotation:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Annotation not found'
+            }, status=404)
+        if request.user != annotation.user and request.user!=annotation.post.author and not request.user.is_superuser:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'You do not have permission to resolve this annotation'
+            }, status=403)
+
+        annotation.status = 'resolved'
+        annotation.save()
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Annotation resolved successfully',
+            'annotation_id': annotation.id
+        })
+        
+    
+class PostQnAListCreateView(LoginRequiredMixin, View):
+    def get(self, request, slug):
+        post = get_object_or_404(Post, slug=slug, status='published')
+        qnas = PostQnA.objects.filter(post=post).order_by('-created_at')
+        data = [
+            {
+                "id": qna.id,
+                "user": qna.user.username if qna.user else None,
+                "question": qna.question,
+                "answer": qna.answer,
+                "is_answered": qna.is_answered,
+                "created_at": qna.created_at.isoformat(),
+                "answered_at": qna.answered_at.isoformat() if qna.answered_at else None,
+            }
+            for qna in qnas
+        ]
+        return JsonResponse({"qnas": data}, status=200)
+
+    def post(self, request, slug):
+        post = get_object_or_404(Post, slug=slug, status='published')
+        question = request.POST.get('question', '').strip()
+        if not question:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Question is required'
+            }, status=400)
+        qna = PostQnA.objects.create(
+            post = post,
+            user = request.user, 
+            question = question
+        )
+
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Question submitted successfully',
+            'user': qna.user.username if qna.user else None,
+            'question': qna.question,
+            'created_at': qna.created_at.isoformat(),
+            'id': qna.id, 
+        }, status=201)
+
+class PostQnAAnswerView(LoginRequiredMixin, View):
+    def post(self, request, slug, pk):
+        post = get_object_or_404(Post, slug=slug, status='published')
+        qna = get_object_or_404(PostQnA, id=pk, post=post)
+        if request.user != qna.post.author and not request.user.is_superuser:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'You do not have permission to answer this question'
+            }, status=403)
+
+        answer = request.POST.get('answer', '').strip()
+        if not answer:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Answer is required'
+            }, status=400)
+
+        qna.answer = answer
+        qna.is_answered = True
+        qna.answered_at = timezone.now()
+        qna.save()
+
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Answer submitted successfully',
+            'id': qna.id,
+            'answer': qna.answer,
+            'answered_at': qna.answered_at.isoformat(),
+        }, status=200)

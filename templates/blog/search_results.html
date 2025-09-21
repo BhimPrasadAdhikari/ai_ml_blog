@@ -1,117 +1,8 @@
 {% extends 'blog/base.html' %}
 {% load blog_extras %}
+{% load static %}
 
 {% block title %}Search Results - AI/ML Blog{% endblock %}
-
-{% block extra_css %}
-<style>
-    .search-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 3rem 0;
-        text-align: center;
-        margin-bottom: 2rem;
-        border-radius: 10px;
-    }
-
-    .search-title {
-        font-size: 2rem;
-        font-weight: bold;
-        margin-bottom: 1rem;
-    }
-
-    .search-subtitle {
-        font-size: 1.1rem;
-        opacity: 0.9;
-    }
-
-    .search-filters {
-        background: white;
-        padding: 1.5rem;
-        border-radius: 12px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        margin-bottom: 2rem;
-        border: 1px solid #e9ecef;
-    }
-
-    .filters-title {
-        font-size: 1.2rem;
-        font-weight: bold;
-        margin-bottom: 1rem;
-        color: #2c3e50;
-    }
-
-    .filters-form {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 1rem;
-    }
-
-    .filter-group {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-    }
-
-    .filter-label {
-        font-weight: 500;
-        color: #495057;
-    }
-
-    .filter-select {
-        padding: 0.5rem;
-        border: 1px solid #dee2e6;
-        border-radius: 4px;
-        background-color: white;
-    }
-
-    .highlight {
-        background-color: #fff3cd;
-        padding: 0.2rem 0.4rem;
-        border-radius: 4px;
-    }
-
-    .no-results {
-        text-align: center;
-        padding: 4rem 2rem;
-        color: #6c757d;
-    }
-
-    .no-results-icon {
-        font-size: 4rem;
-        margin-bottom: 1rem;
-        color: #dee2e6;
-    }
-
-    .pagination {
-        display: flex;
-        justify-content: center;
-        gap: 0.5rem;
-        margin-top: 2rem;
-    }
-
-    .page-link {
-        padding: 0.5rem 1rem;
-        border: 1px solid #dee2e6;
-        border-radius: 4px;
-        color: #495057;
-        text-decoration: none;
-        transition: all 0.3s ease;
-    }
-
-    .page-link:hover,
-    .page-link.active {
-        background: linear-gradient(135deg, #667eea, #764ba2);
-        color: white;
-        border-color: transparent;
-    }
-
-    .page-link.disabled {
-        color: #6c757d;
-        pointer-events: none;
-    }
-</style>
-{% endblock %}
 
 {% block content %}
 <div class="search-header">
@@ -248,4 +139,8 @@
         <p>Try adjusting your search or filters to find what you're looking for.</p>
     </div>
 {% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'blog/js/search_results.js' %}"></script>
 {% endblock %} 

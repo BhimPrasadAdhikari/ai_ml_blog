@@ -1,0 +1,70 @@
+{% extends 'blog/base.html' %}
+{% load blog_extras %}
+{% load static %}
+
+{% block title %}Preview: {{ newsletter.subject }} - AI/ML Blog{% endblock %}
+
+{% block content %}
+<div class="newsletter-preview-container">
+    <div class="preview-header">
+        <h1>Newsletter Preview</h1>
+        <p>This is how your newsletter will appear to subscribers</p>
+        <div class="preview-actions">
+            <a href="{% url 'newsletter_edit' newsletter.id %}" class="btn-edit">
+                <i class="fas fa-edit"></i> Edit Newsletter
+            </a>
+            <a href="{% url 'newsletter_list' %}" class="btn-back">
+                <i class="fas fa-arrow-left"></i> Back to List
+            </a>
+        </div>
+    </div>
+
+    <div class="newsletter-preview-content">
+        <div class="email-preview">
+            <div class="email-header">
+                <div class="email-subject">
+                    <strong>Subject:</strong> {{ newsletter.subject }}
+                </div>
+                <div class="email-meta">
+                    <span><i class="fas fa-users"></i> {% get_subscriber_count %} recipients</span>
+                    <span><i class="fas fa-calendar"></i> {{ newsletter.created_at|date:"M d, Y" }}</span>
+                </div>
+            </div>
+            
+            <div class="email-body">
+                <div class="newsletter-content">
+                    {{ newsletter.content|safe }}
+                </div>
+            </div>
+            
+            <div class="email-footer">
+                <p>This email was sent to subscribers of AI/ML Blog</p>
+                <p><a href="#">Unsubscribe</a> | <a href="#">View in browser</a></p>
+            </div>
+        </div>
+    </div>
+
+    {% if not newsletter.is_sent %}
+    <div class="preview-actions-bottom">
+        <button class="btn-send-newsletter" onclick="sendNewsletter({{ newsletter.id }})">
+            <i class="fas fa-paper-plane"></i> Send Newsletter
+        </button>
+        <p class="send-warning">
+            <i class="fas fa-exclamation-triangle"></i>
+            This will send the newsletter to {% get_subscriber_count %} active subscribers. This action cannot be undone.
+        </p>
+    </div>
+    {% else %}
+    <div class="sent-status">
+        <div class="sent-info">
+            <i class="fas fa-check-circle"></i>
+            <span>Newsletter sent on {{ newsletter.sent_at|date:"M d, Y" }} to {{ newsletter.sent_count }} recipients</span>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+{% block extra_js %}
+<script src="{% static 'blog/js/newsletter_preview.js' %}"></script>
+{% endblock %}
+{% endblock %} 

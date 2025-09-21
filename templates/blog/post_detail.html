@@ -35,643 +35,7 @@
     {% for tag in post.tags.all %}
     <meta property="article:tag" content="{{ tag.name }}">
     {% endfor %}
-{% endblock %}
-
-{% block extra_css %}
-<style>
-    .post-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 3rem 0;
-        margin-bottom: 2rem;
-        border-radius: 10px;
-    }
-
-    .post-title {
-        font-size: 2.5rem;
-        font-weight: bold;
-        margin-bottom: 1rem;
-        line-height: 1.2;
-    }
-
-    .post-meta {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 2rem;
-        align-items: center;
-        font-size: 1rem;
-        opacity: 0.9;
-        margin-bottom: 1rem;
-    }
-
-    .meta-item {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .post-summary {
-        font-size: 1.1rem;
-        opacity: 0.95;
-        line-height: 1.6;
-    }
-
-    .post-content-wrapper {
-        display: grid;
-        grid-template-columns: 1fr 300px;
-        gap: 3rem;
-        align-items: start;
-    }
-
-    .post-main {
-        background: white;
-        padding: 2rem;
-        border-radius: 12px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        border: 1px solid #e9ecef;
-    }
-
-    .post-image {
-        width: 100%;
-        max-height: 400px;
-        object-fit: cover;
-        border-radius: 8px;
-        margin-bottom: 2rem;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-    }
-
-    .post-content {
-        font-size: 1.1rem;
-        line-height: 1.8;
-        color: #2c3e50;
-    }
-
-    .post-content h1,
-    .post-content h2,
-    .post-content h3,
-    .post-content h4,
-    .post-content h5,
-    .post-content h6 {
-        margin: 2rem 0 1rem 0;
-        color: #2c3e50;
-    }
-
-    .post-content p {
-        margin-bottom: 1.5rem;
-    }
-
-    .post-content ul,
-    .post-content ol {
-        margin-bottom: 1.5rem;
-        padding-left: 2rem;
-    }
-
-    .post-content blockquote {
-        border-left: 4px solid #667eea;
-        padding-left: 1.5rem;
-        margin: 2rem 0;
-        font-style: italic;
-        color: #6c757d;
-        background: #f8f9fa;
-        padding: 1rem 1.5rem;
-        border-radius: 0 8px 8px 0;
-    }
-
-    .post-content code {
-        background: #f8f9fa;
-        padding: 0.2rem 0.4rem;
-        border-radius: 4px;
-        font-family: 'Courier New', monospace;
-        font-size: 0.9rem;
-    }
-
-    .post-content pre {
-        background: #2c3e50;
-        color: white;
-        padding: 1.5rem;
-        border-radius: 8px;
-        overflow-x: auto;
-        margin: 1.5rem 0;
-    }
-
-    .post-content pre code {
-        background: none;
-        padding: 0;
-        color: inherit;
-    }
-
-    .sidebar {
-        position: sticky;
-        top: 2rem;
-    }
-
-    .sidebar-section {
-        background: white;
-        padding: 1.5rem;
-        border-radius: 12px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        border: 1px solid #e9ecef;
-        margin-bottom: 2rem;
-    }
-
-    .sidebar-title {
-        font-size: 1.2rem;
-        font-weight: bold;
-        margin-bottom: 1rem;
-        color: #2c3e50;
-        border-bottom: 2px solid #667eea;
-        padding-bottom: 0.5rem;
-    }
-
-    .categories-list {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-    }
-
-    .category-link {
-        background: linear-gradient(135deg, #667eea, #764ba2);
-        color: white;
-        padding: 0.6rem 1rem;
-        border-radius: 25px;
-        text-decoration: none;
-        text-align: center;
-        font-weight: 500;
-        transition: opacity 0.3s ease;
-    }
-
-    .category-link:hover {
-        opacity: 0.8;
-    }
-
-    .tags-list {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-    }
-
-    .tag-item {
-        background: #f8f9fa;
-        color: #495057;
-        padding: 0.4rem 0.8rem;
-        border-radius: 20px;
-        font-size: 0.9rem;
-        border: 1px solid #dee2e6;
-    }
-
-    .back-link {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        color: #667eea;
-        text-decoration: none;
-        font-weight: 500;
-        margin-bottom: 2rem;
-        transition: color 0.3s ease;
-    }
-
-    .back-link:hover {
-        color: #764ba2;
-    }
-
-    .author-info {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        padding: 1.5rem;
-        background: #f8f9fa;
-        border-radius: 12px;
-        margin-top: 2rem;
-        border-left: 4px solid #667eea;
-    }
-
-    .author-avatar {
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #667eea, #764ba2);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-size: 1.5rem;
-        font-weight: bold;
-    }
-
-    .author-details h4 {
-        margin: 0 0 0.5rem 0;
-        color: #2c3e50;
-    }
-
-    .author-details p {
-        margin: 0;
-        color: #6c757d;
-        font-size: 0.9rem;
-    }
-
-    .post-actions {
-        display: flex;
-        gap: 1rem;
-        margin: 2rem 0;
-        padding: 1.5rem;
-        background: #f8f9fa;
-        border-radius: 12px;
-        border-left: 4px solid #667eea;
-
-    }
-
-    .btn-edit {
-        background: linear-gradient(135deg, #28a745, #20c997);
-        color: white;
-        padding: 0.6rem 1.2rem;
-        border: none;
-        border-radius: 8px;
-        text-decoration: none;
-        font-weight: 500;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        transition: all 0.3s ease;
-        font-size: 0.9rem;
-    }
-
-    .btn-edit:hover {
-        opacity: 0.9;
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
-        color: white;
-        text-decoration: none;
-    }
-
-    .btn-delete {
-        background: linear-gradient(135deg, #dc3545, #c82333);
-        color: white;
-        padding: 0.6rem 1.2rem;
-        border: none;
-        border-radius: 8px;
-        text-decoration: none;
-        font-weight: 500;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        transition: all 0.3s ease;
-        font-size: 0.9rem;
-        cursor: pointer;
-    }
-     .btn-delete:hover {
-        opacity: 0.9;
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
-        color: white;
-        text-decoration: none;
-    }
-
-    .actions-title {
-        margin: 0 0 1rem 0;
-        color: #2c3e50;
-        font-size: 1.1rem;
-        font-weight: 600;
-    }
-
-    @media (max-width: 1024px) {
-        .post-content-wrapper {
-            grid-template-columns: 1fr;
-            gap: 2rem;
-        }
-
-        .sidebar {
-            position: static;
-        }
-    }
-
-    @media (max-width: 768px) {
-        .post-title {
-            font-size: 2rem;
-        }
-
-        .post-meta {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 0.5rem;
-        }
-
-        .post-main {
-            padding: 1.5rem;
-        }
-    }
-    
-    .comment-actions {
-        display: flex;
-        gap: 1rem;
-        margin-top: 1rem;
-    }
-
-    .btn-reply, .btn-edit, .btn-delete {
-        background: none;
-        border: none;
-        font-size: 0.9rem;
-        cursor: pointer;
-        padding: 0;
-        font-weight: 500;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.25rem;
-    }
-
-    .btn-reply {
-        color: #667eea;
-    }
-
-    .btn-reply:hover {
-        color: #764ba2;
-    }
-
-    .btn-edit {
-        color: #28a745;
-    }
-
-    .btn-edit:hover {
-        color: #218838;
-    }
-
-    .btn-delete {
-        color: #dc3545;
-    }
-
-    .btn-delete:hover {
-        color: #c82333;
-    }
-
-    .edit-form {
-        margin-top: 1rem;
-        padding: 1rem;
-        background: #f8f9fa;
-        border-radius: 8px;
-        border: 1px solid #e9ecef;
-    }
-
-    .edit-form-actions {
-        display: flex;
-        gap: 1rem;
-        margin-top: 1rem;
-    }
-
-    .comments-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 2rem;
-    }
-    
-    .comment-sorting {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-    }
-    
-    .comment-sorting select {
-        padding: 0.5rem;
-        border-radius: 4px;
-        border: 1px solid #dee2e6;
-    }
-    
-    .status-badge {
-        padding: 0.25rem 0.5rem;
-        border-radius: 4px;
-        font-size: 0.8rem;
-        font-weight: 500;
-    }
-    
-    .status-badge.pending {
-        background-color: #ffc107;
-        color: #000;
-    }
-    
-    .status-badge.rejected {
-        background-color: #dc3545;
-        color: #fff;
-    }
-    
-    .moderation-actions {
-        margin-top: 1rem;
-        display: flex;
-        gap: 0.5rem;
-    }
-
-    .comment-form {
-        background: #f8f9fa;
-        padding: 1.5rem;
-        border-radius: 8px;
-        margin-bottom: 2rem;
-        border: 1px solid #e9ecef;
-    }
-
-    .comment-form .form-group {
-        margin-bottom: 1rem;
-    }
-
-    .comment-form textarea {
-        width: 100%;
-        padding: 0.75rem;
-        border: 1px solid #dee2e6;
-        border-radius: 4px;
-        resize: vertical;
-    }
-
-    .comment-form .btn-primary {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border: none;
-        padding: 0.6rem 1.2rem;
-        font-weight: 500;
-        transition: all 0.3s ease;
-    }
-
-    .comment-form .btn-primary:hover {
-        opacity: 0.9;
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-    }
-
-    .login-prompt {
-        background: #f8f9fa;
-        padding: 1.5rem;
-        border-radius: 8px;
-        margin-bottom: 2rem;
-        text-align: center;
-        border: 1px solid #e9ecef;
-    }
-
-    .login-prompt a {
-        color: #667eea;
-        text-decoration: none;
-        font-weight: 500;
-    }
-
-    .login-prompt a:hover {
-        color: #764ba2;
-        text-decoration: underline;
-    }
-
-    .no-comments {
-        text-align: center;
-        padding: 2rem;
-        background: #f8f9fa;
-        border-radius: 8px;
-        margin-top: 1rem;
-        color: #6c757d;
-    }
-
-    .post-voting {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        margin: 1rem 0;
-    }
-
-    .vote-buttons {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-
-    .vote-btn {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.5rem 1rem;
-        border: 1px solid #e9ecef;
-        border-radius: 20px;
-        background: white;
-        color: #6c757d;
-        cursor: pointer;
-        transition: all 0.2s ease;
-    }
-
-    .vote-btn:hover:not(:disabled) {
-        background: #f8f9fa;
-        color: #495057;
-    }
-
-    .vote-btn.active {
-        background: #667eea;
-        color: white;
-        border-color: #667eea;
-    }
-
-    .vote-btn:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-    }
-
-    .vote-count {
-        font-weight: 500;
-        min-width: 1.5rem;
-        text-align: center;
-    }
-
-    .vote-btn.upvote.active {
-        background: #28a745;
-        border-color: #28a745;
-    }
-
-    .vote-btn.downvote.active {
-        background: #dc3545;
-        border-color: #dc3545;
-    }
-
-    .login-prompt {
-        font-size: 0.9rem;
-        color: #6c757d;
-    }
-
-    .login-prompt a {
-        color: #667eea;
-        text-decoration: none;
-    }
-
-    .login-prompt a:hover {
-        text-decoration: underline;
-    }
-
-    .meta-item {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        color: #6c757d;
-        font-size: 0.9rem;
-    }
-    .meta-item i {
-        font-size: 1rem;
-
-    }
-
-    .meta-item .fa-clock {
-        color: #28a745;
-    }
-
-    .post-sharing {
-        margin: 2rem 0;
-        padding: 1rem;
-        background: #f8f9fa;
-        border-radius: 8px;
-    }
-
-    .post-sharing h3 {
-        margin-bottom: 1rem;
-        font-size: 1.2rem;
-        color: #495057;
-    }
-
-    .share-buttons {
-        display: flex;
-        gap: 1rem;
-        flex-wrap: wrap;
-    }
-
-    .share-btn {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.5rem 1rem;
-        border: none;
-        border-radius: 20px;
-        color: white;
-        cursor: pointer;
-        transition: all 0.2s ease;
-    }
-
-    .share-btn:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-    }
-
-    .share-btn.twitter {
-        background: #1DA1F2;
-    }
-
-    .share-btn.facebook {
-        background: #4267B2;
-    }
-
-    .share-btn.linkedin {
-        background: #0077B5;
-    }
-
-    .share-btn.whatsapp {
-        background: #25D366;
-    }
-
-    .share-btn.telegram {
-        background: #0088cc;
-    }
-
-    .share-count {
-        background: rgba(255,255,255,0.2);
-        padding: 0.2rem 0.5rem;
-        border-radius: 10px;
-        font-size: 0.8rem;
-    }
-</style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 {% endblock %}
 
 {% block content %}
@@ -695,94 +59,131 @@
         </div>
 
         {% endif %}
-<div class="post-header">
-    <h1 class="post-title">{{ post.title }}</h1>
-    
-    <div class="post-meta">
-        <span class="meta-item">
-            👤 <strong>{{ post.author.username }}</strong>
-        </span>
-        <span class="meta-item">
-            📅 {{ post.created_at|date:"F d, Y" }}
-        </span>
-        {% if post.updated_at != post.created_at %}
-        <span class="meta-item">
-            ✏️ Updated {{ post.updated_at|date:"F d, Y" }}
-        </span>
-        {% endif %}
-        {% if total_watch_time_minutes > 0 %}
-            <div class="meta-item">
-                    <i class="fas fa-clock"></i>
-                    <span class="watch-time">{{ total_watch_time_minutes }} min read</span>
-            </div>
-        {% endif %}
-    </div>
-    
-    <div class="post-voting">
-        <div class="vote-buttons">
-            <button class="vote-btn upvote {% if user.is_authenticated and user_vote == 'up' %}active{% endif %}" 
-                    data-vote-type="up" 
-                    {% if not user.is_authenticated %}disabled{% endif %}>
-                <i class="fas fa-arrow-up"></i>
-                <span class="vote-count" id="upvote-count">{{ post.get_upvotes }}</span>
-            </button>
-            <button class="vote-btn downvote {% if user.is_authenticated and user_vote == 'down' %}active{% endif %}" 
-                    data-vote-type="down" 
-                    {% if not user.is_authenticated %}disabled{% endif %}>
-                <i class="fas fa-arrow-down"></i>
-                <span class="vote-count" id="downvote-count">{{ post.get_downvotes }}</span>
-            </button>
+<div class="hero-section">
+    <div class="hero-content">
+        <div class="hero-title">{{ post.title }}</div>
+        <div class="hero-meta">
+            <span class="author-avatar-inline">{{ post.author.username|first|upper }}</span>
+            <span><strong>{{ post.author.get_full_name|default:post.author.username }}</strong></span>
+            <span>• {{ post.created_at|date:"F d, Y" }}</span>
+            {% if post.updated_at != post.created_at %}
+            <span>• Updated {{ post.updated_at|date:"F d, Y" }}</span>
+            {% endif %}
+            {% if total_watch_time_minutes > 0 %}
+                <span>• <i class="fas fa-clock"></i> {{ total_watch_time_minutes }} min read</span>
+            {% endif %}
         </div>
-        {% if not user.is_authenticated %}
-            <div class="login-prompt">
-                <a href="{% url 'account_login' %}">Log in</a> to vote
-            </div>
-        {% endif %}
-    </div>
-    
-    {% if post.summary %}
-    <p class="post-summary">{{ post.summary }}</p>
-    {% endif %}
-</div>
-
-<div class="post-sharing">
-    <h3>Share this post</h3>
-    <div class="share-buttons">
-        <button class="share-btn twitter" data-platform="twitter" title="Share on Twitter">
-            <i class="fab fa-twitter"></i>
-            <span class="share-count">{{ share_counts.twitter }}</span>
-        </button>
-        <button class="share-btn facebook" data-platform="facebook" title="Share on Facebook">
-            <i class="fab fa-facebook"></i>
-            <span class="share-count">{{ share_counts.facebook }}</span>
-        </button>
-        <button class="share-btn linkedin" data-platform="linkedin" title="Share on LinkedIn">
-            <i class="fab fa-linkedin"></i>
-            <span class="share-count">{{ share_counts.linkedin }}</span>
-        </button>
-        <button class="share-btn whatsapp" data-platform="whatsapp" title="Share on WhatsApp">
-            <i class="fab fa-whatsapp"></i>
-            <span class="share-count">{{ share_counts.whatsapp }}</span>
-        </button>
-        <button class="share-btn telegram" data-platform="telegram" title="Share on Telegram">
-            <i class="fab fa-telegram"></i>
-            <span class="share-count">{{ share_counts.telegram }}</span>
-        </button>
-    </div>
-</div>
-
-<div class="post-content-wrapper">
-    <div class="post-main">
         {% if post.image %}
-            <img src="{{ post.image.url }}" alt="{{ post.title }}" class="post-image" loading="lazy",
+            <img src="{{ post.image.url }}" alt="{{ post.title }}" class="hero-image" loading="lazy"
             onerror="this.onerror=null; this.src='{% static 'images/default-image.jpg' %}';">
         {% endif %}
-        
-        <div class="post-content">
-            {{ post_content_html }}
-        </div>
+    </div>
+</div>
 
-        
+<div class="main-grid">
+    <div class="main-content">
+        {% if post.summary %}
+        <p class="post-summary">{{ post.summary }}</p>
+        {% endif %}
+        <!-- Voting, Rating, Bookmark, Sharing -->
+        <div class="post-voting">
+            <div class="vote-buttons">
+                <button class="vote-btn upvote {% if user.is_authenticated and user_vote == 'up' %}active{% endif %}" 
+                        data-vote-type="up" 
+                        {% if not user.is_authenticated %}disabled{% endif %}>
+                    <i class="fas fa-arrow-up"></i>
+                    <span class="vote-count" id="upvote-count">{{ post.get_upvotes }}</span>
+                </button>
+                <button class="vote-btn downvote {% if user.is_authenticated and user_vote == 'down' %}active{% endif %}" 
+                        data-vote-type="down" 
+                        {% if not user.is_authenticated %}disabled{% endif %}>
+                    <i class="fas fa-arrow-down"></i>
+                    <span class="vote-count" id="downvote-count">{{ post.get_downvotes }}</span>
+                </button>
+            </div>
+            {% if not user.is_authenticated %}
+                <div class="login-prompt">
+                    <a href="{% url 'account_login' %}">Log in</a> to vote
+                </div>
+            {% endif %}
+        </div>
+        <div id="post-rating">
+            <strong>Average Rating:</strong>
+            <span id="average-rating">{{ post.get_average_rating|floatformat:1 }}</span>
+            <span>({{ post.get_rating_count }})</span>
+            {% if user.is_authenticated %}
+                <div id="user-rating">
+                    <strong>Your Rating:</strong>
+                    <span>
+                        {% for i in "12345"|make_list %}
+                            <i class="fa-star {% if user_rating|add:'0' >= forloop.counter %}fas{% else %}far{% endif %}" data-value="{{ forloop.counter }}"></i>
+                        {% endfor %}
+                    </span>
+                </div>
+            {% else %}
+                <em><a href="{% url 'account_login' %}?next={{ request.path }}">Log in</a> to rate this post.</em>
+            {% endif %}
+        </div>
+        {% if user.is_authenticated %}
+        <form id="bookmark-form" method="post" action="{% url 'post_bookmark' slug=post.slug %}" style="display:inline;">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="{% if user_bookmarked %}remove{% else %}add{% endif %}">
+            <button type="submit" id="bookmark-btn" class="btn {% if user_bookmarked %}bookmarked{% endif %}">
+                <i class="fa{% if user_bookmarked %}s{% else %}r{% endif %} fa-bookmark"></i>
+                <span id="bookmark-label">{% if user_bookmarked %}Bookmarked{% else %}Bookmark{% endif %}</span>
+            </button>
+            <div id="bookmark-notes-section" style="margin-top: 0.5rem; {% if not user_bookmarked %}display:none;{% endif %}">
+                <textarea name="notes" id="bookmark-notes" rows="2" placeholder="Add personal notes about this post..." style="width:100%;">{% if user_bookmarked and bookmark_notes %}{{ bookmark_notes }}{% endif %}</textarea>
+                <button type="button" id="save-notes-btn" class="btn btn-sm btn-primary" style="margin-top:0.5rem;">Save Notes</button>
+            </div>
+        </form>
+        {% endif %}
+        <div class="post-sharing">
+            <h3 style="margin-bottom:0.7rem; color:#3d348b;">Share this post</h3>
+            <div class="share-buttons">
+                <button class="share-btn twitter" data-platform="twitter" title="Share on Twitter">
+                    <i class="fab fa-twitter"></i>
+                    <span class="share-count">{{ share_counts.twitter }}</span>
+                </button>
+                <button class="share-btn facebook" data-platform="facebook" title="Share on Facebook">
+                    <i class="fab fa-facebook"></i>
+                    <span class="share-count">{{ share_counts.facebook }}</span>
+                </button>
+                <button class="share-btn linkedin" data-platform="linkedin" title="Share on LinkedIn">
+                    <i class="fab fa-linkedin"></i>
+                    <span class="share-count">{{ share_counts.linkedin }}</span>
+                </button>
+                <button class="share-btn whatsapp" data-platform="whatsapp" title="Share on WhatsApp">
+                    <i class="fab fa-whatsapp"></i>
+                    <span class="share-count">{{ share_counts.whatsapp }}</span>
+                </button>
+                <button class="share-btn telegram" data-platform="telegram" title="Share on Telegram">
+                    <i class="fab fa-telegram"></i>
+                    <span class="share-count">{{ share_counts.telegram }}</span>
+                </button>
+            </div>
+        </div>
+        <div class="post-content">
+            {{ post_content_html|safe }}
+        </div>
+        <!-- Related Posts Section -->
+        {% if related_posts %}
+        <div class="related-posts">
+            <h3 style="color:#3d348b;">Related Posts</h3>
+            <div class="related-posts-list">
+                {% for related in related_posts %}
+                <div class="related-post-card">
+                    {% if related.image %}
+                        <img src="{{ related.image.url }}" alt="{{ related.title }}" loading="lazy">
+                    {% endif %}
+                    <a href="{{ related.get_absolute_url }}">{{ related.title }}</a>
+                    <p style="font-size: 0.98rem; color: #666; margin-top: 0.5rem;">{{ related.summary|truncatewords:20 }}</p>
+                    <span style="font-size: 0.92rem; color: #999;">Published: {{ related.published_at|date:'M d, Y' }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
         <div class="author-info">
             <div class="author-avatar">
                 {{ post.author.username|first|upper }}
@@ -792,9 +193,47 @@
                 <p>Published on {{ post.created_at|date:"F d, Y" }}</p>
             </div>
         </div>
-
+        <div id="annotation-layer" style="background: #f4f6fb; border-radius: 1.2rem; padding: 2rem 1.5rem; margin-top: 2.5rem; box-shadow: 0 2px 8px rgba(102,126,234,0.07); border: 1px solid #e9ecef;">
+            <h3 style="color: #3d348b; font-weight: 800; margin-bottom: 1.2rem;">Annotations</h3>
+            <div id="annotations-list" style="margin-bottom: 1.5rem;"></div>
+            {% if user.is_authenticated %}
+            <div id="annotation-form" style="display:none; background: #fff; border-radius: 1rem; box-shadow: 0 2px 8px rgba(102,126,234,0.06); padding: 1.5rem 1.2rem; border: 1px solid #e9ecef;">
+                <div style="margin-bottom: 1rem;">
+                    <label style="font-weight: 700; color: #3d348b;"><strong>Selected Text:</strong></label>
+                    <div id="selected-text" style="background: #f8f9fa; border-radius: 6px; padding: 0.5em 0.8em; color: #495057; font-size: 1.04rem; margin-top: 0.3em;"></div>
+                </div>
+                <textarea id="annotation-content" rows="3" placeholder="Add your annotation, question, or insight..." style="width: 100%; border-radius: 8px; border: 1px solid #dee2e6; padding: 0.8em; font-size: 1.07rem; margin-bottom: 1rem; background: #f8f9fa; color: #232946; resize: vertical;"></textarea>
+                <div style="margin-bottom: 1.2rem;">
+                    <label style="font-size: 1.01rem; color: #6366f1;">
+                        <input type="checkbox" id="annotation-public" checked style="margin-right: 0.5em;"> Public annotation
+                    </label>
+                </div>
+                <button id="submit-annotation" style="background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; border: none; border-radius: 999px; padding: 0.6rem 1.4rem; font-weight: 700; font-size: 1.05rem; cursor: pointer; margin-right: 0.7em; box-shadow: 0 2px 8px rgba(102,126,234,0.08); transition: background 0.2s, box-shadow 0.2s;">Submit Annotation</button>
+                <button id="cancel-annotation" style="background: #e0e7ff; color: #3d348b; border: none; border-radius: 999px; padding: 0.6rem 1.4rem; font-weight: 700; font-size: 1.05rem; cursor: pointer; box-shadow: 0 2px 8px rgba(102,126,234,0.08); transition: background 0.2s, box-shadow 0.2s;">Cancel</button>
+            </div>
+            {% else %}
+            <div class="login-prompt" style="margin-top: 1.2rem;">
+                <a href="{% url 'account_login' %}?next={{request.path}}" style="color: #667eea; font-weight: 700;">Log in</a> to add annotations
+            </div>
+            {% endif %}
+        </div>
+        <!-- Q&A section -->
+        <div id="qna-section" style="background: #f4f6fb; border-radius: 1.2rem; padding: 2rem 1.5rem; margin-top: 2.5rem; box-shadow: 0 2px 8px rgba(102,126,234,0.07); border: 1px solid #e9ecef;">
+            <h3 style="color: #3d348b; font-weight: 800; margin-bottom: 1.2rem;">Peer Review & Author Q&amp;A</h3>
+            <div id="qna-list" style="margin-bottom: 1.5rem;"></div>
+            {% if user.is_authenticated %}
+                <div id="qna-form" style="background: #fff; border-radius: 1rem; box-shadow: 0 2px 8px rgba(102,126,234,0.06); padding: 1.5rem 1.2rem; border: 1px solid #e9ecef;">
+                    <textarea id="qna-question" rows="2" placeholder="Ask the author a question or leave peer review feedback..." style="width: 100%; border-radius: 8px; border: 1px solid #dee2e6; padding: 0.8em; font-size: 1.07rem; margin-bottom: 1rem; background: #f8f9fa; color: #232946; resize: vertical;"></textarea>
+                    <button id="qna-submit" style="background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; border: none; border-radius: 999px; padding: 0.6rem 1.4rem; font-weight: 700; font-size: 1.05rem; cursor: pointer; box-shadow: 0 2px 8px rgba(102,126,234,0.08); transition: background 0.2s, box-shadow 0.2s;">Submit Question</button>
+                </div>
+            {% else %}
+                <div style="margin-top: 1.2rem; background: #fff; border-radius: 1rem; box-shadow: 0 2px 8px rgba(102,126,234,0.06); padding: 1.2rem; border: 1px solid #e9ecef;">
+                    <a href="{% url 'account_login' %}?next={{ request.path }}" style="color: #667eea; font-weight: 700;">Log in</a> to ask a question.
+                </div>
+            {% endif %}
+        </div>
         <!-- Comments Section -->
-        <div class="comments-header">
+        <div class="comments-header" style="margin-top:2.5rem;">
             <h3 class="comments-title">Comments</h3>
             <div class="comment-sorting">
                 <label for="comment-sort">Sort by:</label>
@@ -805,7 +244,6 @@
                 </select>
             </div>
         </div>
-
         <!-- Add Comment Form - Always show if user is authenticated -->
         {% if user.is_authenticated %}
             <form method="post" action="{% url 'add_comment' slug=post.slug %}" class="comment-form">
@@ -820,7 +258,6 @@
                 <p>Please <a href="{% url 'account_login' %}">log in</a> to leave a comment.</p>
             </div>
         {% endif %}
-
         <!-- Comments List -->
         <div class="comments-list">
             {% for comment in comments %}
@@ -849,7 +286,6 @@
                     <div class="comment-content">
                         {{ comment.content }}
                     </div>
-                    
                     {% if user.is_authenticated %}
                         <div class="comment-actions">
                             <button class="btn-reply" onclick="showReplyForm('{{ comment.id }}')">Reply</button>
@@ -859,7 +295,6 @@
                             {% endif %}
                         </div>
                     {% endif %}
-
                     <!-- Edit Form (Hidden by default) -->
                     {% if user == comment.author %}
                         <div id="edit-form-{{ comment.id }}" class="edit-form" style="display: none;">
@@ -875,7 +310,6 @@
                             </form>
                         </div>
                     {% endif %}
-
                     <!-- Reply Form (Hidden by default) -->
                     {% if user.is_authenticated %}
                         <div id="reply-form-{{ comment.id }}" class="reply-form" style="display: none;">
@@ -891,7 +325,6 @@
                             </form>
                         </div>
                     {% endif %}
-
                     <!-- Replies -->
                     {% if comment.get_replies %}
                         <div class="replies">
@@ -928,7 +361,6 @@
                                                 <button class="btn-delete" onclick="confirmDeleteComment('{{ reply.id }}')">Delete</button>
                                             </div>
                                         {% endif %}
-
                                         <!-- Edit Form for Replies (Hidden by default) -->
                                         {% if user == reply.author %}
                                             <div id="edit-form-{{ reply.id }}" class="edit-form" style="display: none;">
@@ -949,7 +381,6 @@
                             {% endfor %}
                         </div>
                     {% endif %}
-
                     {% if user.is_authenticated and user != comment.author %}
                         {% if user.is_superuser or user == post.author %}
                             {% if comment.status == 'pending' %}
@@ -971,7 +402,6 @@
             {% endfor %}
         </div>
     </div>
-    
     <aside class="sidebar">
         {% if post.categories.all %}
         <div class="sidebar-section">
@@ -985,7 +415,6 @@
             </div>
         </div>
         {% endif %}
-        
         {% if post.tags %}
         <div class="sidebar-section">
             <h3 class="sidebar-title">Tags</h3>
@@ -996,7 +425,6 @@
             </div>
         </div>
         {% endif %} 
-        
         <div class="sidebar-section">
             <h3 class="sidebar-title">Post Info</h3>
             <div style="color: #6c757d; line-height: 1.6;">
@@ -1011,7 +439,12 @@
         </div>
     </aside>
 </div>
+
 <script>
+window.postSlug = '{{post.slug}}';
+window.currentUserEmail = '{{user.email}}';
+window.postAuthorEmail = '{{post.author.email}}';
+window.currentUsername = '{{user.username}}';
 function confirmDelete(){
     if(confirm('Are you sure you want to delete this post? This action cannot be undoen.')){
         const form = document.createElement('form');
@@ -1113,7 +546,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Check for new comments every 30 seconds
 setInterval(checkNewComments, 30000);
-
 // Voting functionality
 document.addEventListener('DOMContentLoaded', function() {
     const voteButtons = document.querySelectorAll('.vote-btn');
@@ -1310,7 +742,122 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
-</script>
 
+document.addEventListener('DOMContentLoaded', function() {
+    const bookmarkForm = document.getElementById('bookmark-form');
+    const notesSection = document.getElementById('bookmark-notes-section');
+    const saveNotesBtn = document.getElementById('save-notes-btn');
+    const postSlug = '{{ post.slug }}';
+
+
+    if (bookmarkForm) {
+        if (notesSection && '{{ user_bookmarked }}' === 'True') {
+            notesSection.style.display = 'block';
+        }
+
+        bookmarkForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const actionInput = bookmarkForm.querySelector('input[name="action"]');
+            // Get the current action value
+            let currentAction = actionInput.value;
+
+            // Prepare FormData with the current action
+            const formData = new FormData();
+            formData.append('notes', document.getElementById('bookmark-notes')?.value || '');
+            formData.append('csrfmiddlewaretoken', bookmarkForm.querySelector('[name=csrfmiddlewaretoken]').value);
+            formData.append('action', currentAction);
+
+            fetch(`/post/${postSlug}/bookmark/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
+                },
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                const btn = document.getElementById('bookmark-btn');
+                if (data.status === 'success') {
+                    if (currentAction === 'add') {
+                        btn.innerHTML = '<i class="fas fa-bookmark"></i> <span id="bookmark-label">Bookmarked</span>';
+                        actionInput.value = 'remove';
+                        if (notesSection) notesSection.style.display = 'block';
+                    } else {
+                        btn.innerHTML = '<i class="far fa-bookmark"></i> <span id="bookmark-label">Bookmark</span>';
+                        actionInput.value = 'add';
+                        if (notesSection) notesSection.style.display = 'none';
+
+                    }
+                }
+            });
+        });
+        if (saveNotesBtn) {
+
+            saveNotesBtn.addEventListener('click', function() {
+                const notes = document.getElementById('bookmark-notes').value;
+                const csrfToken = bookmarkForm.querySelector('[name=csrfmiddlewaretoken]').value;
+                fetch(`/post/${postSlug}/bookmark/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrfToken,
+                    },
+                    body: new URLSearchParams({
+                        action: 'update_notes',
+                        notes: notes,
+                        csrfmiddlewaretoken: csrfToken
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        alert('Notes saved!');
+                    }
+                });
+            });
+        }
+
+
+    }
+});
+
+{% if user.is_authenticated %}
+document.addEventListener('DOMContentLoaded', function() {
+    const stars = document.querySelectorAll('#user-rating .fa-star');
+    stars.forEach(star => {
+        star.addEventListener('click', function() {
+            const rating = this.getAttribute('data-value');
+            fetch("{% url 'post_rate' slug=post.slug %}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: `rating=${rating}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    document.getElementById('average-rating').textContent = parseFloat(data.average_rating).toFixed(1);
+                    // Optionally update the user's stars visually
+                    stars.forEach((s, idx) => {
+                        if (idx < rating) {
+                            s.classList.remove('far');
+                            s.classList.add('fas');
+                        } else {
+                            s.classList.remove('fas');
+                            s.classList.add('far');
+                        }
+                    });
+                } else {
+                    alert(data.message);
+                }
+            });
+        });
+    });
+});
+{% endif %}
+</script>
+<script src="{% static 'blog/js/annotations.js' %}"></script>
+<script src="{% static 'blog/js/qna.js' %}"></script>
 {% csrf_token %}
 {% endblock %}

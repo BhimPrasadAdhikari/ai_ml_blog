@@ -1,73 +1,7 @@
 {% extends 'blog/base.html' %}
+{% load static %}
 {% block title %}Categories - AI/ML Blog{% endblock %}
-{% block extra_css %}
-<style>
-.categories-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 2rem;
-    margin: 2rem 0;
-}
-.category-card {
-    background: var(--surface-light);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    padding: 2rem 1.5rem;
-    transition: box-shadow 0.2s, transform 0.2s;
-    border: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-}
-body.dark-theme .category-card {
-    background: var(--surface-dark);
-}
-.category-title {
-    font-size: 1.3rem;
-    font-weight: 700;
-    color: var(--primary);
-    margin-bottom: 0.5rem;
-}
-.category-meta {
-    font-size: 0.95rem;
-    color: var(--text-muted);
-    margin-bottom: 1rem;
-}
-.category-stats {
-    display: flex;
-    gap: 1.2rem;
-    flex-wrap: wrap;
-    margin-bottom: 1rem;
-}
-.stat {
-    background: rgba(99,102,241,0.08);
-    border-radius: 1rem;
-    padding: 0.4rem 1rem;
-    font-size: 0.95rem;
-    color: var(--primary);
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-}
-body.dark-theme .stat {
-    background: rgba(99,102,241,0.18);
-    color: #bdbdfc;
-}
-.category-link {
-    margin-top: auto;
-    background: var(--primary);
-    color: #fff;
-    padding: 0.5rem 1.2rem;
-    border-radius: 1rem;
-    text-decoration: none;
-    font-weight: 500;
-    transition: background 0.2s;
-}
-.category-link:hover {
-    background: var(--primary-hover);
-}
-</style>
-{% endblock %}
+
 {% block content %}
 <h1>Categories</h1>
 <div class="categories-grid">
@@ -86,4 +20,7 @@ body.dark-theme .stat {
     </div>
     {% endfor %}
 </div>
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'blog/js/categories_list.js' %}"></script>
 {% endblock %}
