@@ -36,10 +36,10 @@ from .constants import PostStatus, CommentStatus, VoteType, SharePlatform, PostI
 from .mixins import TimestampMixin, SlugMixin, ImageProcessingMixin
 class CustomUser(AbstractUser):
    
-    phone_number = PhoneNumberField(unique=True, null=False, blank=False)
+    phone_number = PhoneNumberField(unique=True, null=True, blank=True)
     email = models.EmailField(unique=True)
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['phone_number']
+    REQUIRED_FIELDS = []
     objects = CustomUserManager()
     
     def __str__(self):
