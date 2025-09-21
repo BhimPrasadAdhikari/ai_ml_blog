@@ -1,1 +1,20 @@
-{% extends "allauth/layouts/entrance.html" %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}AI/ML Blog{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'auth/css/auth.css' %}">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-left">
+            {% block left_content %}{% endblock %}
+        </div>
+        <div class="auth-right">
+            {% block right_content %}{% endblock %}
+        </div>
+    </div>
+</body>
+</html>
