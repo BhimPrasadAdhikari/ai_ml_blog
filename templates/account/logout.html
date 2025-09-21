@@ -1,25 +1,27 @@
 {% extends "account/base_manage.html" %}
-{% load allauth i18n %}
+{% load i18n static allauth account %}
+
 {% block head_title %}
-    {% trans "Sign Out" %}
+    {% trans "Sign Out - AI/ML Blog" %}
 {% endblock head_title %}
-{% block content %}
-    {% element h1 %}
-        {% trans "Sign Out" %}
-    {% endelement %}
-    {% element p %}
-        {% trans 'Are you sure you want to sign out?' %}
-    {% endelement %}
-    {% url 'account_logout' as action_url %}
-    {% element form method="post" action=action_url no_visible_fields=True %}
-        {% slot body %}
-            {% csrf_token %}
-            {{ redirect_field }}
-        {% endslot %}
-        {% slot actions %}
-            {% element button type="submit" %}
-                {% trans 'Sign Out' %}
-            {% endelement %}
-        {% endslot %}
-    {% endelement %}
-{% endblock content %}
+
+{% block left_content %}
+    <img src="{% static 'auth/images/logout_illustration.svg' %}" alt="Sign Out" class="manage-illustration">
+    <h1>Signing Out 👋</h1>
+    <p>You're about to securely sign out of your account.</p>
+    <p>If this was not you, please review your account security.</p>
+{% endblock left_content %}
+
+{% block right_content %}
+    <h2 class="form-title">{% trans "Confirm Sign Out" %}</h2>
+    <form method="post" action="{% url 'account_logout' %}" class="manage-form">
+        {% csrf_token %}
+        {{ redirect_field }}
+        <button type="submit" class="btn-primary btn-full">
+            {% trans "Sign Out" %}
+        </button>
+        <a href="{% url 'account_login' %}" class="btn-outline btn-full mt-1">
+            {% trans "Cancel" %}
+        </a>
+    </form>
+{% endblock right_content %}

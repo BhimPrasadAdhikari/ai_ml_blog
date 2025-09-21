@@ -1,20 +1,23 @@
 {% extends "account/base_confirm_code.html" %}
 {% load i18n %}
 {% load allauth account %}
+
+{# This defines the action_url variable for the form in the base template #}
+{% url 'account_login_by_code' as action_url %}
+
 {% block head_title %}
-    {% translate "Sign In" %}
+    {% translate "Confirm Sign In" %}
 {% endblock head_title %}
+
 {% block title %}
-    {% translate "Enter Sign-In Code" %}
+    {% translate "Enter Sign In Code" %}
 {% endblock %}
+
 {% block recipient %}
-    {% if email %}
-        <a href="mailto:{{ email }}">{{ email }}</a>
-    {% else %}
-        <a href="tel:{{ phone }}">{{ phone }}</a>
-    {% endif %}
+    {% blocktrans with email=email %}A sign in code was sent to <a href="mailto:{{ email }}">{{ email }}</a>.{% endblocktrans %}
 {% endblock %}
-{% block action_url %}
-    {% url 'account_confirm_login_code' %}
-{% endblock %}
-{% block extra_tags %}login{% endblock %}
+
+{% block extra_tags %}login,verification{% endblock %}
+
+{# The form itself is likely in your base_confirm_code.html and uses the action_url variable. #}
+{# If the form is in this file, make sure its action attribute is correct: action="{{ action_url }}" #}

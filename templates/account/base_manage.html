@@ -1,1 +1,34 @@
-{% extends "allauth/layouts/manage.html" %}
+{% load static i18n %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block head_title %}Account Management{% endblock head_title %}</title>
+    <link rel="stylesheet" href="{% static 'auth/css/manage.css' %}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+
+<div class="manage-container">
+
+    <!-- Left Column: Illustration / Info -->
+    <div class="manage-left">
+        {% block left_content %}
+        <img src="{% static 'auth/images/account_management.svg' %}" alt="Account Management" class="manage-illustration">
+        <h1>Manage Your Account 🔧</h1>
+        <p>Update your details, change password, or safely sign out from here.</p>
+        {% endblock left_content %}
+    </div>
+
+    <!-- Right Column: Form / Actions -->
+    <div class="manage-right">
+        {% block right_content %}
+        <!-- Specific pages like logout, change password will override this -->
+        {% endblock right_content %}
+    </div>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,257 @@
+/* =========================
+   Auth Page General Styles
+   ========================= */
+body {
+    margin: 0;
+    font-family: 'Inter', 'Roboto', sans-serif;
+    background-color: #f9f9f9;
+    color: #333;
+}
+
+.auth-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    min-height: 100vh;
+}
+
+/* -------------------------
+   Left Column - Illustration
+   ------------------------- */
+.auth-left {
+    background: linear-gradient(135deg, #6A4C93, #E94E77);
+    color: white;
+    padding: 3rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+.auth-left img {
+    max-width: 70%;
+    margin-bottom: 2rem;
+}
+
+.auth-left h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+.auth-left p {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    margin-bottom: 0.5rem;
+}
+
+.auth-left .auth-link {
+    font-weight: 600;
+    color: #fff;
+    text-decoration: underline;
+    margin-top: 1rem;
+}
+
+/* -------------------------
+   Right Column - Form
+   ------------------------- */
+.auth-right {
+    padding: 3rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    background-color: #fff;
+}
+
+.auth-right h2 {
+    color: #2A3A67;
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+}
+
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.auth-form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.auth-form-group input,
+.auth-form-group select,
+.auth-form-group textarea {
+    padding: 0.75rem 1rem;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.auth-form-group input:focus,
+.auth-form-group select:focus,
+.auth-form-group textarea:focus {
+    border-color: #6A4C93;
+    box-shadow: 0 0 0 2px rgba(106, 76, 147, 0.2);
+    outline: none;
+}
+
+.auth-form-group label {
+    font-weight: 600;
+    margin-bottom: 0.3rem;
+}
+
+.auth-error {
+    color: #DB4437;
+    font-size: 0.875rem;
+    margin-top: 0.3rem;
+}
+
+/* -------------------------
+   Buttons
+   ------------------------- */
+.btn-primary {
+    background: linear-gradient(90deg, #6A4C93, #E94E77);
+    color: #fff;
+    font-weight: 700;
+    border: none;
+    border-radius: 8px;
+    padding: 0.75rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    opacity: 0.9;
+}
+
+.btn-full {
+    width: 100%;
+}
+
+.btn-outline {
+    display: block;
+    width: 100%;
+    text-align: center;
+    padding: 0.65rem;
+    margin-top: 0.5rem;
+    border: 2px solid #6A4C93;
+    color: #6A4C93;
+    border-radius: 8px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.btn-outline:hover {
+    background-color: #6A4C93;
+    color: #fff;
+}
+
+.auth-alt-login hr {
+    margin: 1.5rem 0;
+    border: 0;
+    height: 1px;
+    background: #ddd;
+}
+
+/* -------------------------
+   Remember Me Checkbox
+   ------------------------- */
+.auth-form-group.remember-me {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.auth-form-group.remember-me input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: #6A4C93; /* modern colored checkbox */
+    cursor: pointer;
+}
+
+.auth-form-group.remember-me label {
+    margin: 0;
+    font-weight: 500;
+    font-size: 0.95rem;
+    cursor: pointer;
+}
+
+/* -------------------------
+   Alerts / Messages
+   ------------------------- */
+.auth-right .alert {
+    padding: 0.75rem 1rem;
+    border-radius: 6px;
+    margin-bottom: 1rem;
+    font-size: 0.95rem;
+}
+
+.auth-right .alert-success {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.auth-right .alert-error {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+/* -------------------------
+   Social Login Buttons
+   ------------------------- */
+.social-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.social-buttons .social-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.65rem 1.2rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    color: #fff;
+    transition: all 0.3s ease;
+}
+
+.social-buttons .social-btn.google { background-color: #DB4437; }
+.social-buttons .social-btn.google:hover { background-color: #c33d2f; }
+
+.social-buttons .social-btn.github { background-color: #333; }
+.social-buttons .social-btn.github:hover { background-color: #111; }
+
+.social-buttons .social-btn.facebook { background-color: #3b5998; }
+.social-buttons .social-btn.facebook:hover { background-color: #334d84; }
+
+.social-buttons .social-btn.openid { background-color: #6A4C93; }
+.social-buttons .social-btn.openid:hover { background-color: #5a3a7a; }
+
+/* -------------------------
+   Mobile Responsive
+   ------------------------- */
+@media (max-width: 768px) {
+    .auth-container { grid-template-columns: 1fr; }
+
+    .auth-left, .auth-right {
+        width: 100%;
+        padding: 2rem;
+        text-align: center;
+    }
+
+    .auth-left img { max-width: 60%; margin-bottom: 1.5rem; }
+
+    .auth-left h1 { font-size: 2rem; }
+
+    .auth-right h2 { font-size: 1.75rem; }
+
+    .social-buttons { flex-direction: column; gap: 0.8rem; }
+}

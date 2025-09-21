@@ -1,32 +1,53 @@
 {% extends "account/base_entrance.html" %}
-{% load i18n %}
-{% load allauth account %}
+{% load i18n static allauth account %}
+
 {% block head_title %}
-    {% translate "Sign In" %}
+    {% translate "Passwordless Sign-In" %}
 {% endblock head_title %}
-{% block content %}
-    {% element h1 %}
-        {% translate "Send me a sign-in code" %}
-    {% endelement %}
-    {% element p %}
-        {% blocktranslate %}You will receive a special code for a password-free sign-in.{% endblocktranslate %}
-    {% endelement %}
+
+{% block left_content %}
+<div class="auth-left">
+    <img src="{% static 'auth/images/login_code.svg' %}" 
+         alt="Passwordless Sign-In" 
+         class="auth-illustration">
+
+    <h1>{% translate "Sign In Without Password 🔑" %}</h1>
+
+    <p>
+        {% translate "Enter your email and we’ll send you a special sign-in code. No password needed!" %}
+    </p>
+</div>
+{% endblock left_content %}
+
+{% block right_content %}
+<div class="auth-right">
+    <h2 class="form-title">{% translate "Request Sign-In Code" %}</h2>
+
     {% url 'account_request_login_code' as login_url %}
-    {% element form form=form method="post" action=login_url tags="entrance,login" %}
-        {% slot body %}
-            {% csrf_token %}
-            {% element fields form=form unlabeled=True %}
-            {% endelement %}
-            {{ redirect_field }}
-        {% endslot %}
-        {% slot actions %}
-            {% element button type="submit" tags="prominent,login" %}
-                {% translate "Request Code" %}
-            {% endelement %}
-        {% endslot %}
-    {% endelement %}
-    {% url 'account_login' as login_url %}
-    {% element button href=login_url tags="link" %}
-        {% translate "Other sign-in options" %}
-    {% endelement %}
-{% endblock content %}
+    <form method="post" action="{{ login_url }}" class="auth-form">
+        {% csrf_token %}
+
+        {% for field in form %}
+        <div class="auth-form-group">
+            {{ field.label_tag }}
+            {{ field }}
+            {% if field.errors %}
+                <div class="auth-error">{{ field.errors|striptags }}</div>
+            {% endif %}
+        </div>
+        {% endfor %}
+
+        {{ redirect_field }}
+
+        <button type="submit" class="btn-primary btn-full">
+            {% translate "Request Code" %}
+        </button>
+    </form>
+
+    <p class="mt-2 text-center">
+        <a href="{% url 'account_login' %}" class="btn-outline">
+            {% translate "Other sign-in options" %}
+        </a>
+    </p>
+</div>
+{% endblock right_content %}
