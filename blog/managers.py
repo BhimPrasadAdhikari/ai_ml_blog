@@ -11,8 +11,7 @@ class CustomUserManager(BaseUserManager):
     def _create_user(self, email, phone_number, password=None, username=None, **extra_fields):
         if not email:
             raise ValueError('The email field must be set')
-        if not phone_number:
-            raise ValueError('the phone number field must be set')
+        
         email = self.normalize_email(email)
 
         if not username:
@@ -25,14 +24,17 @@ class CustomUserManager(BaseUserManager):
                 username = f"{original_username}{i}"
                 i += 1
 
-        user = self.model(email=email, phone_number=phone_number, username=username, **extra_fields)
+        user = self.model(email=email,phone_number=phone_number, username=username, **extra_fields)
         user.set_password(password)
+        if phone_number:
+            user.phone_number = phone_number
+
         user.save(using=self._db)
         return user
 
-    def create_user(self, email, phone_number, password=None, **extra_fields):
+    def create_user(self, email, phone_number=None, password=None, **extra_fields):
         return self._create_user(email, phone_number, password, **extra_fields)
-    def create_superuser(self, email, phone_number, password=None, **extra_fields):
+    def create_superuser(self, email, phone_number=None, password=None, **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
         

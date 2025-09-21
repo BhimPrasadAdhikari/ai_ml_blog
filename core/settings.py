@@ -74,6 +74,8 @@ AUTHENTICATION_BACKENDS = [
     'allauth.account.auth_backends.AuthenticationBackend',
     'blog.backends.EmailOrPhoneBackend',
 ]
+ACCOUNT_ADAPTER = 'blog.adapter.CustomAccountAdapter'
+
 
 ACCOUNT_FORMS = {
     'signup': 'blog.forms.CustomSignupForm',
@@ -85,8 +87,10 @@ LOGIN_URL = '/accounts/login/'
 ACCOUNT_LOGIN_BY_CODE_ENABLED = True
 ACCOUNT_EMAIL_VERIFICATION = "mandatory"
 ACCOUNT_EMAIL_VERIFICATION_BY_CODE_ENABLED = True
-ACCOUNT_PASSWORD_RESET_BY_CODE_ENABLED = True
-ACCOUNT_SIGNUP_FIELDS = ['email*', 'username', 'password1', 'password2']
+# ACCOUNT_PASSWORD_RESET_BY_CODE_ENABLED = True
+ACCOUNT_PASSWORD_RESET_VERIFICATION_METHOD = 'email'
+
+ACCOUNT_SIGNUP_FIELDS = ['email*', 'username','phone_number', 'password1', 'password2']
 ACCOUNT_LOGIN_METHODS = {"email", "username"}
 
 SOCIALACCOUNT_PROVIDERS = {

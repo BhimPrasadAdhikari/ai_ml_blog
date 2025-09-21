@@ -6,6 +6,7 @@ from phonenumber_field.formfields import PhoneNumberField
 class CustomSignupForm(SignupForm):
     phone_number = PhoneNumberField(
         label='Phone Number',
+        required = False,
         error_messages={
             'invalid': 'Enter a valid phone number (e.g. +1234567890)',
             'required': 'Phone number is required'
