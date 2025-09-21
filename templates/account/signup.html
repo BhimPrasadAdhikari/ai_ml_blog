@@ -1,45 +1,50 @@
 {% extends "account/base_entrance.html" %}
-{% load allauth i18n %}
-{% block head_title %}
-    {% trans "Signup" %}
-{% endblock head_title %}
-{% block content %}
-    {% element h1 %}
-        {% trans "Sign Up" %}
-    {% endelement %}
-    {% setvar link %}
-        <a href="{{ login_url }}">
-        {% endsetvar %}
-        {% setvar end_link %}
-        </a>
-    {% endsetvar %}
-    {% element p %}
-        {% blocktranslate %}Already have an account? Then please {{ link }}sign in{{ end_link }}.{% endblocktranslate %}
-    {% endelement %}
-    {% if not SOCIALACCOUNT_ONLY %}
-        {% url 'account_signup' as action_url %}
-        {% element form form=form method="post" action=action_url tags="entrance,signup" %}
-            {% slot body %}
-                {% csrf_token %}
-                {% element fields form=form unlabeled=True %}
-                {% endelement %}
-                {{ redirect_field }}
-            {% endslot %}
-            {% slot actions %}
-                {% element button tags="prominent,signup" type="submit" %}
-                    {% trans "Sign Up" %}
-                {% endelement %}
-            {% endslot %}
-        {% endelement %}
-    {% endif %}
+{% load static i18n allauth account %}
+
+{% block title %}Sign Up - AI/ML Blog{% endblock title %}
+
+{% block left_content %}
+<div class="auth-left">
+    <img src="{% static 'auth/images/signup_ai_art.svg' %}" alt="AI/ML Illustration" class="auth-illustration">
+    <h1>Join the AI Adventure 🤖</h1>
+    <p>Create your account and explore AI and ML insights, tutorials, and projects.</p>
+    <p class="auth-link">Already have an account? <a href="{{ login_url }}">Sign In</a></p>
+</div>
+{% endblock left_content %}
+
+{% block right_content %}
+<div class="auth-right">
+    <h2 class="form-title">Sign Up</h2>
+
+    {% url 'account_signup' as signup_url %}
+    <form method="post" action="{{ signup_url }}" class="auth-form">
+        {% csrf_token %}
+        {{ redirect_field }}
+
+        {% for field in form %}
+        <div class="auth-form-group">
+            {{ field.label_tag }}
+            {{ field }}
+            {% if field.errors %}
+            <div class="auth-error">{{ field.errors|striptags }}</div>
+            {% endif %}
+        </div>
+        {% endfor %}
+
+        <button type="submit" class="btn-primary btn-full">
+            {% trans "Sign Up" %}
+        </button>
+    </form>
+
     {% if PASSKEY_SIGNUP_ENABLED %}
-        {% element hr %}
-        {% endelement %}
-        {% element button href=signup_by_passkey_url tags="prominent,signup,outline,primary" %}
-            {% trans "Sign up using a passkey" %}
-        {% endelement %}
+    <div class="auth-alt-login">
+        <hr>
+        <a href="{{ signup_by_passkey_url }}" class="btn-outline">{% trans "Sign up using a passkey" %}</a>
+    </div>
     {% endif %}
+
     {% if SOCIALACCOUNT_ENABLED %}
         {% include "socialaccount/snippets/login.html" with page_layout="entrance" %}
     {% endif %}
-{% endblock content %}
+</div>
+{% endblock right_content %}

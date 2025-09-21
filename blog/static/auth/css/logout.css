@@ -1,0 +1,116 @@
+
+.logout-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    min-height: 70vh;
+    margin-top: 5rem;
+}
+
+/* Left side */
+.auth-left {
+    background: linear-gradient(135deg, #6A4C93, #E94E77);
+    color: white;
+    padding: 3rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+.auth-left img.auth-illustration {
+    max-width: 70%;
+    margin-bottom: 2rem;
+}
+
+.auth-left h1 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+}
+
+.auth-left p {
+    font-size: 1.1rem;
+    line-height: 1.5;
+}
+
+/* Right side */
+.auth-right {
+    padding: 3rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    background-color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+}
+
+.auth-right .form-title {
+    font-size: 2rem;
+    color: #2A3A67;
+    margin-bottom: 1.5rem;
+}
+
+.auth-form .auth-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+/* Buttons */
+.btn-primary {
+    background: linear-gradient(90deg, #6A4C93, #E94E77);
+    color: #fff;
+    font-weight: 700;
+    border: none;
+    border-radius: 8px;
+    padding: 0.85rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+}
+
+.btn-primary:hover {
+    opacity: 0.9;
+}
+
+.btn-outline {
+    border: 2px solid #6A4C93;
+    color: #6A4C93;
+    background: #fff;
+    border-radius: 8px;
+    padding: 0.75rem;
+    font-weight: 600;
+    text-decoration: none;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.btn-outline:hover {
+    background-color: #6A4C93;
+    color: #fff;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+    .logout-container {
+        grid-template-columns: 1fr;
+    }
+
+    .auth-left, .auth-right {
+        text-align: center;
+        padding: 2rem;
+    }
+
+    .auth-left img.auth-illustration {
+        max-width: 60%;
+        margin-bottom: 1.5rem;
+    }
+
+    .auth-left h1 {
+        font-size: 2rem;
+    }
+
+    .auth-right .form-title {
+        font-size: 1.75rem;
+    }
+}
