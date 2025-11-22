@@ -1,17 +1,14 @@
 {% extends "account/base_confirm_code.html" %}
-{% load i18n %}
-{% load allauth account %}
-{% block head_title %}
-    {% translate "Email Verification" %}
-{% endblock head_title %}
-{% block title %}
-    {% translate "Enter Email Verification Code" %}
-{% endblock %}
-{% block recipient %}<a href="mailto:{{ email }}">{{ email }}</a>{% endblock %}
-{% block action_url %}
-    {% url 'account_email_verification_sent' %}
-{% endblock %}
+{% load i18n static allauth account %}
+
+{% url 'account_email_verification_sent' as action_url %}
+
+{% block head_title %}{% translate "Email Verification" %}{% endblock head_title %}
+
+{% block title %}{% translate "Enter Email Verification Code" %}{% endblock title %}
+
+{% block recipient %}
+<a href="mailto:{{ email }}" class="auth-email">{{ email }}</a>
+{% endblock recipient %}
+
 {% block extra_tags %}email,verification{% endblock %}
-{% block change_title %}
-    {% translate "Use a different email address" %}
-{% endblock %}

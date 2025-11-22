@@ -1,117 +1,21 @@
-{% extends 'blog/base.html' %}
-{% load blog_tags %} 
+{% extends "blog/base.html" %}
 {% load static %}
-{% block title %}
-{% if category %}
-    {{ category.name }} - AI/ML Blog
-{% else %}
-Latest Posts - AI/ML Blog
-{% endif %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'blog/css/post_list.css' %}">
 {% endblock %}
 
 {% block content %}
-<div class="hero-section">
-        <h1 class="hero-title">
-        {% if category %}
-            {{ category.name }}
-        {% else %}
-            Welcome to AI/ML Blog
-        {% endif %}
-    </h1>
-    <p class="hero-subtitle">
-        {% if category %}
-            Explore our collection of {{ category.name }} articles
-        {% else %}
-            Discover the latest insights in Artificial Intelligence and Machine Learning
-        {% endif %}
-    </p>
-</div>
-<div class="content-wrapper">
-    <div class="main-content">
-        {% if posts %}
-            <div class="posts-grid">
-                {% for post in posts %}
-                <article class="post-card">
-                    {% if post.image %}
-                        <img src="{{ post.image.url }}" alt="{{ post.title }}" class="post-image">
-                    {% else %}
-                        <div class="post-image" style="display: flex; align-items: center; justify-content: center; color: #6c757d;">
-                            <span style="font-size: 2rem;">📄</span>
-                        </div>
-                    {% endif %}
-                    
-                    <div class="post-content">
-                        <h2 class="post-title">
-                            <a href="{{ post.get_absolute_url }}">{{ post.title }}</a>
-                        </h2>
-                        
-                        <div class="post-meta">
-                            <span class="post-author">👤 {{ post.author.username }}</span>
-                            <span class="post-date">
-                                📅 {{ post.created_at|date:"M d, Y" }}
-                            </span>
-                        </div>
-                        
-                        {% if post.categories.all %}
-                        <div class="categories-tags">
-                            {% for category in post.categories.all %}
-                                <a href="{% url 'category_posts' category.slug %}" class="category-tag">{{ category.name }}</a>
-                            {% endfor %}
-
-                            {% if post.tags %}
-                                {% for tag in post.tags|split:"," %}
-                                    <span class="tag-item">{{ tag|trim }}</span>
-                                {% endfor %}
-                            {% endif %}
-                        </div>
-
-                        {% endif %}
-                        
-                        <p class="post-summary">{{ post.summary }}</p>
-                        
-                        <a href="{{ post.get_absolute_url }}" class="read-more">
-                            Read More →
-                        </a>
-
-                        {% if user.is_authenticated and post.id in bookmarked_post_ids %}
-                            <i class="fas fa-bookmark" style="color:#f59e42;" title="Bookmarked"></i>
-                        {% endif %}
-                    </div>
-                </article>
-                {% endfor %}
-            </div>
-        {% else %}
-            <div class="no-posts">
-                <div class="no-posts-icon">📝</div>
-                <h2>No posts available</h2>
-                <p>
-                    {% if category %}
-                        No posts found in {{ category.name }} category.
-                    {% else %}
-                        Be the first to share your AI/ML insights!
-                    {% endif %}
-                </p>
-                <a href="{% url 'post_create' %}" class="read-more mt-2">Write your first post →</a>
-            </div>
-        {% endif %}
-    </div>
-
-    <div class="sidebar">
-        <div class="categories-sidebar">
-            <h3 class="categories-title">Categories</h3>
-            <div class="categories-list">
-                {% for cat in categories %}
-                    <a href="{% url 'category_posts' cat.slug %}" 
-                       class="category-link {% if category and category.slug == cat.slug %}active{% endif %}">
-                        {{ cat.name }}
-                    </a>
-                {% endfor %}
+<h1>All Posts</h1>
+<div class="posts-grid">
+    {% for post in posts %}
+        <div class="post-card">
+            <div class="post-card-content">
+                <h2><a href="{{ post.get_absolute_url }}">{{ post.title }}</a></h2>
+                <p class="post-card-meta">By {{ post.author }} on {{ post.created_at|date:"F d, Y" }}</p>
+                <p class="post-card-summary">{{ post.summary|truncatewords:30 }}</p>
             </div>
         </div>
-    </div>
+    {% endfor %}
 </div>
-{% endblock %}
-
-{% block extra_js %}
-<script src="{% static 'blog/js/post_list.js' %}"></script>
 {% endblock %}
