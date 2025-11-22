@@ -3,6 +3,9 @@
 {% block title %}
 {{ profile.user.username }}'s Profile - AI/ML Blog
 {% endblock %}
+{% block extra_css %}
+  <link rel="stylesheet" href="{% static 'blog/css/profile_detail.css' %}">
+{% endblock %}
 
 {% block content %}
 <div class="profile-header">
@@ -22,24 +25,7 @@
             {% if profile.bio %}
                 <p class="bio">{{ profile.bio }}</p>
             {% endif %}
-            <div class="profile-stats">
-                <div class="stat-item">
-                    <span class="stat-value">{{ stats.total_posts }}</span>
-                    <span class="stat-label">Posts</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-value">{{ stats.total_comments }}</span>
-                    <span class="stat-label">Comments</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-value">{{ stats.total_upvotes }}</span>
-                    <span class="stat-label">Upvotes</span>
-                </div>
-                <div class="stat-item">
-                    <span class="stat-value">{{ stats.total_shares }}</span>
-                    <span class="stat-label">Shares</span>
-                </div>
-            </div>
+            
             {% if user == profile.user %}
 <a href="{% url 'profile_edit' username=profile.user.username %}" class="btn-edit-profile">Edit Profile</a>            {% endif %}
         </div>
