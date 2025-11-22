@@ -29,7 +29,15 @@ function initializeEasyMDE() {
         ],
         status: ['autosave', 'lines', 'words', 'cursor'],
         previewRender: function(plainText) {
-            return typeof marked !== 'undefined' ? marked(plainText) : plainText.replace(/\n/g, '<br>');
+            // FIX: Check for marked.parse (v4+) or fallback to marked (v3-)
+            if (typeof marked !== 'undefined') {
+                if (typeof marked.parse === 'function') {
+                    return marked.parse(plainText);
+                } else if (typeof marked === 'function') {
+                    return marked(plainText);
+                }
+            }
+            return plainText.replace(/\n/g, '<br>');
         },
         shortcuts: {
             drawTable: "Cmd-Alt-T",
@@ -310,4 +318,4 @@ document.addEventListener('keydown', function(e) {
         saveDraft();
         showAutosaveIndicator('saved');
     }
-}); 
+});
