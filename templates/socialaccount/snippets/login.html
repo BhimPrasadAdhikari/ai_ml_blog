@@ -6,7 +6,7 @@
 {% if socialaccount_providers %}
     <div class="social-login-wrapper">
         {% if not SOCIALACCOUNT_ONLY %}
-            <hr class="social-hr">
+            {% comment %} <hr class="social-hr"> {% endcomment %}
             <h2 class="social-heading">{% translate "Or sign in with" %}</h2>
         {% endif %}
 

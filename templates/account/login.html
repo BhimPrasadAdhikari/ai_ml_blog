@@ -52,7 +52,6 @@
 
     {% if LOGIN_BY_CODE_ENABLED or PASSKEY_LOGIN_ENABLED %}
     <div class="auth-alt-login">
-        <hr>
         {% if PASSKEY_LOGIN_ENABLED %}
         <a href="#" class="btn-outline" id="passkey_login">{% trans "Sign in with a passkey" %}</a>
         {% endif %}

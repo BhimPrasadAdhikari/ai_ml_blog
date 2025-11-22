@@ -14,9 +14,8 @@
     <h1>{% block title %}{% endblock %}</h1>
 
     <p>
-        {% trans "We've sent a code to" %}
         {% block recipient %}{% endblock %}
-        . {% trans "The code expires shortly, so please enter it soon." %}
+        {% trans "The code expires shortly, so please enter it soon." %}
     </p>
 </div>
 {% endblock left_content %}
