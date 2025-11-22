@@ -111,10 +111,10 @@
                 <i class="fas fa-envelope-open"></i>
             </div>
             <h3>No Newsletters Yet</h3>
-            <p>Create your first newsletter to start engaging with your subscribers.</p>
+            {% comment %} <p>Create your first newsletter to start engaging with your subscribers.</p>
             <a href="{% url 'newsletter_create' %}" class="btn-create-newsletter">
                 <i class="fas fa-plus"></i> Create Newsletter
-            </a>
+            </a> {% endcomment %}
         </div>
     {% endif %}
 </div>
