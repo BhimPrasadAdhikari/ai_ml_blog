@@ -1,195 +1,206 @@
+/* profile_edit.css */
 .edit-profile-container {
-    max-width: 600px;
-    margin: 2.5rem auto;
-    background: var(--surface-light);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    padding: 2.5rem 2rem 2rem 2rem;
+    max-width: 700px;
+    margin: 3rem auto;
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 4px 25px rgba(0,0,0,0.08);
+    padding: 3rem;
 }
-body.dark-theme .edit-profile-container {
-    background: var(--surface-dark);
-}
+
 .edit-profile-container h1 {
     font-size: 2rem;
     font-weight: 800;
-    margin-bottom: 2rem;
-    background: linear-gradient(90deg, var(--primary), var(--accent));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    margin-bottom: 2.5rem;
+    color: #1a202c;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 1rem;
 }
+
+/* Avatar Edit Section */
 .profile-avatar-edit {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: center;
-    margin-bottom: 1.5rem;
+    margin-bottom: 2.5rem;
+    padding: 2rem;
+    background: #f8fafc;
+    border-radius: 12px;
+    border: 1px dashed #cbd5e0;
 }
+
 .profile-avatar-icon {
-    width: 96px;
-    height: 96px;
+    width: 120px;
+    height: 120px;
     border-radius: 50%;
-    background: var(--primary);
-    color: #fff;
-    font-size: 2.5rem;
+    background: #e2e8f0;
+    color: #718096;
+    font-size: 3rem;
     font-weight: 700;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 2px 12px rgba(99,102,241,0.10);
-    border: 4px solid var(--primary);
     overflow: hidden;
-    transition: box-shadow 0.2s;
+    margin-bottom: 1rem;
+    border: 4px solid #fff;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
+
 .profile-avatar-icon img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    border-radius: 50%;
-    display: block;
 }
+
+/* Form Styling */
 .profile-form .form-group {
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.8rem;
 }
+
 .profile-form label {
     font-weight: 600;
-    color: var(--primary);
-    margin-bottom: 0.5rem;
+    color: #4a5568;
+    margin-bottom: 0.6rem;
     display: block;
+    font-size: 0.95rem;
 }
+
 .profile-form input[type="text"],
 .profile-form input[type="url"],
 .profile-form textarea {
     width: 100%;
-    padding: 0.7rem 1rem;
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-    background: var(--surface-light);
-    color: var(--text-main);
-    transition: background 0.3s, color 0.3s;
-}
-body.dark-theme .profile-form input[type="text"],
-body.dark-theme .profile-form input[type="url"],
-body.dark-theme .profile-form textarea {
-    background: var(--surface-dark);
-    color: var(--text-light);
-    border-color: #232336;
-}
-.profile-form input[type="file"] {
-    margin-top: 0.5rem;
-}
-.current-picture {
-    margin-top: 0.5rem;
-    margin-bottom: 0.5rem;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-.current-picture img {
-    width: 90px;
-    height: 90px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 3px solid var(--primary);
-    box-shadow: 0 2px 12px rgba(99,102,241,0.10);
-    background: var(--surface-light);
-    transition: box-shadow 0.2s;
-}
-body.dark-theme .current-picture img {
-    background: var(--surface-dark);
-}
-.current-picture .img-label {
+    padding: 0.8rem 1rem;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    color: #2d3748;
     font-size: 1rem;
-    color: var(--text-muted);
+    transition: all 0.2s;
+    box-sizing: border-box; /* Ensure padding doesn't overflow width */
 }
+
+.profile-form input:focus,
+.profile-form textarea:focus {
+    border-color: #667eea;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.15);
+}
+
+/* Special styling for file input */
+.profile-form input[type="file"] {
+    font-size: 0.9rem;
+    color: #718096;
+    width: 100%;
+}
+
+.profile-form input[type="file"]::file-selector-button {
+    margin-right: 1rem;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    border: none;
+    background: #edf2f7;
+    color: #4a5568;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background 0.2s;
+}
+
+.profile-form input[type="file"]::file-selector-button:hover {
+    background: #e2e8f0;
+}
+
+/* Action Buttons */
 .form-actions {
     display: flex;
     gap: 1rem;
-    margin-top: 1.5rem;
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e2e8f0;
 }
+
 .btn-save {
-    background: var(--primary);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: #fff;
     border: none;
-    border-radius: var(--radius);
-    padding: 0.5rem 1.5rem;
-    font-weight: 600;
-    transition: background 0.2s;
-    text-decoration: none;
+    border-radius: 8px;
+    padding: 0.8rem 2rem;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
+
 .btn-save:hover {
-    background: var(--primary-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
 }
+
 .btn-cancel {
-    background: var(--surface-light);
-    color: var(--primary);
-    border: 1px solid var(--primary);
-    border-radius: var(--radius);
-    padding: 0.5rem 1.5rem;
+    background: white;
+    color: #718096;
+    border: 1px solid #cbd5e0;
+    border-radius: 8px;
+    padding: 0.8rem 2rem;
     font-weight: 600;
     text-decoration: none;
-    transition: background 0.2s, color 0.2s;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
-body.dark-theme .btn-cancel {
-    background: var(--surface-dark);
-    color: var(--primary);
-    border-color: var(--primary);
-}
+
 .btn-cancel:hover {
-    background: var(--primary);
-    color: #fff;
+    background: #f7fafc;
+    color: #2d3748;
+    border-color: #a0aec0;
 }
-.profile-picture-modal {
-    display: none;
-    position: fixed;
-    z-index: 2000;
-    left: 0; top: 0; width: 100vw; height: 100vh;
-    background: rgba(0,0,0,0.7);
-    align-items: center;
-    justify-content: center;
+
+/* Dark Theme Support */
+body.dark-theme .edit-profile-container {
+    background: #1f2937;
 }
-.profile-picture-modal.active {
-    display: flex;
+
+body.dark-theme .edit-profile-container h1 {
+    color: #f7fafc;
+    border-color: #374151;
 }
-.profile-picture-modal img {
-    max-width: 90vw;
-    max-height: 80vh;
-    border-radius: var(--radius);
-    box-shadow: 0 8px 32px rgba(0,0,0,0.25);
-    background: var(--surface-light);
+
+body.dark-theme .profile-avatar-edit {
+    background: #111827;
+    border-color: #374151;
 }
-.profile-picture-modal .close-btn {
-    position: absolute;
-    top: 2rem;
-    right: 2rem;
-    background: var(--primary);
-    color: #fff;
-    border: none;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    font-size: 1.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    z-index: 2010;
+
+body.dark-theme .profile-avatar-icon {
+    background: #374151;
+    border-color: #1f2937;
+    color: #a0aec0;
 }
-.profile-picture-preview {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 1rem;
+
+body.dark-theme .profile-form label {
+    color: #cbd5e0;
 }
-.profile-picture-preview img {
-    width: 90px;
-    height: 90px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 3px solid var(--primary);
-    box-shadow: 0 2px 12px rgba(99,102,241,0.10);
-    background: var(--surface-light);
-    transition: box-shadow 0.2s;
-    cursor: pointer;
+
+body.dark-theme .profile-form input[type="text"],
+body.dark-theme .profile-form input[type="url"],
+body.dark-theme .profile-form textarea {
+    background: #111827;
+    border-color: #374151;
+    color: #f7fafc;
 }
-body.dark-theme .profile-picture-preview img {
-    background: var(--surface-dark);
+
+body.dark-theme .profile-form input[type="file"]::file-selector-button {
+    background: #374151;
+    color: #cbd5e0;
+}
+
+body.dark-theme .btn-cancel {
+    background: transparent;
+    border-color: #4b5563;
+    color: #a0aec0;
+}
+
+body.dark-theme .btn-cancel:hover {
+    border-color: #6b7280;
+    color: #f7fafc;
 }
