@@ -1,61 +1,270 @@
 /* post_form.css */
+:root {
+    --editor-border: #e2e8f0;
+    --editor-toolbar-bg: #f8fafc;
+    --editor-active-border: #6366f1; /* Primary brand color */
+    --editor-focus-shadow: rgba(99, 102, 241, 0.2);
+}
+
 .form-container {
-    max-width: 800px;
-    margin: 0 auto;
+    max-width: 900px;
+    margin: 2rem auto;
+    background: #fff;
+    padding: 2.5rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.form-container h1 {
+    margin-bottom: 2rem;
+    font-size: 1.875rem;
+    color: #1e293b;
+    font-weight: 800;
+    border-bottom: 2px solid #f1f5f9;
+    padding-bottom: 1rem;
 }
 
 .form-group {
     margin-bottom: 1.5rem;
+    position: relative;
 }
 
 .form-group label {
     display: block;
     font-weight: 600;
     margin-bottom: 0.5rem;
+    color: #475569;
+    font-size: 0.95rem;
 }
 
 .form-group input[type="text"],
+.form-group input[type="url"],
 .form-group textarea,
 .form-group select {
     width: 100%;
-    padding: 0.75rem;
-    border: 1px solid var(--border-color);
-    border-radius: 5px;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--editor-border);
+    border-radius: 8px;
     font-size: 1rem;
-    background-color: var(--background-color);
-    color: var(--text-color);
+    background-color: #fff;
+    color: #334155;
+    transition: all 0.2s ease-in-out;
 }
 
-.form-group select[multiple] {
-    height: 150px;
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: var(--editor-active-border);
+    box-shadow: 0 0 0 3px var(--editor-focus-shadow);
 }
 
-.form-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1.5rem;
+.form-help {
+    display: block;
+    margin-top: 0.4rem;
+    font-size: 0.85rem;
+    color: #94a3b8;
 }
 
-/* EasyMDE Markdown Editor Styles */
-.EasyMDEContainer .CodeMirror {
-    border: 1px solid var(--border-color);
-    border-radius: 5px;
+.char-count {
+    position: absolute;
+    top: 0;
+    right: 0;
+    font-size: 0.85rem;
+    color: #94a3b8;
+}
+
+.char-count.warning { color: #f59e0b; }
+.char-count.error { color: #ef4444; }
+
+/* --- EasyMDE Professional Styling --- */
+
+.EasyMDEContainer {
+    display: block;
 }
 
 .editor-toolbar {
-    border-top: 1px solid var(--border-color);
-    border-left: 1px solid var(--border-color);
-    border-right: 1px solid var(--border-color);
-    border-top-left-radius: 5px;
-    border-top-right-radius: 5px;
+    background-color: var(--editor-toolbar-bg);
+    border: 1px solid var(--editor-border);
+    border-bottom: none;
+    border-radius: 8px 8px 0 0;
+    padding: 0.5rem;
 }
 
-.form-actions {
-    margin-top: 2rem;
+.editor-toolbar button {
+    border-radius: 4px;
+    color: #475569;
+    transition: all 0.2s;
 }
 
-@media (max-width: 600px) {
-    .form-grid {
-        grid-template-columns: 1fr;
-    }
+.editor-toolbar button:hover {
+    background-color: #e2e8f0;
+    color: #1e293b;
+    border-color: transparent;
+}
+
+.editor-toolbar button.active {
+    background-color: #cbd5e1;
+    color: #0f172a;
+}
+
+.CodeMirror {
+    border: 1px solid var(--editor-border);
+    border-radius: 0 0 8px 8px;
+    padding: 1rem;
+    font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+    font-size: 15px;
+    line-height: 1.6;
+    background: #fff;
+    color: #334155;
+    min-height: 400px;
+}
+
+.CodeMirror-focused {
+    border-color: var(--editor-active-border);
+    box-shadow: 0 0 0 3px var(--editor-focus-shadow);
+}
+
+/* Preview Area Styling */
+.editor-preview {
+    background: #fff;
+    padding: 2rem;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.8;
+}
+
+.editor-preview h1, 
+.editor-preview h2, 
+.editor-preview h3 {
+    border-bottom: 1px solid #f1f5f9;
+    padding-bottom: 0.3em;
+    color: #1e293b;
+}
+
+.editor-preview code {
+    background-color: #f1f5f9;
+    padding: 0.2em 0.4em;
+    border-radius: 4px;
+    font-size: 90%;
+}
+
+.editor-preview pre {
+    background-color: #1e293b;
+    color: #f8fafc;
+    padding: 1rem;
+    border-radius: 8px;
+    overflow-x: auto;
+}
+
+/* --- Autosave & Draft UI --- */
+
+.autosave-indicator {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    padding: 0.75rem 1.25rem;
+    background: #1e293b;
+    color: white;
+    border-radius: 50px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    font-size: 0.9rem;
+    font-weight: 500;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.3s ease;
+    z-index: 1000;
+}
+
+.autosave-indicator.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.draft-recovery-alert {
+    display: none;
+    background-color: #fffbeb;
+    border: 1px solid #fcd34d;
+    border-radius: 8px;
+    padding: 1rem 1.5rem;
+    margin-bottom: 2rem;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.draft-recovery-alert.show {
+    display: flex;
+}
+
+.draft-recovery-alert p {
+    margin: 0;
+    color: #92400e;
+    font-weight: 500;
+}
+
+.btn-recover {
+    background: #d97706;
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.btn-dismiss {
+    background: transparent;
+    color: #92400e;
+    border: 1px solid #92400e;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+/* --- File Input Styling --- */
+
+.file-input-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.file-input-wrapper input[type="file"] {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.file-input-label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    border: 2px dashed var(--editor-border);
+    border-radius: 8px;
+    background: #f8fafc;
+    color: #64748b;
+    transition: all 0.2s;
+    text-align: center;
+    cursor: pointer;
+}
+
+.file-input-label i {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    color: #94a3b8;
+}
+
+.file-input-wrapper:hover .file-input-label,
+.file-input-wrapper.has-file .file-input-label {
+    border-color: var(--editor-active-border);
+    background: #eef2ff;
+    color: var(--editor-active-border);
 }
