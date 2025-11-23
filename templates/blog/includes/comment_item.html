@@ -1,0 +1,59 @@
+{% load static %}
+<div class="comment-item" id="comment-{{ comment.id }}">
+    <div class="comment-avatar">
+        {% if comment.author.profile.profile_picture %}
+            <img src="{{ comment.author.profile.profile_picture.url }}" alt="{{ comment.author.username }}">
+        {% else %}
+            <div class="avatar-placeholder small">{{ comment.author.username|first|upper }}</div>
+        {% endif %}
+    </div>
+    <div class="comment-body">
+        <div class="comment-header">
+            <strong>{{ comment.author.get_full_name|default:comment.author.username }}</strong>
+            <span class="comment-date">{{ comment.created_at|timesince }} ago</span>
+            {% if comment.is_edited %}<span class="text-muted">(edited)</span>{% endif %}
+        </div>
+        
+        <div class="comment-text">
+            {{ comment.content }}
+        </div>
+
+        <div class="comment-actions">
+            {% if user.is_authenticated %}
+                <button class="btn-link btn-sm" onclick="toggleReplyForm('{{ comment.id }}')">Reply</button>
+                {% if user == comment.author %}
+                    <a href="{% url 'edit_comment' post.slug comment.id %}" class="btn-link btn-sm">Edit</a>
+                    <a href="{% url 'delete_comment' post.slug comment.id %}" class="btn-link btn-sm text-danger">Delete</a>
+                {% endif %}
+            {% endif %}
+        </div>
+
+        <div id="reply-form-{{ comment.id }}" class="reply-form-container" style="display: none;">
+            <form method="post" action="{% url 'add_reply' post.slug comment.id %}">
+                {% csrf_token %}
+                <textarea name="content" class="form-control mb-2" rows="2" placeholder="Write a reply..."></textarea>
+                <button type="submit" class="btn btn-sm btn-primary">Post Reply</button>
+                <button type="button" class="btn btn-sm btn-secondary" onclick="toggleReplyForm('{{ comment.id }}')">Cancel</button>
+            </form>
+        </div>
+
+        {% if comment.prefetched_replies %}
+            <div class="replies-list">
+                {% for reply in comment.prefetched_replies %}
+                    {% include 'blog/includes/comment_item.html' with comment=reply %}
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function toggleReplyForm(id) {
+    const form = document.getElementById(`reply-form-${id}`);
+    if (form.style.display === 'none') {
+        form.style.display = 'block';
+    } else {
+        form.style.display = 'none';
+    }
+}
+</script>

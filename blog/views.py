@@ -572,6 +572,7 @@ class PostVoteView(LoginRequiredMixin, View):
             return JsonResponse({
                 'status': 'success',
                 'message': 'Vote removed',
+                'upvote_count': post.get_upvotes(),
                 'vote_count': post.get_vote_count()
             })
 
@@ -582,6 +583,8 @@ class PostVoteView(LoginRequiredMixin, View):
         return JsonResponse({
             'status': 'success',
             'message': f'Vote {vote_type} recorded',
+            'upvote_count': post.get_upvotes(),
+            
             'vote_count': post.get_vote_count()
         })
 
