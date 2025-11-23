@@ -12,6 +12,22 @@
 <div class="form-container">
     <h1>{{ form_title|default:"Create New Post" }}</h1>
 
+    {% if form.errors %}
+    <div class="alert alert-error" style="background: #fee2e2; border: 1px solid #ef4444; color: #b91c1c; padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+        <p style="font-weight: bold; margin-bottom: 0.5rem;">Please correct the following errors:</p>
+        <ul style="margin: 0; padding-left: 1.5rem;">
+            {% for field in form %}
+                {% for error in field.errors %}
+                    <li><strong>{{ field.label }}:</strong> {{ error }}</li>
+                {% endfor %}
+            {% endfor %}
+            {% for error in form.non_field_errors %}
+                <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
     <div id="autosave-indicator" class="autosave-indicator">
         <span id="autosave-text"></span>
     </div>
@@ -31,6 +47,9 @@
             <label for="{{ form.title.id_for_label }}">Title</label>
             {{ form.title }}
             <small id="title-count" class="char-count"></small>
+            {% if form.title.errors %}
+                <div class="error-message" style="color: #dc3545; font-size: 0.875rem; margin-top: 0.25rem;">{{ form.title.errors.0 }}</div>
+            {% endif %}
         </div>
 
         <div class="form-group">
@@ -38,6 +57,9 @@
             {{ form.slug }}
             <small class="form-help">URL-friendly version of the title.</small>
             <small id="slug-count" class="char-count"></small>
+            {% if form.slug.errors %}
+                <div class="error-message" style="color: #dc3545; font-size: 0.875rem; margin-top: 0.25rem;">{{ form.slug.errors.0 }}</div>
+            {% endif %}
         </div>
 
         <div class="form-group">
@@ -49,32 +71,50 @@
                 </label>
                 {{ form.image }}
             </div>
+            {% if form.image.errors %}
+                <div class="error-message" style="color: #dc3545; font-size: 0.875rem; margin-top: 0.25rem;">{{ form.image.errors.0 }}</div>
+            {% endif %}
         </div>
 
         <div class="form-group">
             <label for="{{ form.summary.id_for_label }}">Summary</label>
             {{ form.summary }}
             <small id="summary-count" class="char-count"></small>
+            {% if form.summary.errors %}
+                <div class="error-message" style="color: #dc3545; font-size: 0.875rem; margin-top: 0.25rem;">{{ form.summary.errors.0 }}</div>
+            {% endif %}
         </div>
 
         <div class="form-group editor-wrapper">
             <label for="{{ form.content.id_for_label }}">Content (Markdown Supported)</label>
             {{ form.content }}
+            {% if form.content.errors %}
+                <div class="error-message" style="color: #dc3545; font-size: 0.875rem; margin-top: 0.25rem;">{{ form.content.errors.0 }}</div>
+            {% endif %}
         </div>
         
         <div class="form-grid">
             <div class="form-group">
                 <label for="{{ form.categories.id_for_label }}">Categories</label>
                 {{ form.categories }}
+                {% if form.categories.errors %}
+                    <div class="error-message" style="color: #dc3545; font-size: 0.875rem; margin-top: 0.25rem;">{{ form.categories.errors.0 }}</div>
+                {% endif %}
             </div>
             <div class="form-group">
                 <label for="{{ form.tags.id_for_label }}">Tags</label>
                 {{ form.tags }}
                 <small class="form-help">Comma-separated keywords.</small>
+                {% if form.tags.errors %}
+                    <div class="error-message" style="color: #dc3545; font-size: 0.875rem; margin-top: 0.25rem;">{{ form.tags.errors.0 }}</div>
+                {% endif %}
             </div>
             <div class="form-group">
                 <label for="{{ form.status.id_for_label }}">Status</label>
                 {{ form.status }}
+                {% if form.status.errors %}
+                    <div class="error-message" style="color: #dc3545; font-size: 0.875rem; margin-top: 0.25rem;">{{ form.status.errors.0 }}</div>
+                {% endif %}
             </div>
         </div>
 
@@ -89,9 +129,7 @@
 {% block extra_js %}
 <script src="https://unpkg.com/easymde/dist/easymde.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-
 <script>
-    // Pass Django IDs and configuration to the external JS file
     window.titleId = "{{ form.title.auto_id }}";
     window.slugId = "{{ form.slug.auto_id }}";
     window.summaryId = "{{ form.summary.auto_id }}";
@@ -100,11 +138,8 @@
     window.statusId = "{{ form.status.auto_id }}";
     window.categoriesId = "{{ form.categories.auto_id }}";
     window.imageId = "{{ form.image.auto_id }}";
-    
-    // Unique key for draft saving (uses ID if editing, else 'new')
     window.draftKey = "blog_post_draft_{% if form.instance.pk %}{{ form.instance.pk }}{% else %}new{% endif %}";
     window.easyMDEPlaceholder = "Write your story here... \n\n# Features\n- **Bold** and *Italic*\n- [Links](https://example.com)\n- Code blocks\n\nUse the toolbar above for formatting and preview.";
 </script>
-
 <script src="{% static 'blog/js/post_form.js' %}"></script>
 {% endblock %}

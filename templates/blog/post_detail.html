@@ -1,23 +1,391 @@
 {% extends 'blog/base.html' %}
 {% load static %}
+{% load blog_extras %}
 
 {% block title %}{{ post.title }}{% endblock %}
 
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'blog/css/post_detail.css' %}">
+    <link rel="stylesheet" href="{% static 'blog/css/comments.css' %}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 {% endblock %}
 
 {% block content %}
-<article class="post-detail-container">
+<button id="focus-mode-toggle" class="focus-btn" title="Toggle Focus Mode">
+    <i class="fas fa-expand"></i> <span>Focus Mode</span>
+</button>
+
+<div class="container-max">
+    
+    <div id="annotation-form" class="annotation-form-popup" style="display: none;">
+        <h4>Add Annotation</h4>
+        <div id="selected-text" class="selected-text-preview"></div>
+        <textarea id="annotation-content" placeholder="Your insight..."></textarea>
+        <div class="form-check">
+            <input type="checkbox" id="annotation-public">
+            <label for="annotation-public">Make Public?</label>
+        </div>
+        <div class="annotation-actions">
+            <button id="submit-annotation" class="btn btn-sm btn-primary">Save</button>
+            <button id="cancel-annotation" class="btn btn-sm btn-secondary">Cancel</button>
+        </div>
+    </div>
+
     <header class="post-header">
+        <div class="header-meta">
+            <span class="post-cat">
+                {% for cat in post.categories.all|slice:":1" %}{{ cat.name }}{% endfor %}
+            </span>
+            <span class="read-time">{{ post.read_time|default:"5" }} min read</span>
+            <div class="post-rating-display" title="Average Rating: {{ post.get_average_rating|floatformat:1 }}">
+                <i class="fas fa-star"></i> <span>{{ post.get_average_rating|floatformat:1 }}</span>
+                <span class="rating-count">({{ post.get_rating_count }})</span>
+            </div>
+        </div>
+        
         <h1 class="post-title">{{ post.title }}</h1>
-        <p class="post-meta">
-            By {{ post.author.username }} on {{ post.created_at|date:"F d, Y" }}
-        </p>
+        
+        <div class="author-meta-row">
+            <a href="{% url 'profile_detail' username=post.author.username %}" class="author-chip">
+                {% if post.author.profile.profile_picture %}
+                    <img src="{{ post.author.profile.profile_picture.url }}" alt="{{ post.author.username }}">
+                {% else %}
+                    <div class="avatar-placeholder">{{ post.author.username|first|upper }}</div>
+                {% endif %}
+                <div class="author-text">
+                    <span class="name">{{ post.author.get_full_name|default:post.author.username }}</span>
+                    <span class="date">{{ post.created_at|date:"M d, Y" }}</span>
+                </div>
+            </a>
+        </div>
     </header>
 
-    <div class="post-content">
-        {{ post_content_html|safe }}
-    </div>
-</article>
+    {% if post.image %}
+        <figure class="featured-image-container">
+            <img src="{{ post.image.url }}" alt="{{ post.title }}" class="featured-image">
+        </figure>
+    {% endif %}
+
+    {% comment %} <div class="main-grid"> {% endcomment %}
+        <main class="main-content">
+            <p class="post-summary">{{ post.summary }}</p>
+            
+            <div class="post-body post-content">
+                {{ post_content_html|safe }}
+            </div>
+
+            <div class="annotations-section">
+                <h3><i class="fas fa-highlighter"></i> Annotations</h3>
+                <div id="annotations-list">
+                    <p class="text-muted">Highlight text in the article to add an annotation.</p>
+                </div>
+            </div>
+            
+        <aside class="sidebar">
+            <div class="sidebar-widget">
+                <h4 class="widget-title">More from {{ post.author.username }}</h4>
+                <div class="related-posts-list">
+                    {% for related in related_posts %}
+                        <a href="{{ related.get_absolute_url }}" class="related-post-item">
+                            {% if related.image %}
+                                <img src="{{ related.image.url }}" alt="thumb">
+                            {% endif %}
+                            <div class="related-info">
+                                <h5>{{ related.title }}</h5>
+                                <span class="related-date">{{ related.created_at|date:"M d" }}</span>
+                            </div>
+                        </a>
+                    {% endfor %}
+                </div>
+            </div>
+
+            {% if post.tags %}
+            <div class="sidebar-widget">
+                <h4 class="widget-title">Tags</h4>
+                <div class="tags-cloud">
+                    {% for tag in post.get_tags_list %}
+                        <span class="tag-chip">#{{ tag }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            
+            <div class="sidebar-widget">
+                <h4 class="widget-title">Topics</h4>
+                <div class="category-list">
+                    {% for cat in post.categories.all %}
+                        <a href="{% url 'category_posts' cat.slug %}" class="cat-link">{{ cat.name }}</a>
+                    {% endfor %}
+                </div>
+            </div>
+        </aside>
+
+            <div class="post-footer-actions">
+                <div class="action-group">
+                    <button class="vote-btn {% if user_vote == 'up' %}active{% endif %}" id="upvote-btn" data-post-slug="{{ post.slug }}" onclick="handleVote('up')">
+                        <i class="fas fa-arrow-up"></i> <span id="upvote-count">{{ post.get_upvotes }}</span>
+                    </button>
+                    <button class="vote-btn {% if user_vote == 'down' %}active{% endif %}" id="downvote-btn" data-post-slug="{{ post.slug }}" onclick="handleVote('down')">
+                        <i class="fas fa-arrow-down"></i>
+                    </button>
+                </div>
+                {% if user == post.author %}
+                <div class="action-group author-controls">
+                <a href="{% url 'post_edit' post.slug %}" class="btn-manage edit">
+                    <i class="fas fa-pen"></i> Edit
+                </a>
+                <a href="{% url 'post_delete' post.slug %}" class="btn-manage delete">
+                    <i class="fas fa-trash"></i> Delete
+                </a>
+                </div>
+                {% endif %}
+
+                <div class="user-rating-input" data-post-slug="{{ post.slug }}">
+                    <span>Rate this:</span>
+                    {% for i in "12345" %}
+                    <i class="far fa-star star-btn" data-value="{{ forloop.counter }}"></i>
+                    {% endfor %}
+                </div>
+                
+                <div class="action-group right">
+                    <div class="share-dropdown">
+                        <button class="share-btn-toggle" title="Share">
+                            <i class="fas fa-share-alt"></i>
+                        </button>
+                        <div class="share-menu">
+                            <a href="#" onclick="sharePost('twitter', '{{ post.slug }}')"><i class="fab fa-twitter"></i> Twitter</a>
+                            <a href="#" onclick="sharePost('facebook', '{{ post.slug }}')"><i class="fab fa-facebook"></i> Facebook</a>
+                            <a href="#" onclick="sharePost('linkedin', '{{ post.slug }}')"><i class="fab fa-linkedin"></i> LinkedIn</a>
+                        </div>
+                    </div>
+
+                    <button id="bookmark-btn" 
+                            class="{% if user_bookmarked %}bookmarked{% endif %}" 
+                            data-post-slug="{{ post.slug }}"
+                            title="Bookmark this post">
+                        <i class="{% if user_bookmarked %}fas{% else %}far{% endif %} fa-bookmark"></i>
+                    </button>
+                </div>
+            </div>
+
+            <hr class="section-divider">
+
+            <section class="qna-section">
+                <h3><i class="fas fa-question-circle"></i> Q&A with Author</h3>
+                <div id="qna-form-container">
+                    <div class="input-group">
+                        <input type="text" id="qna-question" class="form-control" placeholder="Ask a question about this post...">
+                        <button id="qna-submit" class="btn btn-primary">Ask</button>
+                    </div>
+                </div>
+                <div id="qna-list" class="mt-4">
+                    <p class="text-muted">Loading questions...</p>
+                </div>
+            </section>
+
+            <hr class="section-divider">
+
+            <section class="comments-section">
+                <h3>Comments ({{ comments.paginator.count }})</h3>
+                
+                {% if user.is_authenticated %}
+                    <form method="post" action="{% url 'add_comment' post.slug %}" class="comment-form">
+                        {% csrf_token %}
+                        {{ comment_form.content }}
+                        <button type="submit" class="btn btn-primary mt-2">Post Comment</button>
+                    </form>
+                {% else %}
+                    <p><a href="{% url 'account_login' %}?next={{ request.path }}">Log in</a> to leave a comment.</p>
+                {% endif %}
+
+                <div class="comments-list">
+                    {% for comment in comments %}
+                        {% include 'blog/includes/comment_item.html' with comment=comment %}
+                    {% empty %}
+                        <div class="no-comments">
+                            <p>No comments yet. Be the first to start the discussion!</p>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                {% if comments.has_other_pages %}
+                <div class="pagination">
+                    {% if comments.has_previous %}
+                        <a href="?page={{ comments.previous_page_number }}" class="page-link">&laquo;</a>
+                    {% endif %}
+                    <span class="current">Page {{ comments.number }} of {{ comments.paginator.num_pages }}</span>
+                    {% if comments.has_next %}
+                        <a href="?page={{ comments.next_page_number }}" class="page-link">&raquo;</a>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </section>
+        </main>
+    {% comment %} </div> {% endcomment %}
+</div>
+
+<input type="hidden" id="post-slug" value="{{ post.slug }}">
+{% if user.is_authenticated %}
+<input type="hidden" id="current-username" value="{{ user.username }}">
+<input type="hidden" id="current-user-email" value="{{ user.email }}">
+{% endif %}
+<input type="hidden" id="post-author-email" value="{{ post.author.email }}">
+<input type="hidden" id="post-author-username" value="{{ post.author.username }}">
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+<script>
+  window.MathJax = {
+    tex: {
+      inlineMath: [['$', '$'], ['\\(', '\\)']],
+      displayMath: [['$$', '$$'], ['\\[', '\\]']],
+      processEscapes: true
+    },
+    options: {
+      skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+    }
+  };
+</script>
+<script>
+    // Global variables for existing scripts
+    window.postSlug = "{{ post.slug }}";
+    window.currentUsername = "{{ user.username }}";
+    window.currentUserEmail = "{{ user.email }}";
+    window.postAuthorname = "{{ post.author.username }}";
+    window.postAuthorEmail = "{{ post.author.email }}";
+</script>
+<script src="{% static 'blog/js/user_bookmarks.js' %}"></script>
+<script src="{% static 'blog/js/annotations.js' %}"></script>
+<script src="{% static 'blog/js/qna.js' %}"></script>
+<script>
+    // --- Watch Time Tracker ---
+    let timeSpent = 0;
+    const slug = "{{ post.slug }}";
+    
+    setInterval(() => {
+        if (document.hasFocus()) {
+            timeSpent += 30; // 30 seconds
+            fetch(`/post/${slug}/watch-time/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ time: 30 })
+            });
+        }
+    }, 30000); // Ping every 30s
+
+    // --- Voting Logic ---
+    function handleVote(type) {
+        fetch(`/post/${slug}/vote/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `vote_type=${type}`
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.status === 'success') {
+                // Reset buttons
+                document.getElementById('upvote-btn').classList.remove('active');
+                document.getElementById('downvote-btn').classList.remove('active');
+                
+                // Activate clicked if it wasn't a removal
+                if (data.message.includes('recorded')) {
+                    document.getElementById(`${type}vote-btn`).classList.add('active');
+                }
+                if (data.upvote_count !== undefined) {
+                    document.getElementById('upvote-count').innerText = data.upvote_count;
+                }
+            }
+        });
+    }
+
+    // --- Share Logic ---
+    function sharePost(platform, slug) {
+        fetch(`/post/${slug}/share/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `platform=${platform}`
+        });
+        
+        // Open actual share window
+        const url = encodeURIComponent(window.location.href);
+        const title = encodeURIComponent("{{ post.title }}");
+        let shareUrl = '';
+        if(platform === 'twitter') shareUrl = `https://twitter.com/intent/tweet?url=${url}&text=${title}`;
+        if(platform === 'facebook') shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${url}`;
+        if(platform === 'linkedin') shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${url}`;
+        
+        if(shareUrl) window.open(shareUrl, '_blank', 'width=600,height=400');
+    }
+
+    // --- Rating Logic ---
+    document.querySelectorAll('.star-btn').forEach(star => {
+        star.addEventListener('click', function() {
+            const rating = this.dataset.value;
+            fetch(`/post/${slug}/rate/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `rating=${rating}`
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.status === 'success') {
+                    alert('Rating saved!');
+                    // Update visual stars
+                    document.querySelectorAll('.star-btn').forEach(s => {
+                        s.classList.remove('fas');
+                        s.classList.add('far');
+                        if(s.dataset.value <= rating) {
+                            s.classList.remove('far');
+                            s.classList.add('fas');
+                        }
+                    });
+                }
+            });
+        });
+    });
+
+    // Focus Mode
+    const focusBtn = document.getElementById('focus-mode-toggle');
+    const body = document.body;
+    focusBtn.addEventListener('click', () => {
+        body.classList.toggle('focus-active');
+        focusBtn.innerHTML = body.classList.contains('focus-active') ? 
+            '<i class="fas fa-compress"></i> <span>Exit Focus</span>' : 
+            '<i class="fas fa-expand"></i> <span>Focus Mode</span>';
+    });
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+</script>
 {% endblock %}
