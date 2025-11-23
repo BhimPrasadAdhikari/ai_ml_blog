@@ -244,6 +244,10 @@ function initializeOtherFeatures() {
         }
     }
     document.getElementById('post-form').addEventListener('submit', function(e) {
+
+        if (easyMDE) {
+            easyMDE.codemirror.save();
+        }
         const title = document.getElementById(window.titleId).value.trim();
         const content = easyMDE ? easyMDE.value().trim() : document.getElementById(window.contentId).value.trim();
         if (!title) {
@@ -259,7 +263,7 @@ function initializeOtherFeatures() {
         localStorage.removeItem(DRAFT_KEY);
         const submitBtn = this.querySelector('button[type="submit"]');
         submitBtn.innerHTML = '⏳ Publishing...';
-        submitBtn.disabled = true;
+        // submitBtn.disabled = true;
     });
 }
 
