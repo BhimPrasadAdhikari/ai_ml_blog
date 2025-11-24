@@ -180,7 +180,31 @@
                     </div>
                 </div>
                 <div id="qna-list" class="mt-4">
-                    <p class="text-muted">Loading questions...</p>
+                    {% for qna in qnas %}
+                    <div class="qna-item">
+                        <div class="qna-question">
+                            <strong>{{ qna.user.username }}</strong> asked:
+                            <div class="mt-1">{{ qna.question }}</div>
+                        </div>
+                        
+                        <div class="mt-2">
+                            {% if qna.is_answered %}
+                                <div class="qna-answer">
+                                    <strong>Author:</strong> {{ qna.answer }}
+                                </div>
+                            {% else %}
+                                {% if user == post.author %}
+                                    <textarea rows="2" class="qna-answer form-control" data-qid="{{ qna.id }}" placeholder="Write your answer..."></textarea>
+                                    <button class="qna-answer-btn btn btn-sm btn-success mt-2" data-qid="{{ qna.id }}">Submit Answer</button>
+                                {% else %}
+                                    <p class="text-muted"><em>Awaiting author response...</em></p>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% empty %}
+                        <p class="text-muted">No questions yet. Be the first to ask!</p>
+                    {% endfor %}
                 </div>
             </section>
 
@@ -265,7 +289,6 @@
 <script src="{% static 'blog/js/annotations.js' %}"></script>
 <script src="{% static 'blog/js/qna.js' %}"></script>
 <script>
-    // --- Watch Time Tracker ---
     let timeSpent = 0;
     const slug = "{{ post.slug }}";
     
@@ -283,7 +306,6 @@
         }
     }, 30000); // Ping every 30s
 
-    // --- Voting Logic ---
     function handleVote(type) {
         fetch(`/post/${slug}/vote/`, {
             method: 'POST',
@@ -311,7 +333,6 @@
         });
     }
 
-    // --- Share Logic ---
     function sharePost(platform, slug) {
         fetch(`/post/${slug}/share/`, {
             method: 'POST',
@@ -333,7 +354,6 @@
         if(shareUrl) window.open(shareUrl, '_blank', 'width=600,height=400');
     }
 
-    // --- Rating Logic ---
     document.querySelectorAll('.star-btn').forEach(star => {
         star.addEventListener('click', function() {
             const rating = this.dataset.value;
@@ -363,7 +383,6 @@
         });
     });
 
-    // Focus Mode
     const focusBtn = document.getElementById('focus-mode-toggle');
     const body = document.body;
     focusBtn.addEventListener('click', () => {
@@ -372,6 +391,188 @@
             '<i class="fas fa-compress"></i> <span>Exit Focus</span>' : 
             '<i class="fas fa-expand"></i> <span>Focus Mode</span>';
     });
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+window.postSlug = "{{ post.slug }}";
+
+    // 1. Handle Main Comment Submission
+    const mainForm = document.querySelector('.comment-form');
+    if (mainForm) {
+        mainForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const form = this;
+            const submitBtn = form.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+
+            fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: new FormData(form)
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    form.reset();
+                    const noComments = document.querySelector('.no-comments');
+                    if (noComments) noComments.remove();
+                    
+                    const commentsList = document.querySelector('.comments-list');
+                    commentsList.insertAdjacentHTML('afterbegin', data.comment_html);
+                } else {
+                    alert(data.message);
+                }
+            })
+            .catch(err => console.error(err))
+            .finally(() => submitBtn.disabled = false);
+        });
+    }
+
+    // 2. Moderate (Approve/Reject)
+    function moderateComment(commentId, action) {
+        fetch(`/post/${window.postSlug}/comment/${commentId}/moderate/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: `action=${action}`
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                // Replace the specific comment element with the updated HTML from server
+                const commentEl = document.getElementById(`comment-${commentId}`);
+                if (commentEl && data.comment_html) {
+                    commentEl.outerHTML = data.comment_html;
+                }
+            } else {
+                alert(data.message || 'Error moderating comment');
+            }
+        });
+    }
+
+    // 3. Submit Edit
+    function submitEdit(event, commentId) {
+        event.preventDefault();
+        const form = event.target;
+        const btn = form.querySelector('button[type="submit"]');
+        btn.disabled = true;
+
+        fetch(form.action, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: new FormData(form)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                const commentEl = document.getElementById(`comment-${commentId}`);
+                if (commentEl && data.comment_html) {
+                    commentEl.outerHTML = data.comment_html;
+                }
+            } else {
+                alert(data.message);
+            }
+        })
+        .finally(() => btn.disabled = false);
+        return false;
+    }
+
+    // 4. Delete Comment
+    function deleteComment(commentId) {
+        if (!confirm('Are you sure you want to delete this comment?')) return;
+
+        fetch(`/post/${window.postSlug}/comment/${commentId}/delete/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                const el = document.getElementById(`comment-${commentId}`);
+                if (el) el.remove();
+            } else {
+                alert(data.message || 'Error deleting comment');
+            }
+        });
+    }
+
+    // 5. Submit Reply
+    function submitReply(event, commentId) {
+        event.preventDefault();
+        const form = event.target;
+        const btn = form.querySelector('button[type="submit"]');
+        btn.disabled = true;
+
+        fetch(form.action, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: new FormData(form)
+        })
+        .then(res => res.json())
+                .then(data => {
+            if (data.status === 'success') {
+                // Look for the ID we added in the include template
+                const repliesList = document.getElementById(`replies-list-${commentId}`);
+                
+                if (repliesList) {
+                    repliesList.insertAdjacentHTML('beforeend', data.comment_html);
+                }
+                
+                form.reset();
+                toggleReplyForm(commentId);
+            } else {
+                alert(data.message);
+            }
+        })
+        .finally(() => btn.disabled = false);
+        return false;
+    }
+
+    // Helper Functions
+    function toggleReplyForm(id) {
+        const form = document.getElementById(`reply-form-${id}`);
+        form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function toggleEditForm(id) {
+        const content = document.getElementById(`comment-content-${id}`);
+        const form = document.getElementById(`edit-form-${id}`);
+        if (form.style.display === 'none') {
+            form.style.display = 'block';
+            content.style.display = 'none';
+        } else {
+            form.style.display = 'none';
+            content.style.display = 'block';
+        }
+    }
 
     function getCookie(name) {
         let cookieValue = null;

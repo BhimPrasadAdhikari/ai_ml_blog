@@ -195,6 +195,10 @@ class Comment(TimestampMixin, models.Model):
     def get_parent_comment(self):
         """Get the parent comment if this is a reply"""
         return self.parent if self.is_reply else None
+    
+    def get_absolute_url(self):
+        return reverse('post_detail', kwargs={'slug': self.post.slug})
+
 
         
 class PostInteraction(TimestampMixin, models.Model):
