@@ -18,7 +18,8 @@ from django.db import models
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.utils.decorators import method_decorator
 from django.core.paginator import Paginator
-
+from django.contrib.auth.decorators import login_required
+from django.template.loader import render_to_string
 # Create your views here.
 
 class LandingPageView(TemplateView):
@@ -163,7 +164,7 @@ class PostDetailView(DetailView):
         # Remove duplicates, order by published date, and limit
         related_posts = related_posts.distinct().order_by('-published_at')[:4]
         context['related_posts'] = related_posts
-
+        context['qnas'] = self.object.qna.all().select_related('user').order_by('-created_at')
         return context
     
 class PostListView(ListView):
@@ -409,22 +410,34 @@ class AddCommentView(LoginRequiredMixin, CreateView):
             form.instance.author = self.request.user
             form.instance.post = post
             
-            # Automatically approve comments from superusers and post authors
+            # Auto-approve for superuser/author
             if self.request.user.is_superuser or self.request.user == post.author:
                 form.instance.status = 'approved'
                 form.instance.moderated_at = timezone.now()
                 form.instance.moderated_by = self.request.user
             
-            response = super().form_valid(form)
-            messages.success(self.request, 'Comment added successfully!')
-            return response
+            self.object = form.save()
+            
+            if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                # Render the new comment HTML
+                comment_html = render_to_string(
+                    'blog/includes/comment_item.html', 
+                    {'comment': self.object, 'user': self.request.user, 'post': post},
+                    request=self.request
+                )
+                return JsonResponse({
+                    'status': 'success',
+                    'message': 'Comment submitted successfully',
+                    'comment_html': comment_html
+                })
+            
+            return super().form_valid(form)
         except Exception as e:
-            messages.error(self.request, f'Error adding comment: {str(e)}')
-            return self.form_invalid(form)
-    
+            if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+            return self.form_invalid(form) 
     def get_success_url(self):
-        return reverse_lazy('post_detail', kwargs={'slug': self.kwargs['slug']})
-
+        return reverse('post_detail', kwargs={'slug': self.kwargs['slug']})
 class AddReplyView(LoginRequiredMixin, CreateView):
     model = Comment
     form_class = CommentForm
@@ -437,22 +450,32 @@ class AddReplyView(LoginRequiredMixin, CreateView):
             form.instance.author = self.request.user
             form.instance.post = post
             form.instance.parent = parent_comment
+                        
+            form.instance.status = 'approved'
+            form.instance.moderated_at = timezone.now()
+            form.instance.moderated_by = self.request.user
             
-            # Automatically approve replies from superusers and post authors
-            if self.request.user.is_superuser or self.request.user == post.author:
-                form.instance.status = 'approved'
-                form.instance.moderated_at = timezone.now()
-                form.instance.moderated_by = self.request.user
+            self.object = form.save()
             
-            response = super().form_valid(form)
-            messages.success(self.request, 'Reply added successfully')
-            return response
+            if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                comment_html = render_to_string(
+                    'blog/includes/comment_item.html', 
+                    {'comment': self.object, 'user': self.request.user, 'post': post},
+                    request=self.request
+                )
+                return JsonResponse({
+                    'status': 'success',
+                    'message': 'Reply added successfully',
+                    'comment_html': comment_html
+                })
+            
+            return super().form_valid(form)
         except Exception as e:
-            messages.error(self.request, f'Error adding reply: {str(e)}')
+            if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
             return self.form_invalid(form)
-    
     def get_success_url(self):
-        return reverse_lazy('post_detail', kwargs={'slug': self.kwargs['slug']})
+        return reverse('post_detail', kwargs={'slug': self.kwargs['slug']})
 
 class EditCommentView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Comment
@@ -465,20 +488,44 @@ class EditCommentView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         return self.request.user == comment.author
 
     def handle_no_permission(self):
-        if not self.request.user.is_authenticated:
-            return super().handle_no_permission()
-        else:
-            messages.error(self.request, 'You do not have permission to edit this comment.')
-            return redirect('post_detail', slug=self.kwargs['slug'])
+        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'status': 'error', 'message': 'Permission denied'}, status=403)
+        return super().handle_no_permission()
 
     def form_valid(self, form):
         form.instance.is_edited = True
+        self.object = form.save()
+        
+        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            # Render the updated comment HTML
+            comment = Comment.objects.prefetch_related(
+                models.Prefetch(
+                    'replies',
+                    queryset=Comment.objects.select_related('author'),
+                    to_attr='prefetched_replies'
+                )
+            ).get(id=self.object.id)
+            
+            comment_html = render_to_string(
+                'blog/includes/comment_item.html', 
+                {'comment': comment, 'user': self.request.user, 'post': comment.post},
+                request=self.request
+            )
+            return JsonResponse({
+                'status': 'success',
+                'message': 'Comment updated successfully',
+                'comment_html': comment_html
+            })
+
         messages.success(self.request, 'Comment updated successfully!')
-        return super().form_valid(form)
-
+        return redirect('post_detail', slug=self.object.post.slug)
+        
+    def form_invalid(self, form):
+        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
+             return JsonResponse({'status': 'error', 'message': 'Invalid data'}, status=400)
+        return super().form_invalid(form)
     def get_success_url(self):
-        return reverse_lazy('post_detail', kwargs={'slug': self.kwargs['slug']})
-
+        return reverse('post_detail', kwargs={'slug': self.kwargs['slug']})
 class DeleteCommentView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     model = Comment
     template_name = 'blog/post_detail.html'
@@ -486,34 +533,35 @@ class DeleteCommentView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
 
     def test_func(self):
         comment = self.get_object()
-        return self.request.user == comment.author
+        return self.request.user == comment.author or self.request.user == comment.post.author
 
     def handle_no_permission(self):
-        if not self.request.user.is_authenticated:
-            return super().handle_no_permission()
-        else:
-            messages.error(self.request, 'You do not have permission to delete this comment.')
-            return redirect('post_detail', slug=self.kwargs['slug'])
+        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'status': 'error', 'message': 'Permission denied'}, status=403)
+        return super().handle_no_permission()
 
     def delete(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        self.object.delete()
+        
+        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'status': 'success', 'message': 'Comment deleted successfully'})
+            
         messages.success(request, 'Comment deleted successfully!')
-        return super().delete(request, *args, **kwargs)
-
+        return redirect('post_detail', slug=self.object.post.slug)
     def get_success_url(self):
-        return reverse_lazy('post_detail', kwargs={'slug': self.kwargs['slug']})
-
+        post = self.object.post
+        return reverse('post_detail', kwargs={'slug': post.slug})
+    
 class ModerateCommentView(LoginRequiredMixin, UserPassesTestMixin, View):
     def test_func(self):
         comment = get_object_or_404(Comment, id=self.kwargs['comment_id'])
-        # Allow superusers and post authors to moderate
         return self.request.user.is_superuser or self.request.user == comment.post.author
 
     def handle_no_permission(self):
-        if not self.request.user.is_authenticated:
-            return super().handle_no_permission()
-        else:
-            messages.error(self.request, 'You do not have permission to moderate this comment.')
-            return redirect('post_detail', slug=self.kwargs['slug'])
+        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
+             return JsonResponse({'status': 'error', 'message': 'Permission denied'}, status=403)
+        return super().handle_no_permission()
     
     def post(self, request, *args, **kwargs):
         comment = get_object_or_404(Comment, id=kwargs['comment_id'])
@@ -528,9 +576,29 @@ class ModerateCommentView(LoginRequiredMixin, UserPassesTestMixin, View):
         comment.moderated_by = request.user
         comment.save()
         
+        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            # Re-fetch to get replies and relations
+            comment = Comment.objects.prefetch_related(
+                models.Prefetch(
+                    'replies',
+                    queryset=Comment.objects.select_related('author'),
+                    to_attr='prefetched_replies'
+                )
+            ).get(id=comment.id)
+
+            comment_html = render_to_string(
+                'blog/includes/comment_item.html', 
+                {'comment': comment, 'user': request.user, 'post': comment.post},
+                request=request
+            )
+            return JsonResponse({
+                'status': 'success', 
+                'message': f'Comment {action}d successfully!',
+                'comment_html': comment_html
+            })
+        
         messages.success(request, f'Comment {action}d successfully!')
         return redirect('post_detail', slug=comment.post.slug)
-
 def check_new_comments(request):
     post_id = request.GET.get('post_id')
     last_id = request.GET.get('last_id', '0')
@@ -1118,7 +1186,8 @@ class PostQnAListCreateView(LoginRequiredMixin, View):
             for qna in qnas
         ]
         return JsonResponse({"qnas": data}, status=200)
-
+    
+    @method_decorator(login_required)
     def post(self, request, slug):
         post = get_object_or_404(Post, slug=slug, status='published')
         question = request.POST.get('question', '').strip()
@@ -1171,3 +1240,42 @@ class PostQnAAnswerView(LoginRequiredMixin, View):
             'answer': qna.answer,
             'answered_at': qna.answered_at.isoformat(),
         }, status=200)
+
+class PostQnAUpdateView(LoginRequiredMixin, View):
+    def post(self, request, slug, pk):
+        qna = get_object_or_404(PostQnA, id=pk)
+        
+        # Only the user who asked the question can edit it
+        if request.user != qna.user:
+             return JsonResponse({
+                 'status': 'error', 
+                 'message': 'You do not have permission to edit this question'
+             }, status=403)
+        
+        question_text = request.POST.get('question', '').strip()
+        if not question_text:
+            return JsonResponse({
+                'status': 'error', 
+                'message': 'Question cannot be empty'
+            }, status=400)
+            
+        qna.question = question_text
+        qna.save()
+        return JsonResponse({'status': 'success', 'message': 'Question updated successfully'})
+
+class PostQnADeleteView(LoginRequiredMixin, View):
+    def post(self, request, slug, pk):
+        qna = get_object_or_404(PostQnA, id=pk)
+        
+        # Allow deletion by the question asker OR the post author
+        if request.user != qna.user and request.user != qna.post.author:
+             return JsonResponse({
+                 'status': 'error', 
+                 'message': 'You do not have permission to delete this question'
+             }, status=403)
+        
+        qna.delete()
+        return JsonResponse({'status': 'success', 'message': 'Question deleted successfully'})   
+            
+            
+        

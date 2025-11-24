@@ -12,48 +12,73 @@
             <strong>{{ comment.author.get_full_name|default:comment.author.username }}</strong>
             <span class="comment-date">{{ comment.created_at|timesince }} ago</span>
             {% if comment.is_edited %}<span class="text-muted">(edited)</span>{% endif %}
+            
+            <!-- Status Badge -->
+            {% if comment.status == 'pending' %}
+                {% if user == comment.post.author or user.is_superuser or user == comment.author %}
+                    <span class="badge bg-warning text-dark" style="font-size: 0.7em; margin-left: 5px;">Pending Approval</span>
+                {% endif %}
+            {% elif comment.status == 'rejected' %}
+                 <span class="badge bg-danger" style="font-size: 0.7em; margin-left: 5px;">Rejected</span>
+            {% endif %}
         </div>
         
-        <div class="comment-text">
+        <!-- Content Display -->
+        <div class="comment-text" id="comment-content-{{ comment.id }}">
             {{ comment.content }}
+        </div>
+
+        <!-- Inline Edit Form (Hidden by default) -->
+        <div id="edit-form-{{ comment.id }}" class="reply-form-container" style="display: none;">
+            <form method="post" action="{% url 'edit_comment' post.slug comment.id %}" onsubmit="return submitEdit(event, '{{ comment.id }}')">
+                {% csrf_token %}
+                <textarea name="content" class="form-control mb-2" rows="2" required>{{ comment.content }}</textarea>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-sm btn-primary">Save</button>
+                    <button type="button" class="btn btn-sm btn-secondary" onclick="toggleEditForm('{{ comment.id }}')">Cancel</button>
+                </div>
+            </form>
         </div>
 
         <div class="comment-actions">
             {% if user.is_authenticated %}
                 <button class="btn-link btn-sm" onclick="toggleReplyForm('{{ comment.id }}')">Reply</button>
+                
                 {% if user == comment.author %}
-                    <a href="{% url 'edit_comment' post.slug comment.id %}" class="btn-link btn-sm">Edit</a>
-                    <a href="{% url 'delete_comment' post.slug comment.id %}" class="btn-link btn-sm text-danger">Delete</a>
+                    <button class="btn-link btn-sm" onclick="toggleEditForm('{{ comment.id }}')">Edit</button>
+                {% endif %}
+
+                <!-- Approve/Reject Buttons -->
+                {% if user == comment.post.author or user.is_superuser %}
+                    {% if comment.status == 'pending' %}
+                         <button class="btn-link btn-sm text-success" onclick="moderateComment('{{ comment.id }}', 'approve')">Approve</button>
+                         <button class="btn-link btn-sm text-danger" onclick="moderateComment('{{ comment.id }}', 'reject')">Reject</button>
+                    {% endif %}
+                {% endif %}
+
+                {% if user == comment.author or user == comment.post.author or user.is_superuser %}
+                    <button class="btn-link btn-sm text-danger" onclick="deleteComment('{{ comment.id }}')">Delete</button>   
                 {% endif %}
             {% endif %}
         </div>
 
+        <!-- Reply Form (Hidden by default) -->
         <div id="reply-form-{{ comment.id }}" class="reply-form-container" style="display: none;">
-            <form method="post" action="{% url 'add_reply' post.slug comment.id %}">
+            <form method="post" action="{% url 'add_reply' post.slug comment.id %}" onsubmit="return submitReply(event, '{{ comment.id }}')">
                 {% csrf_token %}
-                <textarea name="content" class="form-control mb-2" rows="2" placeholder="Write a reply..."></textarea>
+                <textarea name="content" class="form-control mb-2" rows="2" placeholder="Write a reply..." required></textarea>
                 <button type="submit" class="btn btn-sm btn-primary">Post Reply</button>
                 <button type="button" class="btn btn-sm btn-secondary" onclick="toggleReplyForm('{{ comment.id }}')">Cancel</button>
             </form>
         </div>
 
-        {% if comment.prefetched_replies %}
-            <div class="replies-list">
+        <div class="replies-list" id="replies-list-{{ comment.id }}">
+            {% if comment.prefetched_replies %}
                 {% for reply in comment.prefetched_replies %}
                     {% include 'blog/includes/comment_item.html' with comment=reply %}
                 {% endfor %}
-            </div>
-        {% endif %}
+            {% endif %}
+        </div>
+
     </div>
 </div>
-
-<script>
-function toggleReplyForm(id) {
-    const form = document.getElementById(`reply-form-${id}`);
-    if (form.style.display === 'none') {
-        form.style.display = 'block';
-    } else {
-        form.style.display = 'none';
-    }
-}
-</script>
