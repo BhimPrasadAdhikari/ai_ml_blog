@@ -8,18 +8,15 @@ See https://docs.djangoproject.com/en/5.0/topics/settings/
 import os
 from pathlib import Path
 from dotenv import load_dotenv
-
+import dj_database_url
 load_dotenv()
 
-# --- Paths ---
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# --- Security ---
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'your-default-development-key')
 DEBUG = os.environ.get('DJANGO_DEBUG', 'True').lower() == 'true'
 ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
-# --- Security Middleware Settings ---
 SECURE_SSL_REDIRECT = not DEBUG
 SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG
@@ -30,23 +27,19 @@ SECURE_HSTS_SECONDS = 31536000  # 1 year
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
 
-# --- Rate Limiting ---
 RATELIMIT_ENABLE = True
 RATELIMIT_USE_CACHE = 'default'
 RATELIMIT_RATE = '5/m'  # 5 requests per minute for authenticated views
 
-# --- File Uploads ---
 FILE_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024  # 5MB
 DATA_UPLOAD_MAX_MEMORY_SIZE = 5 * 1024 * 1024  # 5MB
 
-# --- Static & Media Files ---
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [BASE_DIR / 'blog' / 'static']
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'blog_images'
 
-# --- Application Definition ---
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -68,7 +61,6 @@ INSTALLED_APPS = [
 AUTH_USER_MODEL = 'blog.CustomUser'
 SITE_ID = 1
 
-# --- Authentication Backends ---
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
     'allauth.account.auth_backends.AuthenticationBackend',
@@ -76,6 +68,8 @@ AUTHENTICATION_BACKENDS = [
 ]
 ACCOUNT_ADAPTER = 'blog.adapter.CustomAccountAdapter'
 
+MONGO_URI = os.getenv("MONGO_URI")
+MONGO_DB_NAME = os.getenv("MONGO_DB_NAME")
 
 ACCOUNT_FORMS = {
     'signup': 'blog.forms.CustomSignupForm',
@@ -87,7 +81,7 @@ LOGIN_URL = '/accounts/login/'
 ACCOUNT_LOGIN_BY_CODE_ENABLED = True
 ACCOUNT_EMAIL_VERIFICATION = "mandatory"
 ACCOUNT_EMAIL_VERIFICATION_BY_CODE_ENABLED = True
-# ACCOUNT_PASSWORD_RESET_BY_CODE_ENABLED = True
+
 ACCOUNT_PASSWORD_RESET_VERIFICATION_METHOD = 'email'
 
 ACCOUNT_SIGNUP_FIELDS = ['email*', 'username','phone_number', 'password1', 'password2']
@@ -118,7 +112,7 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
-# --- Middleware ---
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -130,7 +124,6 @@ MIDDLEWARE = [
     "allauth.account.middleware.AccountMiddleware",
 ]
 
-# --- Templates ---
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -150,15 +143,14 @@ TEMPLATES = [
 ROOT_URLCONF = 'core.urls'
 WSGI_APPLICATION = 'core.wsgi.application'
 
-# --- Database ---
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    'default': dj_database_url.config(
+        default=os.getenv("POSTGRES_URL_NON_POOLING","sqlite:///" + str(BASE_DIR / "db.sqlite3") ),
+        conn_max_age=600,
+        ssl_require=not DEBUG,
+    )
 }
 
-# --- Password Validation ---
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
@@ -166,7 +158,6 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-# --- Internationalization ---
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
 USE_I18N = True
