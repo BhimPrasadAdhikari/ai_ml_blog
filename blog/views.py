@@ -548,10 +548,13 @@ class DeleteCommentView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
             return JsonResponse({'status': 'success', 'message': 'Comment deleted successfully'})
             
         messages.success(request, 'Comment deleted successfully!')
-        return redirect('post_detail', slug=self.object.post.slug)
+        return redirect(self.get_success_url())
+
     def get_success_url(self):
-        post = self.object.post
-        return reverse('post_detail', kwargs={'slug': post.slug})
+        # Fallback URL if not using AJAX
+        return reverse('post_detail', kwargs={'slug': self.object.post.slug})
+
+
     
 class ModerateCommentView(LoginRequiredMixin, UserPassesTestMixin, View):
     def test_func(self):
