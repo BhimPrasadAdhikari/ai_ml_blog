@@ -7,15 +7,18 @@ See https://docs.djangoproject.com/en/5.0/topics/settings/
 
 import os
 from pathlib import Path
-from dotenv import load_dotenv
+import environ 
 import dj_database_url
-load_dotenv()
+env = environ.Env(
+    DEBUG=(bool, False)
+)
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
-SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'your-default-development-key')
-DEBUG = os.environ.get('DJANGO_DEBUG', 'True').lower() == 'true'
-ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+SECRET_KEY = env('DJANGO_SECRET_KEY')
+DEBUG = False
+ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['*'])
 
 SECURE_SSL_REDIRECT = not DEBUG
 SESSION_COOKIE_SECURE = not DEBUG
@@ -38,7 +41,7 @@ STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [BASE_DIR / 'blog' / 'static']
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'blog_images'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -68,8 +71,6 @@ AUTHENTICATION_BACKENDS = [
 ]
 ACCOUNT_ADAPTER = 'blog.adapter.CustomAccountAdapter'
 
-MONGO_URI = os.getenv("MONGO_URI")
-MONGO_DB_NAME = os.getenv("MONGO_DB_NAME")
 
 ACCOUNT_FORMS = {
     'signup': 'blog.forms.CustomSignupForm',
@@ -115,6 +116,7 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',

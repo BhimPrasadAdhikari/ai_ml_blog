@@ -34,11 +34,11 @@ class CustomUserManager(BaseUserManager):
 
     def create_user(self, email, phone_number=None, password=None, **extra_fields):
         return self._create_user(email, phone_number, password, **extra_fields)
-    def create_superuser(self, email, phone_number=None, password=None, **extra_fields):
+    def create_superuser(self, email, password, **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
         
-        return self.create_user(email, phone_number, password, **extra_fields)
+        return self.create_user(email, password, **extra_fields)
     
 class CategoryManager(models.Manager):
     def get_by_natural_key(self, slug):
