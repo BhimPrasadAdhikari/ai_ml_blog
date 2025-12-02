@@ -1,4 +1,6 @@
 from django.contrib import admin
+from django.utils.html import format_html
+
 from .models import (
     Post, CustomUser, Category, Comment, PostInteraction, UserProfile, 
     EmailSubscription, Newsletter, PostBookmark, PostRating)
@@ -16,9 +18,16 @@ class CategoryAdmin(admin.ModelAdmin):
 @admin.register(Post)
 class PostAdmin(admin.ModelAdmin):
     form = PostAdminForm
-    list_display = ('title','slug','summary','content','image','tags','status','created_at','updated_at','published_at')
+    list_display = ('title','slug','summary','content','tags','status','created_at','updated_at','published_at')
     list_filter = ('status',)  # removed 'slug'
     search_fields =('title','slug','author__username')
+    readonly_fields=('image_preview',)
+    
+    def image_preview(self, obj):
+        if obj.image:
+            return format_html('<img src="{}" style="max-height: 120px;"/>', obj.image.url)
+        return "(No image)"
+    image_preview.short_description = 'Image Preview'
 
 @admin.register(CustomUser)
 class CustomUserAdmin(admin.ModelAdmin):
