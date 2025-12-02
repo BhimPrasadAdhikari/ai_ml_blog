@@ -9,6 +9,7 @@ import os
 from pathlib import Path
 import environ 
 import dj_database_url
+import cloudinary
 env = environ.Env(
     DEBUG=(bool, False)
 )
@@ -171,3 +172,22 @@ USE_TZ = True
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
+
+if not os.environ.get('CLOUDINARY_URL'):
+    cloud_name = env('CLOUDINARY_CLOUD_NAME', default=None)
+    api_key = env('CLOUDINARY_API_KEY', default=None)
+    api_secret = env('CLOUDINARY_SECRET_KEY', default=None)
+    if cloud_name and api_key and api_secret:
+        os.environ['CLOUDINARY_URL'] = f"cloudinary://{api_key}:{api_secret}@{cloud_name}"
+
+cloudinary.config(
+    cloud_name=env('CLOUDINARY_CLOUD_NAME', default=None),
+    api_key=env('CLOUDINARY_API_KEY', default=None),
+    api_secret=env('CLOUDINARY_SECRET_KEY', default=None),
+)
+
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': env('CLOUDINARY_CLOUD_NAME'),
+    'API_KEY': env('CLOUDINARY_API_KEY'),
+    'API_SECRET': env('CLOUDINARY_SECRET_KEY'),
+}
