@@ -67,7 +67,7 @@ class Post(SlugMixin, TimestampMixin, ImageProcessingMixin, models.Model):
     content = TextField()
     image = CloudinaryField('blog_images/',
                        blank=True, 
-                       null=True,
+                       null=True
                        )
     author = ForeignKey(get_user_model(),
                         on_delete=CASCADE,
