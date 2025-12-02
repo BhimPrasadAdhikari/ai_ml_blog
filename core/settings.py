@@ -145,12 +145,9 @@ TEMPLATES = [
 ROOT_URLCONF = 'core.urls'
 WSGI_APPLICATION = 'core.wsgi.application'
 
+
 DATABASES = {
-    'default': dj_database_url.config(
-        default=os.getenv("POSTGRES_URL_NON_POOLING","sqlite:///" + str(BASE_DIR / "db.sqlite3") ),
-        conn_max_age=600,
-        ssl_require=not DEBUG,
-    )
+    'default': dj_database_url.config(default=os.getenv('DATABASE_URL'))
 }
 
 AUTH_PASSWORD_VALIDATORS = [
