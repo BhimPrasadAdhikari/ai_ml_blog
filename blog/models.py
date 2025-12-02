@@ -10,7 +10,6 @@ from django.core.files.images import get_image_dimensions
 from django.db.models import (
     CharField,
     TextField,
-    ImageField,
     ForeignKey,
     ManyToManyField,
     DateTimeField,
@@ -27,6 +26,8 @@ from django.db.models import (
     SET,
     Avg,
 )
+from cloudinary.models import CloudinaryField
+
 from django.contrib.auth.base_user import BaseUserManager
 from .validators import validate_image_size, validate_image_dimensions, validate_image_extension
 from .managers import CustomUserManager
@@ -64,14 +65,10 @@ class Post(SlugMixin, TimestampMixin, ImageProcessingMixin, models.Model):
     title = CharField(max_length=200)
     summary = TextField(max_length=500, help_text="A short summary of the post")
     content = TextField()
-    image = ImageField(upload_to='',
+    image = CloudinaryField('blog_images',
                        blank=True, 
                        null=True,
-                       validators=[
-                           validate_image_size,
-                           validate_image_dimensions,
-                           validate_image_extension
-                       ])
+                       )
     author = ForeignKey(get_user_model(),
                         on_delete=CASCADE,
                         related_name='posts')
@@ -331,7 +328,7 @@ class PostRating(TimestampMixin, models.Model):
 class UserProfile(TimestampMixin, models.Model):
     user = OneToOneField(get_user_model(), on_delete=CASCADE, related_name='profile')
     bio = TextField(max_length=500, blank=True)
-    profile_picture = ImageField(upload_to='profile_pictures/', blank=True, null=True)
+    profile_picture = CloudinaryField('profile_pictures', blank=True, null=True)
     website = URLField(max_length=200, blank=True)
     location = CharField(max_length=100, blank=True)
     github = URLField(max_length=200, blank=True)
