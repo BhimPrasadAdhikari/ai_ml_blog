@@ -31,10 +31,9 @@ from cloudinary.models import CloudinaryField
 from django.contrib.auth.base_user import BaseUserManager
 from .validators import validate_image_size, validate_image_dimensions, validate_image_extension
 from .managers import CustomUserManager
-from PIL import Image
 import os
 from .constants import PostStatus, CommentStatus, VoteType, SharePlatform, PostInteractionType, AnnotationStatus, MAX_IMAGE_SIZE, MAX_IMAGE_DIMENSION, MAX_THUMBNAIL_DIMENSION, VALID_IMAGE_EXTENSIONS, VALID_VIDEO_EXTENSIONS, VALID_AUDIO_EXTENSIONS, VALID_DOCUMENT_EXTENSIONS, VALID_ARCHIVE_EXTENSIONS, VALID_CODE_EXTENSIONS, VALID_TEXT_EXTENSIONS
-from .mixins import TimestampMixin, SlugMixin, ImageProcessingMixin
+from .mixins import TimestampMixin, SlugMixin
 class CustomUser(AbstractUser):
    
     phone_number = PhoneNumberField(unique=True, null=True, blank=True)
@@ -57,7 +56,7 @@ class Category(SlugMixin, models.Model):
     def get_absolute_url(self):
         return reverse('category_detail', kwargs={'slug': self.slug})
 
-class Post(SlugMixin, TimestampMixin, ImageProcessingMixin, models.Model):
+class Post(SlugMixin, TimestampMixin,models.Model):
     """
     Model to store blog posts for the AI/ML blog.
     """
@@ -97,11 +96,6 @@ class Post(SlugMixin, TimestampMixin, ImageProcessingMixin, models.Model):
         verbose_name = "Blog Post"
         verbose_name_plural = "Blog Posts"
         ordering = ['-published_at','-created_at']
-        
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
-        if self.image:
-            self.process_image(self.image)
     
     def get_upvotes(self):
         """Get the number of upvotes for this post"""
