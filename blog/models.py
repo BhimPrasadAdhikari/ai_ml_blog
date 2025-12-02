@@ -65,7 +65,7 @@ class Post(SlugMixin, TimestampMixin, ImageProcessingMixin, models.Model):
     title = CharField(max_length=200)
     summary = TextField(max_length=500, help_text="A short summary of the post")
     content = TextField()
-    image = CloudinaryField('blog_images',
+    image = CloudinaryField('blog_images/',
                        blank=True, 
                        null=True,
                        )
@@ -328,7 +328,7 @@ class PostRating(TimestampMixin, models.Model):
 class UserProfile(TimestampMixin, models.Model):
     user = OneToOneField(get_user_model(), on_delete=CASCADE, related_name='profile')
     bio = TextField(max_length=500, blank=True)
-    profile_picture = CloudinaryField('profile_pictures', blank=True, null=True)
+    profile_picture = CloudinaryField('profile_pictures/', blank=True, null=True)
     website = URLField(max_length=200, blank=True)
     location = CharField(max_length=100, blank=True)
     github = URLField(max_length=200, blank=True)
