@@ -8,7 +8,6 @@
     <link rel="stylesheet" href="{% static 'blog/css/post_detail.css' %}">
     <link rel="stylesheet" href="{% static 'blog/css/comments.css' %}">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 {% endblock %}
 
 {% block content %}
@@ -67,186 +66,189 @@
         </figure>
     {% endif %}
 
-    {% comment %} <div class="main-grid"> {% endcomment %}
-        <main class="main-content">
-            <p class="post-summary">{{ post.summary }}</p>
-            
-            <div class="post-body post-content">
-                {{ post_content_html|safe }}
+    <main class="main-content">
+        <p class="post-summary">{{ post.summary }}</p>
+        
+        <div class="post-body post-content">
+            {{ post_content_html|safe }}
+        </div>
+
+        <div class="annotations-section">
+            <h3><i class="fas fa-highlighter"></i> Annotations</h3>
+            <div id="annotations-list">
+                <p class="text-muted">Highlight text in the article to add an annotation.</p>
+            </div>
+        </div>
+    </main>
+
+    <aside class="sidebar">
+        {% if related_posts %}
+        <div class="sidebar-widget">
+            <h4 class="widget-title">More from {{ post.author.username }}</h4>
+            <div class="related-posts-list">
+                {% for related in related_posts %}
+                    <a href="{{ related.get_absolute_url }}" class="related-post-item">
+                        {% if related.image %}
+                            <img src="{{ related.image.url }}" alt="thumb">
+                        {% endif %}
+                        <div class="related-info">
+                            <h5>{{ related.title }}</h5>
+                            <span class="related-date">{{ related.created_at|date:"M d" }}</span>
+                        </div>
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% if post.tags %}
+        <div class="sidebar-widget">
+            <h4 class="widget-title">Tags</h4>
+            <div class="tags-cloud">
+                {% for tag in post.get_tags_list %}
+                    <span class="tag-chip">#{{ tag }}</span>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        
+        {% if post.categories.all %}
+        <div class="sidebar-widget">
+            <h4 class="widget-title">Topics</h4>
+            <div class="category-list">
+                {% for cat in post.categories.all %}
+                    <a href="{% url 'category_posts' cat.slug %}" class="cat-link">{{ cat.name }}</a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </aside>
+
+    <div class="post-footer-actions">
+        <div class="action-group">
+            <button class="vote-btn {% if user_vote == 'up' %}active{% endif %}" id="upvote-btn" data-post-slug="{{ post.slug }}" onclick="handleVote('up')">
+                <i class="fas fa-arrow-up"></i> <span id="upvote-count">{{ post.get_upvotes }}</span>
+            </button>
+            <button class="vote-btn {% if user_vote == 'down' %}active{% endif %}" id="downvote-btn" data-post-slug="{{ post.slug }}" onclick="handleVote('down')">
+                <i class="fas fa-arrow-down"></i>
+            </button>
+        </div>
+
+        {% if user == post.author %}
+        <div class="action-group author-controls">
+            <a href="{% url 'post_edit' post.slug %}" class="btn-manage edit">
+                <i class="fas fa-pen"></i> <span>Edit</span>
+            </a>
+            <a href="{% url 'post_delete' post.slug %}" class="btn-manage delete">
+                <i class="fas fa-trash"></i> <span>Delete</span>
+            </a>
+        </div>
+        {% endif %}
+
+        <div class="user-rating-input" data-post-slug="{{ post.slug }}">
+            <span>Rate this</span>
+            {% for i in "12345" %}
+            <i class="far fa-star star-btn" data-value="{{ forloop.counter }}"></i>
+            {% endfor %}
+        </div>
+        
+        <div class="action-group right">
+            <div class="share-dropdown">
+                <button class="share-btn-toggle" title="Share">
+                    <i class="fas fa-share-alt"></i>
+                </button>
+                <div class="share-menu">
+                    <a href="#" onclick="sharePost('twitter', '{{ post.slug }}')"><i class="fab fa-twitter"></i> Twitter</a>
+                    <a href="#" onclick="sharePost('facebook', '{{ post.slug }}')"><i class="fab fa-facebook"></i> Facebook</a>
+                    <a href="#" onclick="sharePost('linkedin', '{{ post.slug }}')"><i class="fab fa-linkedin"></i> LinkedIn</a>
+                </div>
             </div>
 
-            <div class="annotations-section">
-                <h3><i class="fas fa-highlighter"></i> Annotations</h3>
-                <div id="annotations-list">
-                    <p class="text-muted">Highlight text in the article to add an annotation.</p>
-                </div>
-            </div>
-            
-        <aside class="sidebar">
-            <div class="sidebar-widget">
-                <h4 class="widget-title">More from {{ post.author.username }}</h4>
-                <div class="related-posts-list">
-                    {% for related in related_posts %}
-                        <a href="{{ related.get_absolute_url }}" class="related-post-item">
-                            {% if related.image %}
-                                <img src="{{ related.image.url }}" alt="thumb">
-                            {% endif %}
-                            <div class="related-info">
-                                <h5>{{ related.title }}</h5>
-                                <span class="related-date">{{ related.created_at|date:"M d" }}</span>
-                            </div>
-                        </a>
-                    {% endfor %}
-                </div>
-            </div>
+            <button id="bookmark-btn" 
+                    class="{% if user_bookmarked %}bookmarked{% endif %}" 
+                    data-post-slug="{{ post.slug }}"
+                    title="Bookmark this post">
+                <i class="{% if user_bookmarked %}fas{% else %}far{% endif %} fa-bookmark"></i>
+            </button>
+        </div>
+    </div>
 
-            {% if post.tags %}
-            <div class="sidebar-widget">
-                <h4 class="widget-title">Tags</h4>
-                <div class="tags-cloud">
-                    {% for tag in post.get_tags_list %}
-                        <span class="tag-chip">#{{ tag }}</span>
-                    {% endfor %}
+    <hr class="section-divider">
+
+    <section class="qna-section">
+        <h3><i class="fas fa-question-circle"></i> Q&A with Author</h3>
+        <div id="qna-form-container">
+            <div class="input-group">
+                <input type="text" id="qna-question" class="form-control" placeholder="Ask a question about this post...">
+                <button id="qna-submit" class="btn btn-primary">Ask</button>
+            </div>
+        </div>
+        <div id="qna-list" class="mt-4">
+            {% for qna in qnas %}
+            <div class="qna-item">
+                <div class="qna-question">
+                    <strong>{{ qna.user.username }}</strong> asked:
+                    <div class="mt-1">{{ qna.question }}</div>
+                </div>
+                
+                <div class="mt-2">
+                    {% if qna.is_answered %}
+                        <div class="qna-answer">
+                            <strong>Author:</strong> {{ qna.answer }}
+                        </div>
+                    {% else %}
+                        {% if user == post.author %}
+                            <textarea rows="2" class="qna-answer form-control" data-qid="{{ qna.id }}" placeholder="Write your answer..."></textarea>
+                            <button class="qna-answer-btn btn btn-sm btn-success mt-2" data-qid="{{ qna.id }}">Submit Answer</button>
+                        {% else %}
+                            <p class="text-muted"><em>Awaiting author response...</em></p>
+                        {% endif %}
+                    {% endif %}
                 </div>
             </div>
+            {% empty %}
+                <p class="text-muted">No questions yet. Be the first to ask!</p>
+            {% endfor %}
+        </div>
+    </section>
+
+    <hr class="section-divider">
+
+    <section class="comments-section">
+        <h3>Comments ({{ comments.paginator.count }})</h3>
+        
+        {% if user.is_authenticated %}
+            <form method="post" action="{% url 'add_comment' post.slug %}" class="comment-form">
+                {% csrf_token %}
+                {{ comment_form.content }}
+                <button type="submit" class="btn btn-primary mt-2">Post Comment</button>
+            </form>
+        {% else %}
+            <p><a href="{% url 'account_login' %}?next={{ request.path }}">Log in</a> to leave a comment.</p>
+        {% endif %}
+
+        <div class="comments-list">
+            {% for comment in comments %}
+                {% include 'blog/includes/comment_item.html' with comment=comment %}
+            {% empty %}
+                <div class="no-comments">
+                    <p>No comments yet. Be the first to start the discussion!</p>
+                </div>
+            {% endfor %}
+        </div>
+
+        {% if comments.has_other_pages %}
+        <div class="pagination">
+            {% if comments.has_previous %}
+                <a href="?page={{ comments.previous_page_number }}" class="page-link">&laquo;</a>
             {% endif %}
-            
-            <div class="sidebar-widget">
-                <h4 class="widget-title">Topics</h4>
-                <div class="category-list">
-                    {% for cat in post.categories.all %}
-                        <a href="{% url 'category_posts' cat.slug %}" class="cat-link">{{ cat.name }}</a>
-                    {% endfor %}
-                </div>
-            </div>
-        </aside>
-
-            <div class="post-footer-actions">
-                <div class="action-group">
-                    <button class="vote-btn {% if user_vote == 'up' %}active{% endif %}" id="upvote-btn" data-post-slug="{{ post.slug }}" onclick="handleVote('up')">
-                        <i class="fas fa-arrow-up"></i> <span id="upvote-count">{{ post.get_upvotes }}</span>
-                    </button>
-                    <button class="vote-btn {% if user_vote == 'down' %}active{% endif %}" id="downvote-btn" data-post-slug="{{ post.slug }}" onclick="handleVote('down')">
-                        <i class="fas fa-arrow-down"></i>
-                    </button>
-                </div>
-                {% if user == post.author %}
-                <div class="action-group author-controls">
-                <a href="{% url 'post_edit' post.slug %}" class="btn-manage edit">
-                    <i class="fas fa-pen"></i> Edit
-                </a>
-                <a href="{% url 'post_delete' post.slug %}" class="btn-manage delete">
-                    <i class="fas fa-trash"></i> Delete
-                </a>
-                </div>
-                {% endif %}
-
-                <div class="user-rating-input" data-post-slug="{{ post.slug }}">
-                    <span>Rate this:</span>
-                    {% for i in "12345" %}
-                    <i class="far fa-star star-btn" data-value="{{ forloop.counter }}"></i>
-                    {% endfor %}
-                </div>
-                
-                <div class="action-group right">
-                    <div class="share-dropdown">
-                        <button class="share-btn-toggle" title="Share">
-                            <i class="fas fa-share-alt"></i>
-                        </button>
-                        <div class="share-menu">
-                            <a href="#" onclick="sharePost('twitter', '{{ post.slug }}')"><i class="fab fa-twitter"></i> Twitter</a>
-                            <a href="#" onclick="sharePost('facebook', '{{ post.slug }}')"><i class="fab fa-facebook"></i> Facebook</a>
-                            <a href="#" onclick="sharePost('linkedin', '{{ post.slug }}')"><i class="fab fa-linkedin"></i> LinkedIn</a>
-                        </div>
-                    </div>
-
-                    <button id="bookmark-btn" 
-                            class="{% if user_bookmarked %}bookmarked{% endif %}" 
-                            data-post-slug="{{ post.slug }}"
-                            title="Bookmark this post">
-                        <i class="{% if user_bookmarked %}fas{% else %}far{% endif %} fa-bookmark"></i>
-                    </button>
-                </div>
-            </div>
-
-            <hr class="section-divider">
-
-            <section class="qna-section">
-                <h3><i class="fas fa-question-circle"></i> Q&A with Author</h3>
-                <div id="qna-form-container">
-                    <div class="input-group">
-                        <input type="text" id="qna-question" class="form-control" placeholder="Ask a question about this post...">
-                        <button id="qna-submit" class="btn btn-primary">Ask</button>
-                    </div>
-                </div>
-                <div id="qna-list" class="mt-4">
-                    {% for qna in qnas %}
-                    <div class="qna-item">
-                        <div class="qna-question">
-                            <strong>{{ qna.user.username }}</strong> asked:
-                            <div class="mt-1">{{ qna.question }}</div>
-                        </div>
-                        
-                        <div class="mt-2">
-                            {% if qna.is_answered %}
-                                <div class="qna-answer">
-                                    <strong>Author:</strong> {{ qna.answer }}
-                                </div>
-                            {% else %}
-                                {% if user == post.author %}
-                                    <textarea rows="2" class="qna-answer form-control" data-qid="{{ qna.id }}" placeholder="Write your answer..."></textarea>
-                                    <button class="qna-answer-btn btn btn-sm btn-success mt-2" data-qid="{{ qna.id }}">Submit Answer</button>
-                                {% else %}
-                                    <p class="text-muted"><em>Awaiting author response...</em></p>
-                                {% endif %}
-                            {% endif %}
-                        </div>
-                    </div>
-                    {% empty %}
-                        <p class="text-muted">No questions yet. Be the first to ask!</p>
-                    {% endfor %}
-                </div>
-            </section>
-
-            <hr class="section-divider">
-
-            <section class="comments-section">
-                <h3>Comments ({{ comments.paginator.count }})</h3>
-                
-                {% if user.is_authenticated %}
-                    <form method="post" action="{% url 'add_comment' post.slug %}" class="comment-form">
-                        {% csrf_token %}
-                        {{ comment_form.content }}
-                        <button type="submit" class="btn btn-primary mt-2">Post Comment</button>
-                    </form>
-                {% else %}
-                    <p><a href="{% url 'account_login' %}?next={{ request.path }}">Log in</a> to leave a comment.</p>
-                {% endif %}
-
-                <div class="comments-list">
-                    {% for comment in comments %}
-                        {% include 'blog/includes/comment_item.html' with comment=comment %}
-                    {% empty %}
-                        <div class="no-comments">
-                            <p>No comments yet. Be the first to start the discussion!</p>
-                        </div>
-                    {% endfor %}
-                </div>
-
-                {% if comments.has_other_pages %}
-                <div class="pagination">
-                    {% if comments.has_previous %}
-                        <a href="?page={{ comments.previous_page_number }}" class="page-link">&laquo;</a>
-                    {% endif %}
-                    <span class="current">Page {{ comments.number }} of {{ comments.paginator.num_pages }}</span>
-                    {% if comments.has_next %}
-                        <a href="?page={{ comments.next_page_number }}" class="page-link">&raquo;</a>
-                    {% endif %}
-                </div>
-                {% endif %}
-            </section>
-        </main>
-    {% comment %} </div> {% endcomment %}
+            <span class="current">Page {{ comments.number }} of {{ comments.paginator.num_pages }}</span>
+            {% if comments.has_next %}
+                <a href="?page={{ comments.next_page_number }}" class="page-link">&raquo;</a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </section>
 </div>
 
 <input type="hidden" id="post-slug" value="{{ post.slug }}">
@@ -368,7 +370,6 @@
             .then(res => res.json())
             .then(data => {
                 if(data.status === 'success') {
-                    alert('Rating saved!');
                     // Update visual stars
                     document.querySelectorAll('.star-btn').forEach(s => {
                         s.classList.remove('fas');
