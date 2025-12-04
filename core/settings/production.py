@@ -46,10 +46,11 @@ if not os.environ.get("DEMO_MODE"):
     EMAIL_PORT = 587
     EMAIL_USE_TLS = True
     EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
+    EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
+    DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 else:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
-DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+
 
 # Cloudinary configuration for production
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
