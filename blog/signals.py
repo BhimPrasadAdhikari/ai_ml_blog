@@ -10,8 +10,10 @@ def create_user_profile(sender, instance, created, **kwargs):
         UserProfile.objects.create(user=instance)
 
 @receiver(post_save, sender=get_user_model())
-def save_user_profile(sender, instance, **kwargs):
+def save_user_profile(sender, instance, created, **kwargs):
     # Import here to avoid circular import
     from .models import UserProfile
-    instance.profile.save()
+    if not created:
+        # Get or create profile for existing users
+        UserProfile.objects.get_or_create(user=instance)
 
