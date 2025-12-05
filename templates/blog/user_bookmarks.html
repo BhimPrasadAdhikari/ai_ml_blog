@@ -1,38 +1,159 @@
 {% extends 'blog/base.html' %}
 {% load blog_extras %}
 {% load static %}
+
 {% block title %}My Bookmarks - AI/ML Blog{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'blog/css/user_bookmarks.css' %}">
+{% endblock %}
+
 {% block content %}
-<div class="container">
-    <h1>My Bookmarked Posts</h1>
+<div class="bookmarks-container">
+    <div class="bookmarks-header">
+        <h1><i class="fas fa-bookmark"></i> My Bookmarks</h1>
+        {% if bookmarked_posts %}
+        <span class="bookmarks-count">
+            <i class="fas fa-layer-group"></i> 
+            {{ page_obj.paginator.count }} saved post{{ page_obj.paginator.count|pluralize }}
+        </span>
+        {% endif %}
+    </div>
+
     {% if bookmarked_posts %}
-        <div class="posts-grid">
+        <div class="bookmarks-grid">
             {% for post in bookmarked_posts %}
-                <article class="post-card">
-                    {% if post.image %}
-                        <img src="{{ post.image.url }}" alt="{{ post.title }}" class="post-image">
-                    {% endif %}
-                    <div class="post-content">
-                        <h2 class="post-title">
-                            <a href="{{ post.get_absolute_url }}">{{ post.title }}</a>
-                        </h2>
-                        <p class="post-summary">{{ post.summary }}</p>
-                        <a href="{{ post.get_absolute_url }}" class="read-more">Read More →</a>
-                    </div>
-                    {% with bookmark=bookmarks_map|get_item:post.id %}
-                        {% if bookmark and bookmark.notes %}
-                            <div class="bookmark-notes">
-                                <strong>Notes:</strong> {{ bookmark.notes }}
+                <article class="bookmark-card" data-post-slug="{{ post.slug }}" data-post-id="{{ post.id }}">
+                    <div class="bookmark-card-image">
+                        {% if post.image %}
+                            <img src="{{ post.image.url }}" alt="{{ post.title }}" loading="lazy">
+                        {% else %}
+                            <div class="bookmark-card-placeholder">
+                                <i class="fas fa-newspaper"></i>
                             </div>
                         {% endif %}
-                    {% endwith %}
+                        
+                        <div class="bookmark-date-badge">
+                            <i class="fas fa-clock"></i>
+                            {% with bookmark=bookmarks_map|get_item:post.id %}
+                                Saved {{ bookmark.created_at|timesince }} ago
+                            {% endwith %}
+                        </div>
+
+                        <div class="bookmark-actions">
+                            <button class="bookmark-action-btn remove-btn" title="Remove bookmark" data-post-slug="{{ post.slug }}">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="bookmark-card-content">
+                        {% if post.categories.exists %}
+                        <div class="bookmark-card-categories">
+                            {% for category in post.categories.all|slice:":2" %}
+                                <span class="bookmark-category">{{ category.name }}</span>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
+                        <h2 class="bookmark-card-title">
+                            <a href="{{ post.get_absolute_url }}">{{ post.title }}</a>
+                        </h2>
+
+                        <p class="bookmark-card-summary">{{ post.summary|truncatewords:25 }}</p>
+
+                        <div class="bookmark-card-meta">
+                            <div class="bookmark-card-author">
+                                <span class="author-avatar">{{ post.author.username|slice:":1"|upper }}</span>
+                                <span>{{ post.author.username }}</span>
+                            </div>
+                            <div class="bookmark-stats">
+                                <span class="bookmark-stat" title="Upvotes">
+                                    <i class="fas fa-arrow-up"></i> {{ post.get_upvotes }}
+                                </span>
+                                <span class="bookmark-stat" title="Comments">
+                                    <i class="fas fa-comment"></i> {{ post.comments.count }}
+                                </span>
+                            </div>
+                        </div>
+
+                        {% with bookmark=bookmarks_map|get_item:post.id %}
+                            {% if bookmark.notes %}
+                                <div class="bookmark-notes">
+                                    <i class="fas fa-sticky-note"></i>
+                                    <span class="bookmark-notes-text">{{ bookmark.notes }}</span>
+                                    <div class="bookmark-notes-actions">
+                                        <button class="bookmark-notes-btn edit-notes-btn" title="Edit notes" data-post-slug="{{ post.slug }}" data-notes="{{ bookmark.notes }}">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            {% else %}
+                                <button class="add-notes-btn" data-post-slug="{{ post.slug }}">
+                                    <i class="fas fa-plus"></i> Add personal notes
+                                </button>
+                            {% endif %}
+                        {% endwith %}
+                    </div>
                 </article>
             {% endfor %}
         </div>
+
+        {% if page_obj.has_other_pages %}
+        <nav class="bookmarks-pagination">
+            {% if page_obj.has_previous %}
+                <a href="?page=1">&laquo; First</a>
+                <a href="?page={{ page_obj.previous_page_number }}">Previous</a>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                    <span class="current">{{ num }}</span>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <a href="?page={{ num }}">{{ num }}</a>
+                {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}">Next</a>
+                <a href="?page={{ page_obj.paginator.num_pages }}">Last &raquo;</a>
+            {% endif %}
+        </nav>
+        {% endif %}
+
     {% else %}
-        <p>You have not bookmarked any posts yet.</p>
+        <div class="bookmarks-empty">
+            <i class="far fa-bookmark"></i>
+            <h2>No bookmarks yet</h2>
+            <p>Start exploring and bookmark posts you want to read later!</p>
+            <a href="{% url 'post_list' %}" class="btn btn-primary">
+                <i class="fas fa-compass"></i> Discover Posts
+            </a>
+        </div>
     {% endif %}
+</div>
+
+<!-- Notes Modal -->
+<div class="notes-modal-overlay" id="notesModal">
+    <div class="notes-modal">
+        <div class="notes-modal-header">
+            <h3><i class="fas fa-sticky-note"></i> Personal Notes</h3>
+            <button class="notes-modal-close" id="closeNotesModal">&times;</button>
+        </div>
+        <textarea class="notes-textarea" id="notesTextarea" placeholder="Add your personal notes about this post..."></textarea>
+        <div class="notes-modal-actions">
+            <button class="btn btn-secondary" id="cancelNotes">Cancel</button>
+            <button class="btn btn-primary" id="saveNotes">
+                <i class="fas fa-save"></i> Save Notes
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Notification -->
+<div class="toast" id="toast">
+    <i class="fas fa-check-circle"></i>
+    <span id="toastMessage"></span>
 </div>
 {% endblock %}
 
