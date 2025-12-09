@@ -60,11 +60,16 @@ class PostDetailView(DetailView):
         context = super().get_context_data(**kwargs)
         post = context['post']
         context['post_content_html'] = mark_safe(markdown.markdown(post.content, extensions=['extra','codehilite', 'toc','tables']))
-        total_watch_time = PostWatchTime.objects.filter(
-            post=post, 
-            user=self.request.user
+        
+        # Only calculate watch time for authenticated users
+        if self.request.user.is_authenticated:
+            total_watch_time = PostWatchTime.objects.filter(
+                post=post, 
+                user=self.request.user
             ).aggregate(total=models.Sum('watch_time'))['total'] or 0
-        context['total_watch_time_minutes'] = total_watch_time // 60
+            context['total_watch_time_minutes'] = total_watch_time // 60
+        else:
+            context['total_watch_time_minutes'] = 0
         
         # Get user's vote for this post
         if self.request.user.is_authenticated:

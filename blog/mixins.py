@@ -18,7 +18,10 @@ class SlugMixin(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.slug:
-            self.slug = slugify(self.title)
+            # Try to use 'title' first, then 'name' as a fallback
+            slug_source = getattr(self, 'title', None) or getattr(self, 'name', None)
+            if slug_source:
+                self.slug = slugify(slug_source)
         super().save(*args, **kwargs)
 
 class ImageProcessingMixin:
